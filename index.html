@@ -36,7 +36,7 @@
       </div>
 
       <div class="nav-label" style="margin-top:20px">系统</div>
-      <div class="nav-item">
+      <div class="nav-item" data-page="settings" onclick="go('settings')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         <span>设置</span>
       </div>
@@ -44,10 +44,10 @@
 
     <div class="sidebar-foot">
       <div class="user-row">
-        <div class="avatar">李</div>
+        <div class="avatar" id="sidebarAvatar">李</div>
         <div class="user-meta">
-          <div class="user-name">李明远</div>
-          <div class="user-role">成都七中 · 高二教师</div>
+          <div class="user-name" id="sidebarUserName">李明远</div>
+          <div class="user-school" id="sidebarUserSchool">成都市第七中学（演示）</div>
         </div>
       </div>
     </div>
@@ -59,21 +59,24 @@
       <div class="topbar-left">
         <h1 class="topbar-title" id="pTitle">数字教材</h1>
         <div class="topbar-sep"></div>
-        <span class="topbar-hint" id="pHint">浏览全部数字教材资源</span>
+        <span class="topbar-hint" id="pHint">浏览、选购全部上架数字教材</span>
       </div>
       <div class="topbar-right">
-        <div class="search-box">
+        <div class="search-box" id="topbarSearchWrap">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="搜索教材名称、科目..." id="sInput" oninput="renderLib()">
+          <input type="text" placeholder="搜索图书名称、科目..." id="sInput" oninput="renderLib()">
         </div>
         <button class="tb-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-        <button class="tb-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+        <button type="button" class="tb-btn tb-btn--redeem" onclick="openRedeem()" title="兑换教材" aria-label="兑换教材">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 2v6M8 2v6"/></svg>
+        </button>
       </div>
     </header>
 
     <div class="scroll">
       <div class="page active" id="page-library"></div>
       <div class="page" id="page-my"></div>
+      <div class="page" id="page-settings"></div>
     </div>
   </main>
 </div>
@@ -191,6 +194,179 @@
     </button>
     <div id="classDetailContent"></div>
   </div>
+</div>
+
+<!-- 完善学校信息（绑定/更换） -->
+<div class="school-modal-overlay" id="schoolModalOverlay">
+  <div class="school-modal-bg" onclick="closeSchoolModal()"></div>
+  <div class="school-modal-box" role="dialog" aria-labelledby="schoolModalTitle" aria-modal="true">
+    <button type="button" class="school-modal-close" onclick="closeSchoolModal()" aria-label="关闭">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="school-modal-header">
+      <h2 class="school-modal-title" id="schoolModalTitle">完善学校信息</h2>
+    </div>
+    <div class="school-modal-body">
+      <input type="text" id="schoolActivationCode" class="school-modal-input" placeholder="请输入学校课程激活码" autocomplete="off">
+      <div class="school-modal-notes">
+        <span class="school-modal-notes-label">备注：</span>
+        <ul class="school-modal-notes-list">
+          <li>仅支持已合作的学校</li>
+          <li>如没有激活码，请联系学校管理员获取</li>
+        </ul>
+      </div>
+    </div>
+    <div class="school-modal-footer">
+      <button type="button" class="school-modal-btn" onclick="confirmSchoolBind()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修改密码 -->
+<div class="pwd-modal-overlay" id="pwdModalOverlay">
+  <div class="pwd-modal-bg" onclick="closePasswordModal()"></div>
+  <div class="pwd-modal-box" role="dialog" aria-labelledby="pwdModalTitle">
+    <button type="button" class="pwd-modal-close" onclick="closePasswordModal()" aria-label="关闭">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 class="pwd-modal-title" id="pwdModalTitle">修改密码</h2>
+    <p class="pwd-modal-desc">请填写当前密码与新密码。演示环境不校验原密码真实性。</p>
+    <div class="pwd-modal-fields">
+      <label class="pwd-modal-label" for="pwdOld">当前密码</label>
+      <input type="password" id="pwdOld" class="pwd-modal-input" placeholder="请输入当前密码" autocomplete="current-password">
+      <label class="pwd-modal-label" for="pwdNew">新密码</label>
+      <input type="password" id="pwdNew" class="pwd-modal-input" placeholder="至少 6 位" autocomplete="new-password" minlength="6">
+      <label class="pwd-modal-label" for="pwdNew2">确认新密码</label>
+      <input type="password" id="pwdNew2" class="pwd-modal-input" placeholder="再次输入新密码" autocomplete="new-password">
+    </div>
+    <p class="pwd-modal-err" id="pwdModalErr" role="alert"></p>
+    <button type="button" class="pwd-modal-submit" onclick="confirmPasswordChange()">确认修改</button>
+  </div>
+</div>
+
+<!-- 用户反馈 -->
+<div class="feedback-modal-overlay" id="feedbackModalOverlay">
+  <div class="feedback-modal-bg" onclick="closeFeedbackModal()"></div>
+  <div class="feedback-modal-box" role="dialog" aria-labelledby="feedbackModalTitle">
+    <button type="button" class="feedback-modal-close" onclick="closeFeedbackModal()" aria-label="关闭">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 class="feedback-modal-title" id="feedbackModalTitle">用户反馈</h2>
+    <p class="feedback-modal-desc">请描述问题或建议，可附上截图。提交后将同步至后台处理（演示将输出到控制台）。</p>
+    <label class="feedback-modal-label" for="feedbackModalText">反馈内容</label>
+    <textarea id="feedbackModalText" class="feedback-modal-textarea" rows="5" maxlength="2000" placeholder="请输入反馈内容"></textarea>
+    <label class="feedback-modal-label">图片附件 <span class="settings-optional">（选填，最多 6 张）</span></label>
+    <div class="feedback-modal-toolbar">
+      <input type="file" id="feedbackModalFileInput" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="display:none" onchange="onFeedbackFilesChange(event)">
+      <button type="button" class="btn-settings-ghost" onclick="document.getElementById('feedbackModalFileInput').click()">添加图片</button>
+      <span class="settings-hint" style="margin:0">单张不超过 4MB</span>
+    </div>
+    <div id="feedbackModalPreview" class="feedback-preview feedback-preview--modal" aria-live="polite"></div>
+    <button type="button" class="feedback-modal-submit" onclick="submitUserFeedback()">提交反馈</button>
+  </div>
+</div>
+
+<!-- 数字教材阅读页 -->
+<div class="reader-overlay" id="readerOverlay" aria-hidden="true">
+  <div class="reader-shell">
+    <header class="reader-top">
+      <div class="reader-top-left">
+        <button type="button" class="reader-icon-btn" onclick="closeReader()" title="返回" aria-label="返回">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </button>
+        <h1 class="reader-doc-title" id="readerDocTitle">教材阅读</h1>
+      </div>
+      <nav class="reader-mode-bar" id="readerModeBar" aria-label="阅读模式快捷入口"></nav>
+      <div class="reader-top-right">
+        <button type="button" class="reader-ai-entry" onclick="readerToggleAi()" title="AI 阅读助手" aria-label="打开 AI 阅读助手">
+          <span class="reader-ai-entry-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="readerAiEntryGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#a855f7"/>
+                  <stop offset="0.45" stop-color="#ec4899"/>
+                  <stop offset="1" stop-color="#f97316"/>
+                </linearGradient>
+              </defs>
+              <path fill="url(#readerAiEntryGrad)" d="M12 2l1.2 4.2h4.3l-3.5 2.6 1.3 4.2L12 12.3 8.7 13l1.3-4.2L6.5 6.2h4.3L12 2z"/>
+              <path fill="url(#readerAiEntryGrad)" opacity="0.85" d="M19 14l.8 2.6h2.7l-2.2 1.6.8 2.6-2.1-1.5-2.1 1.5.8-2.6-2.2-1.6h2.7L19 14z"/>
+              <path fill="url(#readerAiEntryGrad)" opacity="0.7" d="M4 16l.6 1.8h2l-1.6 1.2.6 1.8-1.6-1.1L3.4 21l.6-1.8-1.6-1.2h2L4 16z"/>
+            </svg>
+          </span>
+          <span class="reader-ai-entry-text">AI助手</span>
+        </button>
+      </div>
+    </header>
+    <div class="reader-body">
+      <aside class="reader-sidebar" id="readerSidebar">
+        <div class="reader-sidebar-head">
+          <span class="reader-sidebar-title">目录</span>
+          <button type="button" class="reader-sidebar-toc-toggle" id="readerTocToggle" onclick="readerToggleTocCollapse()" title="收起/展开目录" aria-label="收起或展开目录">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="reader-toc-tree" id="readerTocTree"></div>
+      </aside>
+      <main class="reader-main" id="readerMain">
+        <article class="reader-article" id="readerArticle"></article>
+      </main>
+      <aside class="reader-toolbar" id="readerToolbar" aria-label="阅读工具栏">
+        <div class="reader-tool-slot" id="readerToolDisplay">
+          <button type="button" class="reader-tool-rail-btn" onclick="readerToggleDisplayPanel()" title="显示设置（字号、背景）">
+            <span class="reader-tool-rail-icon" aria-hidden="true">Aa</span>
+          </button>
+          <div class="reader-toolbar-pop reader-toolbar-pop--display" id="readerDisplayPopover" role="dialog" aria-label="显示设置">
+            <div class="reader-pop-section">
+              <div class="reader-popover-title">字号</div>
+              <input type="range" class="reader-font-range" id="readerFontRange" min="14" max="22" step="1" value="17" oninput="readerApplyFontSize(this.value)">
+              <span class="reader-font-val" id="readerFontVal">17px</span>
+            </div>
+            <div class="reader-pop-section">
+              <div class="reader-popover-title">阅读背景</div>
+              <div class="reader-bg-swatches">
+                <button type="button" class="reader-bg-swatch reader-bg-swatch--paper" data-bg="paper" onclick="readerSetBg('paper')" title="白纸"></button>
+                <button type="button" class="reader-bg-swatch reader-bg-swatch--sepia" data-bg="sepia" onclick="readerSetBg('sepia')" title="护眼米黄"></button>
+                <button type="button" class="reader-bg-swatch reader-bg-swatch--dark" data-bg="dark" onclick="readerSetBg('dark')" title="夜间"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="reader-tool-slot" id="readerToolSearch">
+          <button type="button" class="reader-tool-rail-btn" onclick="readerToggleSearch()" title="搜索">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+          <div class="reader-toolbar-pop reader-toolbar-pop--search" id="readerSearchPopover">
+            <input type="search" class="reader-search-input" id="readerSearchInput" placeholder="搜索目录关键词…" autocomplete="off" oninput="readerOnSearchInput()">
+          </div>
+        </div>
+        <button type="button" class="reader-tool-rail-btn" onclick="readerToggleNotes()" title="笔记">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+        </button>
+      </aside>
+    </div>
+  </div>
+  <aside class="reader-drawer reader-ai-drawer" id="readerAiDrawer" aria-hidden="true">
+    <div class="reader-drawer-head">
+      <span>AI 阅读助手</span>
+      <button type="button" class="reader-drawer-close" onclick="readerToggleAi()" aria-label="关闭">×</button>
+    </div>
+    <div class="reader-ai-messages" id="readerAiMessages"></div>
+    <div class="reader-ai-input-row">
+      <input type="text" class="reader-ai-input" id="readerAiInput" placeholder="提问本课知识点、生词…" onkeydown="if(event.key==='Enter')readerSendAi()">
+      <button type="button" class="reader-ai-send" onclick="readerSendAi()">发送</button>
+    </div>
+  </aside>
+  <aside class="reader-drawer reader-notes-drawer" id="readerNotesDrawer" aria-hidden="true">
+    <div class="reader-drawer-head">
+      <span>我的笔记</span>
+      <button type="button" class="reader-drawer-close" onclick="readerToggleNotes()" aria-label="关闭">×</button>
+    </div>
+    <div class="reader-notes-list" id="readerNotesList"></div>
+    <div class="reader-notes-add">
+      <textarea class="reader-notes-textarea" id="readerNotesTextarea" placeholder="记录本节要点…" rows="3"></textarea>
+      <button type="button" class="reader-notes-save" onclick="readerSaveNote()">保存笔记</button>
+    </div>
+  </aside>
 </div>
 
 <!-- Book Picker for Class -->

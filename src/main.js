@@ -14,43 +14,115 @@ const PAL=[
 
 const SM={语文:0,数学:1,英语:2,物理:3,化学:4,生物:5,历史:6,地理:7,政治:0,信息技术:1,美术:3,音乐:5};
 
+/** 数字教材书目：readModeKeys 为后台配置的阅读模式，仅展示已配置的项（可省略或 [] 表示不展示） */
+const BOOK_READ_MODES = [
+  { key: 'read', label: '阅读模式' },
+  { key: 'av', label: '视听模式' },
+  { key: 'task', label: '任务模式' },
+  { key: 'kg', label: '知识图谱' },
+];
+
+function resolveLibReadModes(b) {
+  const keys = b && Array.isArray(b.readModeKeys) ? b.readModeKeys : [];
+  if (!keys.length) return [];
+  return keys.map((k) => BOOK_READ_MODES.find((a) => a.key === k)).filter(Boolean);
+}
+
+const MODE_ARROW_SVG_DETAIL =
+  '<svg class="mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+
+/** 教材详情「学习模式」单卡（点击进入阅读器并选中对应模式） */
+function detailModeCardHtml(modeKey) {
+  const blocks = {
+    read: {
+      cls: 'mi-read',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+      name: '阅读模式',
+      desc: '沉浸式阅读体验，支持批注、书签、笔记和划线标注',
+    },
+    av: {
+      cls: 'mi-av',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+      name: '视听模式',
+      desc: '配套微课视频、课文朗读、名师讲解音频资源',
+    },
+    task: {
+      cls: 'mi-task',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+      name: '任务模式',
+      desc: '章节练习、课后作业、自测试卷，自动批改与错题收集',
+    },
+    kg: {
+      cls: 'mi-kg',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/><line x1="5" y1="19" x2="19" y2="19"/></svg>',
+      name: '知识图谱',
+      desc: '可视化知识结构，智能关联跨章节概念与考点脉络',
+    },
+  };
+  const m = blocks[modeKey];
+  if (!m) return '';
+  return `<div class="mode-card" onclick="openReaderFromDetailMode('${modeKey}')">
+          <div class="mode-icon ${m.cls}">${m.icon}</div>
+          <div class="mode-info">
+            <div class="mode-name">${m.name}</div>
+            <div class="mode-desc">${m.desc}</div>
+          </div>
+          ${MODE_ARROW_SVG_DETAIL}
+        </div>`;
+}
+
+function detailLearningModesSectionHtml(modeEntries) {
+  if (!modeEntries.length) return '';
+  const cards = modeEntries.map((e) => detailModeCardHtml(e.key)).join('');
+  if (!cards.trim()) return '';
+  return `<div class="mode-section">
+      <div class="intro-heading"><span class="bar"></span>学习模式</div>
+      <div class="mode-grid">
+        ${cards}
+      </div>
+    </div>`;
+}
+
 const books=[
-  {t:'语文',s:'必修上册',g:'高一',p:'人民教育出版社',tp:'r',sub:'语文'},
-  {t:'语文',s:'必修下册',g:'高一',p:'人民教育出版社',tp:'r',sub:'语文'},
-  {t:'数学',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'数学'},
-  {t:'数学',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'数学'},
-  {t:'英语',s:'必修第一册',g:'高一',p:'外语教学与研究出版社',tp:'r',sub:'英语'},
-  {t:'英语',s:'必修第二册',g:'高一',p:'外语教学与研究出版社',tp:'r',sub:'英语'},
-  {t:'物理',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'物理'},
-  {t:'物理',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'物理'},
-  {t:'化学',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'化学'},
-  {t:'化学',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'化学'},
-  {t:'生物',s:'必修一 分子与细胞',g:'高一',p:'人民教育出版社',tp:'r',sub:'生物'},
-  {t:'历史',s:'必修 中外历史纲要(上)',g:'高一',p:'人民教育出版社',tp:'r',sub:'历史'},
-  {t:'地理',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'地理'},
-  {t:'政治',s:'必修一 中国特色社会主义',g:'高一',p:'人民教育出版社',tp:'r',sub:'政治'},
-  {t:'信息技术',s:'必修一 数据与计算',g:'高一',p:'教育科学出版社',tp:'o',sub:'信息技术'},
-  {t:'美术',s:'必修 美术鉴赏',g:'高一',p:'人民美术出版社',tp:'o',sub:'美术'},
-  {t:'音乐',s:'必修 音乐鉴赏',g:'高一',p:'人民音乐出版社',tp:'o',sub:'音乐'},
-  {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',tp:'r',sub:'语文'},
-  {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'数学'},
-  {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',tp:'r',sub:'英语'},
-  {t:'物理',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'物理'},
-  {t:'化学',s:'选择性必修一',g:'高二',p:'人民教育出版社',tp:'r',sub:'化学'},
-  {t:'生物',s:'选择性必修一 稳态与调节',g:'高二',p:'人民教育出版社',tp:'r',sub:'生物'},
-  {t:'历史',s:'选择性必修一 国家制度',g:'高二',p:'人民教育出版社',tp:'r',sub:'历史'},
+  {t:'语文',s:'必修上册',g:'高一',p:'人民教育出版社',tp:'r',sub:'语文',paperDigital:true,editor:'温儒敏',readModeKeys:['read','av','task','kg']},
+  {t:'语文',s:'必修下册',g:'高一',p:'人民教育出版社',tp:'r',sub:'语文',editor:'温儒敏',readModeKeys:['read','av','task']},
+  {t:'数学',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'数学',paperDigital:true,editor:'章建跃 等',readModeKeys:['read','task']},
+  {t:'数学',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'数学',editor:'章建跃 等',readModeKeys:['read']},
+  {t:'英语',s:'必修第一册',g:'高一',p:'外语教学与研究出版社',tp:'r',sub:'英语',editor:'陈琳 等',readModeKeys:['read','av','task','kg']},
+  {t:'英语',s:'必修第二册',g:'高一',p:'外语教学与研究出版社',tp:'r',sub:'英语',editor:'陈琳 等',readModeKeys:['read','av']},
+  {t:'物理',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'物理',paperDigital:true,editor:'彭前程 等',readModeKeys:['read','av','task']},
+  {t:'物理',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'物理',editor:'彭前程 等',readModeKeys:['read']},
+  {t:'化学',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'化学',editor:'王晶 等',readModeKeys:['read','task','kg']},
+  {t:'化学',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'化学',editor:'王晶 等'},
+  {t:'生物',s:'必修一 分子与细胞',g:'高一',p:'人民教育出版社',tp:'r',sub:'生物',editor:'赵占良 等',readModeKeys:['read']},
+  {t:'历史',s:'必修 中外历史纲要(上)',g:'高一',p:'人民教育出版社',tp:'r',sub:'历史',editor:'张海鹏 等',readModeKeys:['read','av','task','kg']},
+  {t:'地理',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'地理',editor:'樊杰 等',readModeKeys:['read','av']},
+  {t:'政治',s:'必修一 中国特色社会主义',g:'高一',p:'人民教育出版社',tp:'r',sub:'政治',editor:'秦宣 等',readModeKeys:['read','task']},
+  {t:'信息技术',s:'必修一 数据与计算',g:'高一',p:'教育科学出版社',tp:'o',sub:'信息技术',paperDigital:true,editor:'李晓明 等',readModeKeys:['read','av','task','kg']},
+  {t:'美术',s:'必修 美术鉴赏',g:'高一',p:'人民美术出版社',tp:'o',sub:'美术',editor:'黄宗贤 等',readModeKeys:['read','av']},
+  {t:'音乐',s:'必修 音乐鉴赏',g:'高一',p:'人民音乐出版社',tp:'o',sub:'音乐',editor:'于润洋 等',readModeKeys:['read']},
+  {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',tp:'r',sub:'语文',editor:'温儒敏',readModeKeys:['read','av','task','kg']},
+  {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'数学',editor:'章建跃 等',readModeKeys:['read','task','kg']},
+  {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',tp:'r',sub:'英语',editor:'陈琳 等',readModeKeys:['read','av','task']},
+  {t:'物理',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'物理',editor:'彭前程 等',readModeKeys:['read','av','task','kg']},
+  {t:'化学',s:'选择性必修一',g:'高二',p:'人民教育出版社',tp:'r',sub:'化学',editor:'王晶 等',readModeKeys:['read']},
+  {t:'生物',s:'选择性必修一 稳态与调节',g:'高二',p:'人民教育出版社',tp:'r',sub:'生物',editor:'赵占良 等',readModeKeys:['read','task']},
+  {t:'历史',s:'选择性必修一 国家制度',g:'高二',p:'人民教育出版社',tp:'r',sub:'历史',editor:'张海鹏 等',readModeKeys:['read','av','task','kg']},
 ];
 
 const myB=[
-  {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',tp:'r',sub:'语文',pr:78},
-  {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'数学',pr:45},
-  {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',tp:'r',sub:'英语',pr:92},
-  {t:'物理',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'物理',pr:30},
-  {t:'化学',s:'选择性必修一',g:'高二',p:'人民教育出版社',tp:'r',sub:'化学',pr:15},
-  {t:'历史',s:'选择性必修一 国家制度',g:'高二',p:'人民教育出版社',tp:'r',sub:'历史',pr:60},
+  {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',tp:'r',sub:'语文',pr:78,paperDigital:true,editor:'温儒敏',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
+  {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'数学',pr:45,editor:'章建跃 等'},
+  {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',tp:'r',sub:'英语',pr:92,paperDigital:true,editor:'陈琳 等',actionKeys:['read','task','questionBank','learnStats']},
+  {t:'物理',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'物理',pr:30,editor:'彭前程 等',actionKeys:['read','resourceLib']},
+  {t:'化学',s:'选择性必修一',g:'高二',p:'人民教育出版社',tp:'r',sub:'化学',pr:15,editor:'王晶 等'},
+  {t:'历史',s:'选择性必修一 国家制度',g:'高二',p:'人民教育出版社',tp:'r',sub:'历史',pr:60,paperDigital:true,editor:'张海鹏 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
 ];
 
 function c(sub){return PAL[SM[sub]??0]}
+
+/** 后台配置：是否为纸数融合教材 */
+function isPaperDigital(b){return !!(b&&b.paperDigital)}
 
 // Book descriptions
 const DESC={
@@ -123,8 +195,427 @@ const TOC={
 // Prices
 const PRICES={语文:18.90,数学:22.50,英语:24.00,物理:20.80,化学:19.50,生物:18.00,历史:17.50,地理:16.80,政治:17.00,信息技术:25.00,美术:15.50,音乐:14.00};
 
+/** 数字教材：未购时默认可试读目录前 N 条，其余锁定；演示内「立即购买」写入会话 */
+const LIB_PREVIEW_LESSON_COUNT = 2;
+const libPurchasedBookKeys = new Set();
+function libBookKey(b) {
+  return b ? `${b.t}|${b.s}` : '';
+}
+function isLibBookPurchased(b) {
+  return !!(b && libPurchasedBookKeys.has(libBookKey(b)));
+}
+let detailViewContext = { bookIdx: null, source: null, b: null };
+
 // === CLASS GROUP DATA ===
 const CURRENT_USER = '李明远';
+
+const SCHOOL_STORAGE_KEY = 'sc-digital-school';
+const SCHOOL_CODE_MAP = {
+  CD7Z2026: '成都市第七中学',
+  SCDEMO001: '四川省示范中学',
+  SCH2026SC: '四川师范大学附属中学',
+};
+
+function normalizeSchoolCode(s) {
+  return String(s).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+function getBoundSchool() {
+  try {
+    const raw = localStorage.getItem(SCHOOL_STORAGE_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (o && typeof o.name === 'string' && o.name) return o;
+  } catch (_) {}
+  return null;
+}
+
+function setBoundSchool(school) {
+  if (school) localStorage.setItem(SCHOOL_STORAGE_KEY, JSON.stringify(school));
+  else localStorage.removeItem(SCHOOL_STORAGE_KEY);
+}
+
+function resolveSchoolName(code) {
+  const n = normalizeSchoolCode(code);
+  if (SCHOOL_CODE_MAP[n]) return SCHOOL_CODE_MAP[n];
+  const t = code.trim();
+  if (t.length <= 10) return `合作学校（${t}）`;
+  return `合作学校（${t.slice(0, 10)}…）`;
+}
+
+let schoolModalMode = 'bind';
+
+function openSchoolModal(mode) {
+  schoolModalMode = mode === 'change' ? 'change' : 'bind';
+  const input = document.getElementById('schoolActivationCode');
+  const school = getBoundSchool();
+  if (input) {
+    input.value = schoolModalMode === 'change' && school ? school.code : '';
+    input.classList.remove('school-modal-input--err');
+  }
+  document.getElementById('schoolModalOverlay')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => input?.focus(), 100);
+}
+
+function closeSchoolModal() {
+  document.getElementById('schoolModalOverlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function confirmSchoolBind() {
+  const input = document.getElementById('schoolActivationCode');
+  const raw = (input?.value || '').trim();
+  if (raw.length < 4) {
+    input?.classList.add('school-modal-input--err');
+    setTimeout(() => input?.classList.remove('school-modal-input--err'), 1500);
+    return;
+  }
+  const name = resolveSchoolName(raw);
+  setBoundSchool({ name, code: raw });
+  closeSchoolModal();
+  refreshSchoolDependentPages();
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:320;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
+  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已绑定：${name}`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
+}
+
+function clearSchoolBind() {
+  setBoundSchool(null);
+  refreshSchoolDependentPages();
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:320;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease';
+  toast.textContent = '已解除学校绑定';
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
+}
+
+const PROFILE_STORAGE_KEY = 'sc-user-profile';
+const DEFAULT_USER_PROFILE = {
+  nickname: '李明远',
+  phone: '13800138000',
+  roleLine: '成都七中 · 高二教师',
+  avatarDataUrl: '',
+};
+
+function getUserProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_USER_PROFILE };
+    const o = JSON.parse(raw);
+    return { ...DEFAULT_USER_PROFILE, ...o };
+  } catch (_) {
+    return { ...DEFAULT_USER_PROFILE };
+  }
+}
+
+function saveUserProfile(partial) {
+  const next = { ...getUserProfile(), ...partial };
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
+  syncSidebarUser();
+}
+
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
+}
+
+function syncSidebarUser() {
+  const u = getUserProfile();
+  const av = document.getElementById('sidebarAvatar') || document.querySelector('.sidebar-foot .avatar');
+  if (av) {
+    if (u.avatarDataUrl) {
+      av.style.backgroundImage = `url(${JSON.stringify(u.avatarDataUrl)})`;
+      av.style.backgroundSize = 'cover';
+      av.style.backgroundPosition = 'center';
+      av.textContent = '';
+    } else {
+      av.style.backgroundImage = '';
+      av.style.backgroundSize = '';
+      av.style.backgroundPosition = '';
+      const n = (u.nickname && u.nickname.trim()) ? u.nickname.trim().slice(0, 1) : '用';
+      av.textContent = n;
+    }
+  }
+  const nameEl = document.getElementById('sidebarUserName') || document.querySelector('.sidebar-foot .user-name');
+  if (nameEl) nameEl.textContent = u.nickname || DEFAULT_USER_PROFILE.nickname;
+  const schoolEl = document.getElementById('sidebarUserSchool');
+  const sch = getBoundSchool();
+  if (schoolEl) {
+    schoolEl.textContent = sch && sch.name ? sch.name : '成都市第七中学（演示）';
+    schoolEl.hidden = false;
+  }
+}
+
+function refreshSchoolDependentPages() {
+  if (document.getElementById('page-my')?.classList.contains('active')) renderMy();
+  if (document.getElementById('page-settings')?.classList.contains('active')) renderSettings();
+  syncSidebarUser();
+}
+
+/** 设置页 — 用户反馈待上传图片（演示，提交后对接 FormData 接口） */
+let feedbackDraftFiles = [];
+
+function resetFeedbackDraft() {
+  feedbackDraftFiles = [];
+}
+
+function onFeedbackFilesChange(e) {
+  const input = e.target;
+  const picked = Array.from(input.files || []);
+  input.value = '';
+  for (const f of picked) {
+    if (feedbackDraftFiles.length >= 6) break;
+    if (!/^image\//.test(f.type)) continue;
+    if (f.size > 4 * 1024 * 1024) {
+      showProfileToast('单张图片请小于 4MB');
+      continue;
+    }
+    feedbackDraftFiles.push(f);
+  }
+  renderFeedbackPreview();
+}
+
+function removeFeedbackImage(idx) {
+  feedbackDraftFiles.splice(idx, 1);
+  renderFeedbackPreview();
+}
+
+function renderFeedbackPreview() {
+  const box = document.getElementById('feedbackModalPreview');
+  if (!box) return;
+  box.querySelectorAll('.feedback-thumb').forEach((img) => {
+    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  });
+  box.innerHTML = feedbackDraftFiles
+    .map(
+      (f, i) => `
+    <div class="feedback-thumb-wrap">
+      <img class="feedback-thumb" src="${URL.createObjectURL(f)}" alt="">
+      <button type="button" class="feedback-thumb-remove" onclick="removeFeedbackImage(${i})" aria-label="移除">×</button>
+    </div>`
+    )
+    .join('');
+}
+
+function openFeedbackModal() {
+  resetFeedbackDraft();
+  const ta = document.getElementById('feedbackModalText');
+  const fi = document.getElementById('feedbackModalFileInput');
+  if (ta) ta.value = '';
+  if (fi) fi.value = '';
+  renderFeedbackPreview();
+  document.getElementById('feedbackModalOverlay')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => ta?.focus(), 100);
+}
+
+function closeFeedbackModal() {
+  document.getElementById('feedbackModalOverlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+  resetFeedbackDraft();
+  const ta = document.getElementById('feedbackModalText');
+  const fi = document.getElementById('feedbackModalFileInput');
+  if (ta) ta.value = '';
+  if (fi) fi.value = '';
+  renderFeedbackPreview();
+}
+
+function submitUserFeedback() {
+  const ta = document.getElementById('feedbackModalText');
+  const text = (ta && ta.value.trim()) || '';
+  if (!text && feedbackDraftFiles.length === 0) {
+    showProfileToast('请填写反馈内容或上传图片');
+    return;
+  }
+  const fd = new FormData();
+  fd.append('content', text);
+  fd.append('client', 'web-demo');
+  feedbackDraftFiles.forEach((f, i) => fd.append(`image_${i}`, f, f.name));
+  console.log('[用户反馈·演示]', {
+    content: text,
+    images: feedbackDraftFiles.map((f) => ({ name: f.name, size: f.size })),
+  });
+  closeFeedbackModal();
+  showProfileToast('反馈已提交，我们会尽快处理（演示）');
+}
+
+function showProfileToast(msg) {
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:320;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
+}
+
+function renderSettings() {
+  const u = getUserProfile();
+  const sch = getBoundSchool();
+  const schoolHtml = sch
+    ? `<div class="settings-school-line"><span class="settings-school-name">${escAttr(sch.name)}</span><span class="settings-school-sub">已绑定</span></div>
+       <div class="settings-school-actions">
+         <button type="button" class="btn-settings-ghost" onclick="openSchoolModal('change')">更换学校</button>
+         <button type="button" class="settings-link-danger" onclick="clearSchoolBind()">解除绑定</button>
+       </div>`
+    : `<div class="settings-school-line muted">未绑定学校</div>
+       <div class="settings-school-actions">
+         <button type="button" class="btn-settings-primary" onclick="openSchoolModal('bind')">绑定学校</button>
+       </div>`;
+
+  const avLetter = escAttr((u.nickname && u.nickname.trim()) ? u.nickname.trim().slice(0, 1) : '用');
+
+  document.getElementById('page-settings').innerHTML = `
+    <div class="settings-page">
+      <div class="settings-card">
+        <h2 class="settings-card-title">个人信息</h2>
+        <div class="settings-profile-block">
+          <div class="settings-avatar-col">
+            <div class="settings-avatar${u.avatarDataUrl ? ' settings-avatar--img' : ''}" id="settingsAvatarDisplay">${u.avatarDataUrl ? '' : avLetter}</div>
+            <input type="file" id="settingsAvatarInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handleSettingsAvatar(event)">
+            <button type="button" class="btn-settings-text" onclick="document.getElementById('settingsAvatarInput').click()">更换头像</button>
+            <p class="settings-hint">支持 JPG、PNG，建议小于 2MB</p>
+          </div>
+          <div class="settings-fields-col">
+            <label class="settings-label" for="settingsNickname">昵称</label>
+            <input type="text" id="settingsNickname" class="settings-input" maxlength="32" value="${escAttr(u.nickname)}" placeholder="请输入昵称" autocomplete="nickname">
+            <label class="settings-label">学校 <span class="settings-optional">（选填）</span></label>
+            ${schoolHtml}
+          </div>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h2 class="settings-card-title">账户信息</h2>
+        <label class="settings-label" for="settingsPhone">手机号</label>
+        <input type="tel" id="settingsPhone" class="settings-input" maxlength="11" value="${escAttr(u.phone)}" placeholder="11 位手机号码" autocomplete="tel">
+        <p class="settings-hint">用于登录与安全验证，修改后请牢记新号码</p>
+        <button type="button" class="btn-settings-save" onclick="saveSettingsProfile()">保存资料</button>
+      </div>
+      <div class="settings-card settings-card--compact">
+        <h2 class="settings-card-title">安全</h2>
+        <button type="button" class="settings-row-action" onclick="openPasswordModal()">
+          <span>修改密码</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="settings-card settings-card--compact">
+        <h2 class="settings-card-title">帮助与反馈</h2>
+        <button type="button" class="settings-row-action" onclick="openFeedbackModal()">
+          <span>用户反馈</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="settings-logout-wrap">
+        <button type="button" class="btn-settings-logout" onclick="logoutAccount()">退出账号</button>
+      </div>
+    </div>`;
+  const avDisp = document.getElementById('settingsAvatarDisplay');
+  if (avDisp && u.avatarDataUrl) {
+    avDisp.style.backgroundImage = `url(${JSON.stringify(u.avatarDataUrl)})`;
+    avDisp.classList.add('settings-avatar--img');
+    avDisp.textContent = '';
+  }
+}
+
+function saveSettingsProfile() {
+  const nick = document.getElementById('settingsNickname')?.value.trim() || '';
+  const phone = document.getElementById('settingsPhone')?.value.trim() || '';
+  if (!nick) {
+    showProfileToast('请填写昵称');
+    return;
+  }
+  if (phone && !/^1\d{10}$/.test(phone)) {
+    showProfileToast('请输入正确的 11 位手机号');
+    return;
+  }
+  saveUserProfile({ nickname: nick, phone });
+  showProfileToast('资料已保存');
+  renderSettings();
+}
+
+function handleSettingsAvatar(e) {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f || !/^image\//.test(f.type)) return;
+  if (f.size > 2 * 1024 * 1024) {
+    showProfileToast('图片请小于 2MB');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    saveUserProfile({ avatarDataUrl: reader.result });
+    showProfileToast('头像已更新');
+    renderSettings();
+  };
+  reader.readAsDataURL(f);
+}
+
+function openPasswordModal() {
+  const o = document.getElementById('pwdOld');
+  const a = document.getElementById('pwdNew');
+  const b = document.getElementById('pwdNew2');
+  const err = document.getElementById('pwdModalErr');
+  if (o) o.value = '';
+  if (a) a.value = '';
+  if (b) b.value = '';
+  if (err) err.textContent = '';
+  document.getElementById('pwdModalOverlay')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePasswordModal() {
+  document.getElementById('pwdModalOverlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function confirmPasswordChange() {
+  const oldP = document.getElementById('pwdOld')?.value || '';
+  const n1 = document.getElementById('pwdNew')?.value || '';
+  const n2 = document.getElementById('pwdNew2')?.value || '';
+  const errEl = document.getElementById('pwdModalErr');
+  if (!oldP) {
+    if (errEl) errEl.textContent = '请输入当前密码';
+    return;
+  }
+  if (n1.length < 6) {
+    if (errEl) errEl.textContent = '新密码至少 6 位';
+    return;
+  }
+  if (n1 !== n2) {
+    if (errEl) errEl.textContent = '两次输入的新密码不一致';
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+  closePasswordModal();
+  showProfileToast('密码已更新（演示）');
+}
+
+function logoutAccount() {
+  if (!confirm('确定退出当前账号？未同步的数据可能丢失。')) return;
+  localStorage.removeItem(PROFILE_STORAGE_KEY);
+  localStorage.removeItem(SCHOOL_STORAGE_KEY);
+  syncSidebarUser();
+  showProfileToast('已退出账号');
+  go('library');
+}
 
 const classGroups=[
   {
@@ -133,20 +624,21 @@ const classGroups=[
     books:[
       {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',sub:'语文'},
       {t:'语文',s:'必修下册',g:'高一',p:'人民教育出版社',sub:'语文'},
+      {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',sub:'数学'},
     ],
     students:[
-      {name:'王思涵',id:'2024030101',bp:[95,88],last:'今天'},
-      {name:'张子墨',id:'2024030102',bp:[82,79],last:'今天'},
-      {name:'刘雨桐',id:'2024030103',bp:[78,65],last:'昨天'},
-      {name:'陈思远',id:'2024030104',bp:[70,60],last:'昨天'},
-      {name:'赵梓涵',id:'2024030105',bp:[66,55],last:'2天前'},
-      {name:'孙晓彤',id:'2024030106',bp:[62,50],last:'2天前'},
-      {name:'周文博',id:'2024030107',bp:[55,48],last:'3天前'},
-      {name:'吴思琪',id:'2024030108',bp:[50,40],last:'3天前'},
-      {name:'郑浩然',id:'2024030109',bp:[42,35],last:'4天前'},
-      {name:'马欣怡',id:'2024030110',bp:[35,28],last:'5天前'},
-      {name:'黄子轩',id:'2024030111',bp:[28,20],last:'6天前'},
-      {name:'林雅琪',id:'2024030112',bp:[22,15],last:'1周前'},
+      {name:'王思涵',id:'2024030101',bp:[95,88,72],last:'今天'},
+      {name:'张子墨',id:'2024030102',bp:[82,79,68],last:'今天'},
+      {name:'刘雨桐',id:'2024030103',bp:[78,65,61],last:'昨天'},
+      {name:'陈思远',id:'2024030104',bp:[70,60,58],last:'昨天'},
+      {name:'赵梓涵',id:'2024030105',bp:[66,55,52],last:'2天前'},
+      {name:'孙晓彤',id:'2024030106',bp:[62,50,48],last:'2天前'},
+      {name:'周文博',id:'2024030107',bp:[55,48,44],last:'3天前'},
+      {name:'吴思琪',id:'2024030108',bp:[50,40,39],last:'3天前'},
+      {name:'郑浩然',id:'2024030109',bp:[42,35,33],last:'4天前'},
+      {name:'马欣怡',id:'2024030110',bp:[35,28,30],last:'5天前'},
+      {name:'黄子轩',id:'2024030111',bp:[28,20,25],last:'6天前'},
+      {name:'林雅琪',id:'2024030112',bp:[22,15,20],last:'1周前'},
     ]
   },
   {
@@ -175,9 +667,51 @@ const classGroups=[
     students:[
       {name:'周洋',id:'2024030301',bp:[90],last:'今天'},
       {name:'吴静',id:'2024030302',bp:[76],last:'昨天'},
+      {name:'李明远',id:'2024030303',bp:[68],last:'昨天'},
     ]
   },
 ];
+
+/** 当前用户可见的班级：创建者或已加入的成员 */
+function isClassVisibleForUser(cls) {
+  return cls.admin === CURRENT_USER || cls.students.some((s) => s.name === CURRENT_USER);
+}
+
+/** 班级教材条目与「我的教材」是否为同一本书（与添加教材逻辑一致） */
+function classBookMatchesMyBook(cb, b) {
+  return cb.t === b.t && cb.s === b.s;
+}
+
+/** 本书被哪些（当前用户可见的）班级用作教材，一书可对应多班 */
+function getClassNamesForMyBook(b) {
+  const names = [];
+  for (const cls of classGroups) {
+    if (!isClassVisibleForUser(cls)) continue;
+    if (cls.books.some((cb) => classBookMatchesMyBook(cb, b))) names.push(cls.name);
+  }
+  return names;
+}
+
+/** 教材详情弹层 — 运用于组群（仅「我的教材」） */
+function mkDetailGroupUseHtml(b) {
+  const names = getClassNamesForMyBook(b);
+  if (!names.length) {
+    return `<div class="detail-group-use">
+      <div class="detail-group-use-label">运用于组群</div>
+      <p class="detail-group-use-empty">暂未关联组群</p>
+    </div>`;
+  }
+  return `<div class="detail-group-use">
+    <div class="detail-group-use-label">运用于组群</div>
+    <div class="detail-group-tags" title="${names.map(escAttr).join('、')}">
+      ${names.map((n) => `<span class="detail-group-tag">${escAttr(n)}</span>`).join('')}
+    </div>
+  </div>`;
+}
+
+function refreshMyPageIfActive() {
+  if (document.getElementById('page-my')?.classList.contains('active')) renderMy();
+}
 
 const AVATAR_COLORS=[
   ['#4aaa85','#78c8a8'],['#4a8ec8','#7ab4de'],['#d48548','#e8a870'],
@@ -188,9 +722,12 @@ const AVATAR_COLORS=[
 function openDetail(bookIdx, source){
   const list = source === 'my' ? myB : books;
   const b = list[bookIdx];
+  detailViewContext = { bookIdx, source, b };
   const [c1,c2] = c(b.sub);
   const price = PRICES[b.sub] || 19.90;
   const isMine = source === 'my';
+  const libUnlocked = source === 'lib' && isLibBookPurchased(b);
+  const tocFullAccess = isMine || libUnlocked;
 
   // Hero
   document.getElementById('detailHero').innerHTML = `
@@ -202,13 +739,13 @@ function openDetail(bookIdx, source){
     </div>
     <div class="detail-info">
       <div class="detail-book-title">${b.t} · ${b.s}</div>
-      <div class="detail-book-sub">${b.g} · ${b.tp==='r'?'必修教材':'选修教材'}</div>
+      <div class="detail-book-sub">${b.g}${isPaperDigital(b)?' · <span class="detail-pd-badge">纸数融合</span>':''}</div>
       <div class="detail-meta-grid">
         <div class="meta-item"><span class="meta-label">出版社</span><span class="meta-value">${b.p}</span></div>
-        <div class="meta-item"><span class="meta-label">版本</span><span class="meta-value">2024年修订版</span></div>
+        <div class="meta-item"><span class="meta-label">主编</span><span class="meta-value">${(b&&b.editor)?b.editor:'—'}</span></div>
         <div class="meta-item"><span class="meta-label">ISBN</span><span class="meta-value">978-7-${Math.floor(1000+Math.random()*9000)}-${Math.floor(1000+Math.random()*9000)}-${Math.floor(1+Math.random()*9)}</span></div>
-        <div class="meta-item"><span class="meta-label">格式</span><span class="meta-value">PDF / EPUB</span></div>
       </div>
+      ${isMine ? mkDetailGroupUseHtml(b) : ''}
       <div class="detail-actions">
         ${isMine
           ? `<button class="btn-buy purchased">已购买</button>
@@ -216,69 +753,29 @@ function openDetail(bookIdx, source){
                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                打印教材
              </button>`
-          : `<button class="btn-buy" onclick="handleBuy(this)">立即购买</button>
-             <button class="btn-trial" onclick="openRedeem()">
+          : libUnlocked
+            ? `<button type="button" class="btn-buy purchased" disabled>已购买</button>`
+            : `<button type="button" class="btn-buy" onclick="handleBuy(this)">立即购买</button>
+             <button type="button" class="btn-trial" onclick="openRedeem()">
                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:4px;vertical-align:-2px"><path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 2v6M8 2v6"/></svg>兑换码
              </button>
-             <button class="btn-trial">免费试读</button>
+             <button type="button" class="btn-trial">免费试读</button>
              <span class="detail-price">¥${price.toFixed(2)}</span>
              <span class="detail-price-orig">¥${(price*1.5).toFixed(2)}</span>`
         }
+        <button type="button" class="btn-enter-reader" onclick="openReaderFromDetail()">进入阅读</button>
       </div>
     </div>`;
 
-  // Intro
+  // Intro（我的教材：四种学习模式；数字教材：按 readModeKeys 展示）
   const desc = DESC[b.sub] || '本教材严格按照国家课程标准编写，内容科学规范，注重学科核心素养的培养。';
-  const modeHtml = isMine ? `
-    <div class="mode-section">
-      <div class="intro-heading"><span class="bar"></span>学习模式</div>
-      <div class="mode-grid">
-        <div class="mode-card" onclick="alertMode('阅读模式')">
-          <div class="mode-icon mi-read">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-          </div>
-          <div class="mode-info">
-            <div class="mode-name">阅读模式</div>
-            <div class="mode-desc">沉浸式阅读体验，支持批注、书签、笔记和划线标注</div>
-          </div>
-          <svg class="mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="mode-card" onclick="alertMode('视听模式')">
-          <div class="mode-icon mi-av">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </div>
-          <div class="mode-info">
-            <div class="mode-name">视听模式</div>
-            <div class="mode-desc">配套微课视频、课文朗读、名师讲解音频资源</div>
-          </div>
-          <svg class="mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="mode-card" onclick="alertMode('任务模式')">
-          <div class="mode-icon mi-task">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          </div>
-          <div class="mode-info">
-            <div class="mode-name">任务模式</div>
-            <div class="mode-desc">章节练习、课后作业、自测试卷，自动批改与错题收集</div>
-          </div>
-          <svg class="mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-        <div class="mode-card" onclick="alertMode('知识图谱')">
-          <div class="mode-icon mi-kg">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/><line x1="5" y1="19" x2="19" y2="19"/></svg>
-          </div>
-          <div class="mode-info">
-            <div class="mode-name">知识图谱</div>
-            <div class="mode-desc">可视化知识结构，智能关联跨章节概念与考点脉络</div>
-          </div>
-          <svg class="mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </div>
-    </div>` : '';
+  const modeSectionHtml = isMine
+    ? detailLearningModesSectionHtml(BOOK_READ_MODES)
+    : detailLearningModesSectionHtml(resolveLibReadModes(b));
 
   document.getElementById('pane-intro').innerHTML = `
-    ${isMine ? modeHtml : ''}
-    <div class="intro-section" ${isMine?'style="margin-top:28px"':''}>
+    ${modeSectionHtml}
+    <div class="intro-section" ${modeSectionHtml ? 'style="margin-top:28px"' : ''}>
       <div class="intro-heading"><span class="bar"></span>教材简介</div>
       <div class="intro-text">${desc}</div>
     </div>
@@ -287,17 +784,20 @@ function openDetail(bookIdx, source){
       <div class="intro-text">本教材具有以下特色：紧扣课程标准，科学设计教学内容；注重情境创设，激发学习兴趣；设置多样化练习，巩固知识要点；融入信息技术，支持数字化学习。配套丰富的数字资源，包括教学课件、微课视频、在线练习等。</div>
       <div class="intro-tags">
         <span class="intro-tag">${b.g}</span>
-        <span class="intro-tag">${b.tp==='r'?'必修':'选修'}</span>
+        ${isPaperDigital(b)?'<span class="intro-tag intro-tag--pd">纸数融合</span>':''}
         <span class="intro-tag">数字版</span>
         <span class="intro-tag">配套资源</span>
         <span class="intro-tag">课程标准</span>
       </div>
     </div>`;
 
-  // TOC
+  // TOC（商城未购：前 LIB_PREVIEW_LESSON_COUNT 条可试读，其余带锁；已购/我的教材：全部开放）
   const toc = TOC[b.sub] || [{u:'第一单元',ls:['第1课','第2课','第3课']},{u:'第二单元',ls:['第4课','第5课','第6课']}];
   const tocColor = c1;
+  let lessonSeq = 0;
+  const lockSvg = `<svg class="toc-lesson-lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
   document.getElementById('pane-toc').innerHTML = `
+    ${source === 'lib' && !tocFullAccess ? `<p class="toc-trial-hint">试读：未购买时默认可阅读前 <strong>${LIB_PREVIEW_LESSON_COUNT}</strong> 条目录；购买本教材后解锁全部章节。</p>` : ''}
     <ul class="toc-list">
       ${toc.map((unit,ui) => `
         <li class="toc-unit${ui===0?' open':''}">
@@ -307,12 +807,16 @@ function openDetail(bookIdx, source){
             <svg class="toc-unit-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
           <div class="toc-lessons">
-            ${unit.ls.map(l => `
-              <div class="toc-lesson">
+            ${unit.ls.map((l) => {
+              const locked = !tocFullAccess && lessonSeq >= LIB_PREVIEW_LESSON_COUNT;
+              lessonSeq += 1;
+              return `
+              <div class="toc-lesson${locked ? ' toc-lesson--locked' : ''}"${locked ? ' onclick="onTocLockedClick(event)" role="button" tabindex="0"' : ''}>
                 <span class="toc-lesson-dot" style="background:${tocColor}"></span>
-                <span>${l}</span>
-                ${!isMine?`<svg class="toc-lesson-lock" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`:''}
-              </div>`).join('')}
+                <span class="toc-lesson-text">${l}</span>
+                ${locked ? lockSvg : ''}
+              </div>`;
+            }).join('')}
           </div>
         </li>`).join('')}
     </ul>`;
@@ -340,9 +844,15 @@ function toggleUnit(el){
 }
 
 function handleBuy(btn){
+  const { source, b, bookIdx } = detailViewContext;
+  if (source === 'lib' && b) {
+    libPurchasedBookKeys.add(libBookKey(b));
+    openDetail(bookIdx, 'lib');
+    showProfileToast('购买成功，已解锁全部章节（演示）');
+    return;
+  }
   btn.textContent='已购买';
   btn.classList.add('purchased');
-  // hide trial & price
   const actions = btn.parentElement;
   const trial = actions.querySelector('.btn-trial');
   const price = actions.querySelector('.detail-price');
@@ -352,9 +862,18 @@ function handleBuy(btn){
   if(orig) orig.style.display='none';
 }
 
+function onTocLockedClick(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  showProfileToast('该章节需购买教材后解锁');
+}
+
 // Close on Escape
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeRedeem();closeDetail();closeCreateClass();closeClassDetail();closeBookPicker();closeJoinClass()}
+  if(e.key==='Escape'){
+    if(document.getElementById('readerOverlay')?.classList.contains('open')){closeReader();return;}
+    closeRedeem();closeDetail();closeCreateClass();closeClassDetail();closeBookPicker();closeJoinClass();closeSchoolModal();closePasswordModal();closeFeedbackModal();
+  }
 });
 
 // Redeem code
@@ -412,16 +931,6 @@ function handlePrint(e){
     btn.style.borderColor='';
     btn.style.background='';
   },2500);
-}
-
-// Mode alert
-function alertMode(name){
-  closeDetail();
-  const toast=document.createElement('div');
-  toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
-  toast.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>正在进入「${name}」...`;
-  document.body.appendChild(toast);
-  setTimeout(()=>{toast.style.opacity='0';toast.style.transition='opacity 0.3s';setTimeout(()=>toast.remove(),300)},2000);
 }
 
 // === CLASS GROUP FUNCTIONS ===
@@ -586,7 +1095,17 @@ function openClassDetail(idx){
 
   const titleBadge=isClassAdmin
     ?`<span class="admin-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>管理员</span>`
-    :`<span class="member-pill">学生成员</span>`;
+    :`<span class="member-pill">组员</span>`;
+
+  const dangerBlock=isClassAdmin
+    ?`<div class="class-detail-danger">
+        <button type="button" class="btn-class-dissolve" onclick="dissolveClass(${idx})">解散群组</button>
+        <p class="class-detail-danger-hint">解散后班级将从所有成员的「我的班级」中移除，且不可恢复。</p>
+      </div>`
+    :`<div class="class-detail-danger">
+        <button type="button" class="btn-class-leave" onclick="leaveClass(${idx})">退出群组</button>
+        <p class="class-detail-danger-hint">退出后你将不再出现在该班级成员列表中，可凭邀请码再次加入。</p>
+      </div>`;
 
   const inviteBlock=isClassAdmin?`
     <div class="invite-section">
@@ -688,7 +1207,8 @@ function openClassDetail(idx){
           </div>`;
         }).join('')}
       </div>
-    </div>`;
+    </div>
+    ${dangerBlock}`;
 
   document.getElementById('classOverlay').classList.add('open');
   document.body.style.overflow='hidden';
@@ -701,6 +1221,48 @@ function openClassDetail(idx){
 function closeClassDetail(){
   document.getElementById('classOverlay').classList.remove('open');
   document.body.style.overflow='';
+}
+
+function dissolveClass(idx) {
+  const cls = classGroups[idx];
+  if (!cls || cls.admin !== CURRENT_USER) return;
+  if (!confirm('确定解散该班级？解散后所有成员将无法再从「我的班级」进入本群，此操作不可恢复。')) return;
+  classGroups.splice(idx, 1);
+  currentClassIdx = null;
+  closeClassDetail();
+  renderMy();
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
+  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已解散班级「${cls.name}」`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
+}
+
+function leaveClass(idx) {
+  const cls = classGroups[idx];
+  if (!cls || cls.admin === CURRENT_USER) return;
+  const si = cls.students.findIndex((s) => s.name === CURRENT_USER);
+  if (si < 0) return;
+  if (!confirm('确定退出该班级？退出后将不再显示在「我的班级」中。')) return;
+  cls.students.splice(si, 1);
+  currentClassIdx = null;
+  closeClassDetail();
+  renderMy();
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
+  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已退出班级「${cls.name}」`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
 }
 
 function copyCode(btn,code){
@@ -738,7 +1300,7 @@ function addBookToClass(classIdx,bookIdx,el){
   const cls=classGroups[classIdx];
   if(!cls||cls.admin!==CURRENT_USER)return;
   const bk=myB[bookIdx];
-  cls.books.push({t:bk.t,s:bk.s,g:bk.g,p:bk.p,sub:bk.sub});
+  cls.books.push({t:bk.t,s:bk.s,g:bk.g,p:bk.p,sub:bk.sub,paperDigital:!!bk.paperDigital,editor:bk.editor||''});
   // Add random progress for existing students
   cls.students.forEach(st=>{st.bp.push(Math.floor(Math.random()*60))});
   el.classList.add('added');
@@ -746,6 +1308,7 @@ function addBookToClass(classIdx,bookIdx,el){
   // Refresh detail
   closeBookPicker();
   openClassDetail(classIdx);
+  refreshMyPageIfActive();
 }
 
 function removeClassBook(classIdx,bookIdx){
@@ -754,6 +1317,96 @@ function removeClassBook(classIdx,bookIdx){
   cls.books.splice(bookIdx,1);
   cls.students.forEach(st=>{st.bp.splice(bookIdx,1)});
   openClassDetail(classIdx);
+  refreshMyPageIfActive();
+}
+
+/** 我的教材：单书功能元数据（「阅读」也可通过封面/信息区进入详情） */
+const BOOK_MY_ACTIONS = [
+  { key: 'read', label: '阅读' },
+  { key: 'cloudHandout', label: '智能云讲义' },
+  { key: 'teach', label: '教学' },
+  { key: 'task', label: '任务' },
+  { key: 'questionBank', label: '题库' },
+  { key: 'internship', label: '岗位实习' },
+  { key: 'resourceLib', label: '资源库' },
+  { key: 'learnStats', label: '学习统计' },
+];
+
+function resolveBookActionEntries(b) {
+  const keys = b && Array.isArray(b.actionKeys) ? b.actionKeys : [];
+  if (!keys.length) return [];
+  return keys.map((k) => BOOK_MY_ACTIONS.find((a) => a.key === k)).filter(Boolean);
+}
+
+function bookShortcut(bookIdx, actionKey) {
+  const b = myB[bookIdx];
+  if (!b) return;
+  if (actionKey === 'read') {
+    openReader(bookIdx, 'my');
+    return;
+  }
+  const act = BOOK_MY_ACTIONS.find((a) => a.key === actionKey);
+  const actionName = act ? act.label : actionKey;
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 24px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;max-width:min(420px,calc(100vw - 48px));text-align:center;line-height:1.5';
+  toast.innerHTML = `<span style="opacity:0.9">「${b.t} · ${b.s}」</span><br><span style="font-weight:500">${actionName}</span> <span style="opacity:0.75">（演示入口，可对接业务）</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2400);
+}
+
+/** 数字教材卡片：阅读模式入口（与详情页「学习模式」四类一致，按 readModeKeys 展示） */
+function libReadModeShortcut(bookIdx, modeKey) {
+  const b = books[bookIdx];
+  if (!b) return;
+  if (modeKey === 'read') {
+    openReader(bookIdx, 'lib', 'read');
+    return;
+  }
+  const m = BOOK_READ_MODES.find((x) => x.key === modeKey);
+  if (!m) return;
+  closeDetail();
+  const toast = document.createElement('div');
+  toast.style.cssText =
+    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 24px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;max-width:min(420px,calc(100vw - 48px));text-align:center;line-height:1.5';
+  toast.innerHTML = `<span style="opacity:0.9">「${b.t} · ${b.s}」</span><br><span style="font-weight:500">正在进入「${m.label}」</span> <span style="opacity:0.75">（演示）</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2400);
+}
+
+function mkLibReadModesRow(b, bookIdx) {
+  const entries = resolveLibReadModes(b);
+  if (!entries.length) return '';
+  return `<div class="lib-read-modes" onclick="event.stopPropagation()">
+    <div class="lib-read-modes-label">阅读模式</div>
+    <div class="lib-read-modes-scroll" role="toolbar" aria-label="阅读模式">
+      ${entries.map(
+        (a) =>
+          `<button type="button" class="lib-read-mode-btn" onclick="event.stopPropagation();libReadModeShortcut(${bookIdx},'${a.key}')">${a.label}</button>`
+      ).join('')}
+    </div>
+  </div>`;
+}
+
+function mkMyActionRow(b, i) {
+  const entries = resolveBookActionEntries(b);
+  if (!entries.length) return '';
+  return `<div class="card-actions" onclick="event.stopPropagation()">
+    <div class="card-actions-scroll" role="toolbar" aria-label="教材功能">
+    ${entries.map(
+      (a) =>
+        `<button type="button" class="card-action" onclick="event.stopPropagation();bookShortcut(${i},'${a.key}')">${a.label}</button>`
+    ).join('')}
+    </div>
+  </div>`;
 }
 
 function mkCard(b,i,wp){
@@ -763,7 +1416,20 @@ function mkCard(b,i,wp){
   if(wp) st=`<div class="card-st st-ok" title="已在书架"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
   let pg='';
   if(wp) pg=`<div class="prog"><div class="prog-track"><div class="prog-fill" style="width:${b.pr}%;background:${pc}"></div></div><span class="prog-pct">${b.pr}%</span></div>`;
-  return `<div class="card" style="animation-delay:${i*0.04}s" onclick="openDetail(${i},'${wp?'my':'lib'}')">${st}<div class="cover"><div class="cover-inner" style="background:linear-gradient(145deg,${c1},${c2})"><span class="cover-grade">${b.g}</span><div class="cover-name">${b.t}</div><div class="cover-sub">${b.s}</div></div></div><div class="detail"><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span><span class="tag ${b.tp==='r'?'tag-req':'tag-opt'}">${b.tp==='r'?'必修':'选修'}</span></div>${pg}</div></div>`;
+  const pdTag=isPaperDigital(b)?`<span class="tag tag-pd">纸数融合</span>`:'';
+  const actions=wp?mkMyActionRow(b,i):'';
+  const cardCls=wp?'card card--mine':'card';
+  const coverInner=`<div class="cover-inner" style="background:linear-gradient(145deg,${c1},${c2})"><span class="cover-grade">${b.g}</span><div class="cover-name">${b.t}</div><div class="cover-sub">${b.s}</div></div>`;
+  if(wp){
+    const open=`onclick="openDetail(${i},'my')"`;
+    return `<div class="${cardCls}" style="animation-delay:${i*0.04}s">${st}<div class="cover cover--open" ${open} title="打开教材详情">${coverInner}</div><div class="detail"><div class="detail-main" ${open}><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span>${pdTag}</div>${pg}</div>${actions}</div></div>`;
+  }
+  const bookIdx=i;
+  const libModes=mkLibReadModesRow(b,bookIdx);
+  if(libModes){
+    return `<div class="card card--lib" style="animation-delay:${bookIdx*0.04}s">${st}<div class="cover" onclick="openDetail(${bookIdx},'lib')">${coverInner}</div><div class="detail"><div class="detail-shop-main" onclick="openDetail(${bookIdx},'lib')"><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span>${pdTag}</div>${pg}</div>${libModes}</div></div>`;
+  }
+  return `<div class="${cardCls}" style="animation-delay:${bookIdx*0.04}s" onclick="openDetail(${bookIdx},'lib')">${st}<div class="cover">${coverInner}</div><div class="detail"><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span>${pdTag}</div>${pg}</div></div>`;
 }
 
 let fG='全部',fS='全部科目';
@@ -784,18 +1450,51 @@ function renderLib(){
   const sc=SS.map(s=>`<div class="pill ${s===fS?'active':''}" onclick="setSubjectFilter('${s}')">${s}</div>`).join('');
 
   const bk=list.length
-    ?`<div class="grid">${list.map((b,i)=>mkCard(b,i,false)).join('')}</div>`
-    :`<div style="text-align:center;padding:80px;color:var(--stone)"><p style="font-size:14px;margin-bottom:4px">未找到匹配的教材</p><p style="font-size:12px;color:var(--silver)">请尝试调整筛选条件</p></div>`;
+    ?`<div class="grid">${list.map((b)=>mkCard(b,books.indexOf(b),false)).join('')}</div>`
+    :`<div style="text-align:center;padding:80px;color:var(--stone)"><p style="font-size:14px;margin-bottom:4px">未找到匹配的图书</p><p style="font-size:12px;color:var(--silver)">请尝试调整筛选条件</p></div>`;
 
   document.getElementById('page-library').innerHTML=`
     <div class="filters">${gc}<div class="pill-sep"></div>${sc}</div>
-    <div class="sec-head"><div class="sec-title"><span class="dot"></span>教材资源</div><div class="sec-extra">共 ${list.length} 本</div></div>${bk}`;
+    <div class="sec-head"><div class="sec-title"><span class="dot"></span>数字教材</div><div class="sec-extra">共 ${list.length} 本</div></div>${bk}`;
 }
 
 function renderMy(){
-  const avg=Math.round(myB.reduce((s,b)=>s+b.pr,0)/myB.length);
+  const school = getBoundSchool();
+  const schoolCardHtml = school
+    ? `<div class="school-bind-card school-bind-card--in-grid">
+      <div class="school-bind-main">
+        <div class="school-bind-ic">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="school-bind-text">
+          <div class="school-bind-label">当前学校</div>
+          <div class="school-bind-value">${school.name}</div>
+        </div>
+      </div>
+      <div class="school-bind-actions">
+        <button type="button" class="school-bind-link" onclick="event.stopPropagation();clearSchoolBind()">解除绑定</button>
+        <button type="button" class="btn-school-ghost" onclick="event.stopPropagation();openSchoolModal('change')">更换学校</button>
+      </div>
+    </div>`
+    : `<div class="school-bind-card school-bind-card--in-grid">
+      <div class="school-bind-main">
+        <div class="school-bind-ic">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="school-bind-text">
+          <div class="school-bind-label">学校信息</div>
+          <div class="school-bind-value muted">尚未绑定学校（可选）。绑定后可与学校课程、班级服务关联</div>
+        </div>
+      </div>
+      <div class="school-bind-actions">
+        <button type="button" class="btn-school-primary" onclick="event.stopPropagation();openSchoolModal('bind')">绑定学校</button>
+      </div>
+    </div>`;
 
-  const classHtml=classGroups.map((cls,i)=>{
+  const myClassEntries = classGroups
+    .map((cls, i) => ({ cls, i }))
+    .filter(({ cls }) => isClassVisibleForUser(cls));
+  const classHtml=myClassEntries.map(({cls,i})=>{
     const avgPr=cls.students.length?Math.round(cls.students.reduce((s,st)=>{
       const sp=st.bp.length?Math.round(st.bp.reduce((a,b)=>a+b,0)/st.bp.length):0;
       return s+sp;
@@ -826,35 +1525,39 @@ function renderMy(){
   }).join('');
 
   document.getElementById('page-my').innerHTML=`
-    <div class="stats">
-      <div class="stat-box"><div class="stat-ic si-mint"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="stat-data"><div class="stat-val">${myB.length}</div><div class="stat-lab">我的教材总数</div></div></div>
-      <div class="stat-box stat-box--action" onclick="openRedeem()" role="button" tabindex="0">
-        <div class="stat-ic si-lavender"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 2v6M8 2v6"/></svg></div>
-        <div class="stat-data"><div class="stat-val stat-val--action">兑换教材</div><div class="stat-lab">输入兑换码添加至书架</div></div>
+    <div class="my-action-row">
+      <div class="join-class-entry join-class-entry--duo" onclick="openRedeem()" role="button" tabindex="0">
+        <div class="join-class-entry-ic join-class-entry-ic--lavender">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 2v6M8 2v6"/></svg>
+        </div>
+        <div class="join-class-entry-text">
+          <div class="join-class-entry-title">兑换教材</div>
+          <div class="join-class-entry-desc">输入兑换码，将数字教材添加至书架</div>
+        </div>
+        <svg class="join-class-entry-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="stat-box"><div class="stat-ic si-peach"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="stat-data"><div class="stat-val">${avg}%</div><div class="stat-lab">平均学习进度</div></div></div>
-    </div>
-    <div class="join-class-entry" onclick="openJoinClass()" role="button" tabindex="0">
-      <div class="join-class-entry-ic">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <div class="join-class-entry join-class-entry--duo" onclick="openJoinClass()" role="button" tabindex="0">
+        <div class="join-class-entry-ic join-class-entry-ic--mint">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="join-class-entry-text">
+          <div class="join-class-entry-title">加入班级</div>
+          <div class="join-class-entry-desc">输入管理员提供的邀请码加入对应班级</div>
+        </div>
+        <svg class="join-class-entry-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="join-class-entry-text">
-        <div class="join-class-entry-title">通过邀请码加入班级</div>
-        <div class="join-class-entry-desc">管理员向你发送邀请后，输入对方提供的邀请码即可加入对应班级</div>
-      </div>
-      <svg class="join-class-entry-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
     <div class="sec-head"><div class="sec-title"><span class="dot"></span>我的书架</div><div class="sec-extra">管理教材 →</div></div>
-    <div class="grid">${myB.map((b,i)=>mkCard(b,i,true)).join('')}</div>
+    <div class="grid grid--my-books">${myB.map((b,i)=>mkCard(b,i,true)).join('')}</div>
     <div class="class-section">
       <div class="sec-head">
         <div class="sec-title"><span class="dot"></span>我的班级</div>
         <div class="sec-head-actions">
-          <button type="button" class="btn-join-inline" onclick="event.stopPropagation();openJoinClass()">通过邀请码加入</button>
-          <span class="sec-extra">共 ${classGroups.length} 个班级</span>
+          <span class="sec-extra">共 ${myClassEntries.length} 个班级</span>
         </div>
       </div>
       <div class="class-grid">
+        ${schoolCardHtml}
         ${classHtml}
         <div class="class-card-create" onclick="openCreateClass()">
           <div class="class-create-icon">
@@ -870,21 +1573,397 @@ function go(p){
   document.querySelectorAll('.nav-item[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===p));
   document.querySelectorAll('.page').forEach(el=>el.classList.toggle('active',el.id===`page-${p}`));
   const t=document.getElementById('pTitle'),h=document.getElementById('pHint');
-  if(p==='library'){t.textContent='数字教材';h.textContent='浏览全部数字教材资源';renderLib()}
-  else{t.textContent='我的教材';h.textContent='管理已添加的教材与学习进度';renderMy()}
+  const sw=document.getElementById('topbarSearchWrap');
+  if(sw) sw.style.display=p==='library'?'':'none';
+  if(p==='library'){t.textContent='数字教材';h.textContent='浏览、选购全部上架数字教材';renderLib()}
+  else if(p==='my'){t.textContent='我的教材';h.textContent='管理已添加的教材与学习进度';renderMy()}
+  else if(p==='settings'){t.textContent='设置';h.textContent='账号与个人信息';renderSettings()}
 }
 
 renderLib();
+syncSidebarUser();
 
 document.getElementById('joinClassCode')?.addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault();doJoinClass();}
 });
 
+document.getElementById('schoolActivationCode')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();confirmSchoolBind();}
+});
+
+document.getElementById('pwdNew2')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();confirmPasswordChange();}
+});
+
+// === 数字教材阅读页 ===
+/** 三级目录演示数据（可对接接口替换） */
+const READER_OUTLINE = [
+  {
+    title: '第一单元 阅读与鉴赏',
+    children: [
+      {
+        title: '第1课 沁园春·长沙',
+        children: [
+          { title: '学习提示', cid: 'r1' },
+          { title: '课文正文', cid: 'r2' },
+        ],
+      },
+      {
+        title: '第2课 立在地球边上放号',
+        children: [{ title: '综合练习', cid: 'r3' }],
+      },
+    ],
+  },
+  {
+    title: '第二单元 劳动光荣',
+    children: [
+      {
+        title: '第5课 喜看稻菽千重浪',
+        children: [{ title: '拓展阅读', cid: 'r4' }],
+      },
+    ],
+  },
+];
+
+let readerContext = { bookIdx: null, source: null, b: null, currentCid: null };
+const readerNotesStore = [];
+
+function firstReaderCid(nodes) {
+  for (const n of nodes) {
+    if (n.cid) return n.cid;
+    if (n.children) {
+      const c = firstReaderCid(n.children);
+      if (c) return c;
+    }
+  }
+  return null;
+}
+
+function renderReaderTocNodes(nodes, depth) {
+  return nodes
+    .map((node) => {
+      if (node.cid) {
+        const st = escAttr(node.title);
+        return `<div class="reader-toc-leaf" data-cid="${node.cid}" data-search="${st}" onclick="readerGo('${node.cid}')">${node.title}</div>`;
+      }
+      return `<div class="reader-toc-group open" data-depth="${depth}">
+      <button type="button" class="reader-toc-head" onclick="readerToggleTocGroup(this)">
+        <span class="reader-toc-chev">▾</span>
+        <span class="reader-toc-head-text">${node.title}</span>
+      </button>
+      <div class="reader-toc-children">${renderReaderTocNodes(node.children, depth + 1)}</div>
+    </div>`;
+    })
+    .join('');
+}
+
+function readerToggleTocGroup(btn) {
+  const g = btn && btn.closest('.reader-toc-group');
+  if (g) g.classList.toggle('open');
+}
+
+function readerGo(cid) {
+  readerContext.currentCid = cid;
+  document.querySelectorAll('#readerTocTree .reader-toc-leaf').forEach((el) => {
+    el.classList.toggle('is-active', el.dataset.cid === cid);
+  });
+  const el = document.getElementById('readerArticle');
+  if (el) el.innerHTML = buildReaderArticleHtml(cid, readerContext.b);
+  document.getElementById('readerMain')?.scrollTo(0, 0);
+}
+
+function buildReaderArticleHtml(cid, b) {
+  const bt = b ? `${b.t} · ${b.s}` : '本教材';
+  const blocks = {
+    r1: `<div class="reader-block"><h2>学习提示</h2><p>本课为「${bt}」的导读与学法提示。请结合单元目标，关注关键词句与情感脉络。</p><p>阅读时建议先通读全篇，再分段批注：标出意象、修辞与抒情线索。</p></div>`,
+    r2: `<div class="reader-block"><h2>课文正文</h2><p>独立寒秋，湘江北去，橘子洲头。看万山红遍，层林尽染；漫江碧透，百舸争流……</p><p>（以下为演示正文占位，正式环境由 CMS 或排版引擎渲染。）</p>
+      <figure class="reader-figure"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" alt="插图" loading="lazy"><figcaption class="reader-figcap">图 · 山川意象（示意）</figcaption></figure>
+      <div class="reader-gallery"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=80" alt="" loading="lazy"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" alt="" loading="lazy"></div>
+      </div>`,
+    r3: `<div class="reader-block"><h2>综合练习</h2><p>请概括本诗主旨，并结合时代背景说明「问苍茫大地，谁主沉浮」的意蕴。</p></div>`,
+    r4: `<div class="reader-block"><h2>拓展阅读</h2><p>对比阅读：新闻通讯与报告文学在叙事视角上的差异。</p>
+      <div class="reader-video" onclick="readerVideoDemo()" role="button" tabindex="0">配套微课 · 点击播放（演示）</div>
+      <div class="reader-quiz" data-correct="B" data-done="">
+        <p class="reader-quiz-q">下列对「劳动精神」理解最恰当的一项是？</p>
+        <div class="reader-quiz-options">
+          <button type="button" class="reader-quiz-opt" data-choice="A" onclick="readerAnswerQuiz(this,'A')">A. 仅指体力劳动</button>
+          <button type="button" class="reader-quiz-opt" data-choice="B" onclick="readerAnswerQuiz(this,'B')">B. 体脑结合、敬业与创造的价值取向</button>
+          <button type="button" class="reader-quiz-opt" data-choice="C" onclick="readerAnswerQuiz(this,'C')">C. 与学科学习无关</button>
+        </div>
+        <p class="reader-quiz-feedback" style="margin:0"></p>
+      </div></div>`,
+  };
+  return blocks[cid] || `<div class="reader-block"><p>本节暂无演示内容。</p></div>`;
+}
+
+function readerAnswerQuiz(btn, choice) {
+  const quiz = btn.closest('.reader-quiz');
+  if (!quiz || quiz.dataset.done === '1') return;
+  const correct = quiz.dataset.correct;
+  quiz.querySelectorAll('.reader-quiz-opt').forEach((o) => {
+    o.classList.remove('is-right', 'is-wrong');
+    o.disabled = true;
+    if (o.dataset.choice === correct) o.classList.add('is-right');
+    else if (o.dataset.choice === choice) o.classList.add('is-wrong');
+  });
+  quiz.dataset.done = '1';
+  const fb = quiz.querySelector('.reader-quiz-feedback');
+  if (fb) fb.textContent = choice === correct ? '回答正确。' : `正确选项为 ${correct}。`;
+}
+
+function readerVideoDemo() {
+  showProfileToast('播放配套视频（演示，可对接点播地址）');
+}
+
+/** 阅读顶栏模式 pill 前的彩色小图标（与模式 key 对应） */
+function readerModePillIconHtml(modeKey) {
+  const ic = {
+    read: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#15803d" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path fill="#22c55e" d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path fill="#4ade80" d="M6.5 2H18v18H6.5A2.5 2.5 0 0 1 4 17.5v-13A2.5 2.5 0 0 1 6.5 2z" opacity=".4"/></svg></span>`,
+    av: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#8b5cf6"/><path fill="#fff" d="M10 8.5l5.5 3.5-5.5 3.5v-7z"/></svg></span>`,
+    task: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="14" height="18" rx="2" fill="#f97316"/><path fill="#fff" fill-opacity=".9" d="M8 7h8v1.8H8V7zm0 3.2h5v1.8H8v-1.8z"/><path stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M8.3 16.2l2.2 2.2 4.2-5"/></svg></span>`,
+    kg: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="8" r="3" fill="#0ea5e9"/><circle cx="18.5" cy="8" r="3" fill="#6366f1"/><circle cx="12" cy="17" r="3" fill="#ec4899"/><path stroke="#94a3b8" stroke-width="1.3" stroke-linecap="round" d="M7.8 10.2l4.4 5M16.2 10.2l-4.4 5"/></svg></span>`,
+  };
+  return ic[modeKey] || '';
+}
+
+function openReader(bookIdx, source, initialModeKey) {
+  const list = source === 'my' ? myB : books;
+  const b = list[bookIdx];
+  if (!b) return;
+  readerContext = { bookIdx, source, b, currentCid: null };
+  const tEl = document.getElementById('readerDocTitle');
+  if (tEl) tEl.textContent = `${b.t} · ${b.s}`;
+  const tocEl = document.getElementById('readerTocTree');
+  if (tocEl) tocEl.innerHTML = renderReaderTocNodes(READER_OUTLINE, 0);
+  const validModes = new Set(['read', 'av', 'task', 'kg']);
+  const initial = validModes.has(initialModeKey) ? initialModeKey : 'read';
+  const bar = document.getElementById('readerModeBar');
+  if (bar) {
+    bar.innerHTML = [
+      ['read', '阅读模式'],
+      ['av', '视听模式'],
+      ['task', '任务模式'],
+      ['kg', '知识图谱'],
+    ]
+      .map(
+        ([k, lab]) =>
+          `<button type="button" data-mode="${k}" class="reader-mode-pill${initial === k ? ' reader-mode-pill--on' : ''}" onclick="readerQuickMode('${k}')">${readerModePillIconHtml(k)}<span class="reader-mode-pill-label">${lab}</span></button>`
+      )
+      .join('');
+  }
+  const first = firstReaderCid(READER_OUTLINE);
+  if (first) readerGo(first);
+  const ov = document.getElementById('readerOverlay');
+  if (ov) {
+    ov.classList.add('open');
+    ov.setAttribute('aria-hidden', 'false');
+  }
+  document.body.style.overflow = 'hidden';
+  readerSetBg('paper', true);
+  readerApplyFontSize(document.getElementById('readerFontRange')?.value || '17', true);
+  renderReaderNotesList();
+  if (initial !== 'read') {
+    readerQuickMode(initial);
+  }
+}
+
+function closeReader() {
+  const ov = document.getElementById('readerOverlay');
+  if (ov) {
+    ov.classList.remove('open', 'ai-open', 'notes-open', 'toc-collapsed');
+    ov.setAttribute('aria-hidden', 'true');
+  }
+  document.body.style.overflow = '';
+  readerCloseToolSlots();
+}
+
+function openReaderFromDetail() {
+  const { bookIdx, source, b } = detailViewContext;
+  if (bookIdx == null || !b) return;
+  closeDetail();
+  openReader(bookIdx, source);
+}
+
+/** 详情「学习模式」卡片：关闭详情并进入阅读器，顶栏选中对应模式 */
+function openReaderFromDetailMode(modeKey) {
+  const { bookIdx, source, b } = detailViewContext;
+  if (bookIdx == null || !b) return;
+  const valid = new Set(['read', 'av', 'task', 'kg']);
+  const k = valid.has(modeKey) ? modeKey : 'read';
+
+  if (source === 'lib' && !isLibBookPurchased(b)) {
+    if (k === 'read') {
+      closeDetail();
+      openReader(bookIdx, 'lib', 'read');
+      return;
+    }
+    closeDetail();
+    const m = BOOK_READ_MODES.find((x) => x.key === k);
+    if (!m) return;
+    const toast = document.createElement('div');
+    toast.style.cssText =
+      'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 24px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;max-width:min(420px,calc(100vw - 48px));text-align:center;line-height:1.5';
+    toast.innerHTML = `<span style="opacity:0.9">「${b.t} · ${b.s}」</span><br><span style="font-weight:500">正在进入「${m.label}」</span> <span style="opacity:0.75">（演示）</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(() => toast.remove(), 300);
+    }, 2400);
+    return;
+  }
+
+  closeDetail();
+  openReader(bookIdx, source, k);
+}
+
+function readerQuickMode(k) {
+  document.querySelectorAll('.reader-mode-pill').forEach((p) => p.classList.remove('reader-mode-pill--on'));
+  document.querySelector(`.reader-mode-pill[data-mode="${k}"]`)?.classList.add('reader-mode-pill--on');
+  if (k === 'read') return;
+  const labels = { av: '视听模式', task: '任务模式', kg: '知识图谱' };
+  showProfileToast(`正在进入「${labels[k] || k}」（演示）`);
+}
+
+function readerToggleAi() {
+  readerCloseToolSlots();
+  const ov = document.getElementById('readerOverlay');
+  if (!ov) return;
+  ov.classList.toggle('ai-open');
+  ov.classList.remove('notes-open');
+  if (ov.classList.contains('ai-open') && !document.getElementById('readerAiMessages')?.dataset.inited) {
+    const box = document.getElementById('readerAiMessages');
+    if (box) {
+      box.innerHTML = `<div class="reader-ai-bubble">你好，我是阅读助手。可为你讲解本课生词、段落大意与阅读题思路。</div>`;
+      box.dataset.inited = '1';
+    }
+  }
+}
+
+function readerSendAi() {
+  const inp = document.getElementById('readerAiInput');
+  const q = (inp && inp.value.trim()) || '';
+  if (!q) return;
+  const box = document.getElementById('readerAiMessages');
+  if (!box) return;
+  box.insertAdjacentHTML(
+    'beforeend',
+    `<div class="reader-ai-bubble reader-ai-bubble--user">${escAttr(q)}</div><div class="reader-ai-bubble">已收到。演示环境不连接真实大模型，可对接业务接口后返回答案。</div>`
+  );
+  inp.value = '';
+  box.scrollTop = box.scrollHeight;
+}
+
+function readerToggleNotes() {
+  readerCloseToolSlots();
+  const ov = document.getElementById('readerOverlay');
+  if (!ov) return;
+  ov.classList.toggle('notes-open');
+  ov.classList.remove('ai-open');
+}
+
+function readerSaveNote() {
+  const ta = document.getElementById('readerNotesTextarea');
+  const text = (ta && ta.value.trim()) || '';
+  if (!text) {
+    showProfileToast('请先输入笔记内容');
+    return;
+  }
+  readerNotesStore.push({ text, t: Date.now(), cid: readerContext.currentCid });
+  if (ta) ta.value = '';
+  renderReaderNotesList();
+  showProfileToast('笔记已保存（演示）');
+}
+
+function renderReaderNotesList() {
+  const list = document.getElementById('readerNotesList');
+  if (!list) return;
+  if (!readerNotesStore.length) {
+    list.innerHTML = '<p style="color:var(--silver);font-size:12px;margin:0">暂无笔记</p>';
+    return;
+  }
+  list.innerHTML = readerNotesStore
+    .map(
+      (n) =>
+        `<div class="reader-note-item"><div class="reader-note-time">${new Date(n.t).toLocaleString()}</div>${escAttr(n.text)}</div>`
+    )
+    .reverse()
+    .join('');
+}
+
+function readerToggleDisplayPanel() {
+  const d = document.getElementById('readerToolDisplay');
+  const s = document.getElementById('readerToolSearch');
+  if (!d) return;
+  d.classList.toggle('is-open');
+  s?.classList.remove('is-open');
+}
+
+function readerToggleSearch() {
+  const d = document.getElementById('readerToolDisplay');
+  const s = document.getElementById('readerToolSearch');
+  if (!s) return;
+  s.classList.toggle('is-open');
+  d?.classList.remove('is-open');
+  if (s.classList.contains('is-open')) {
+    setTimeout(() => document.getElementById('readerSearchInput')?.focus(), 30);
+  }
+}
+
+function readerOnSearchInput() {
+  const q = (document.getElementById('readerSearchInput')?.value || '').trim().toLowerCase();
+  document.querySelectorAll('#readerTocTree .reader-toc-leaf').forEach((el) => {
+    const t = (el.dataset.search || el.textContent || '').toLowerCase();
+    el.classList.toggle('reader-toc-dim', !!q && !t.includes(q));
+  });
+}
+
+function readerCloseToolSlots() {
+  document.querySelectorAll('.reader-tool-slot.is-open').forEach((el) => el.classList.remove('is-open'));
+}
+
+function readerClosePopovers() {
+  readerCloseToolSlots();
+}
+
+function readerApplyFontSize(px, silent) {
+  const n = Math.min(22, Math.max(14, parseInt(px, 10) || 17));
+  const main = document.getElementById('readerMain');
+  if (main) main.style.setProperty('--reader-font', `${n}px`);
+  const fv = document.getElementById('readerFontVal');
+  if (fv) fv.textContent = `${n}px`;
+  const r = document.getElementById('readerFontRange');
+  if (r) r.value = String(n);
+}
+
+function readerSetBg(mode, silent) {
+  const main = document.getElementById('readerMain');
+  if (main) main.setAttribute('data-bg', mode);
+  document.querySelectorAll('.reader-bg-swatch').forEach((s) => {
+    s.classList.toggle('is-active', s.dataset.bg === mode);
+  });
+}
+
+function readerToggleTocCollapse() {
+  document.getElementById('readerOverlay')?.classList.toggle('toc-collapsed');
+}
+
+document.getElementById('readerFontRange')?.addEventListener('input', (e) => {
+  readerApplyFontSize(e.target.value, true);
+});
+
 Object.assign(window, {
-  go, renderLib, openDetail, closeDetail, switchTab, toggleUnit, handleBuy, handlePrint,
+  go, renderLib, openDetail, closeDetail, switchTab, toggleUnit, handleBuy, handlePrint, onTocLockedClick,
   openRedeem, closeRedeem, doRedeem, openCreateClass, closeCreateClass, doCreateClass,
   openJoinClass, closeJoinClass, doJoinClass,
-  openClassDetail, closeClassDetail, copyCode, openBookPicker, closeBookPicker,
-  addBookToClass, removeClassBook, setGradeFilter, setSubjectFilter
+  openClassDetail, closeClassDetail, copyCode, openBookPicker, closeBookPicker, dissolveClass, leaveClass,
+  addBookToClass, removeClassBook, setGradeFilter, setSubjectFilter,
+  openSchoolModal, closeSchoolModal, confirmSchoolBind, clearSchoolBind,
+  bookShortcut, libReadModeShortcut,
+  openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, readerGo, readerToggleTocGroup, readerAnswerQuiz, readerVideoDemo,
+  readerQuickMode, readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
+  readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
+  renderSettings, saveSettingsProfile, handleSettingsAvatar, openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,
+  onFeedbackFilesChange, removeFeedbackImage, submitUserFeedback, openFeedbackModal, closeFeedbackModal
 });
 

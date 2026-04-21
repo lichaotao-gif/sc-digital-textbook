@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>四川省数字教材</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="logo-row">
+        <div class="logo-icon">川</div>
+        <div class="logo-col">
+          <div class="logo-name">四川省数字教材</div>
+          <div class="logo-en">Sichuan Digital Textbook</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">教材中心</div>
+      <div class="nav-item active" data-page="library" onclick="go('library')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>数字教材</span>
+        <span class="nav-num">128</span>
+      </div>
+      <div class="nav-item" data-page="my" onclick="go('my')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <span>我的教材</span>
+        <span class="nav-num">6</span>
+      </div>
+
+      <div class="nav-label" style="margin-top:20px">系统</div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>设置</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="user-row">
+        <div class="avatar">李</div>
+        <div class="user-meta">
+          <div class="user-name">李明远</div>
+          <div class="user-role">成都七中 · 高二教师</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="topbar-title" id="pTitle">数字教材</h1>
+        <div class="topbar-sep"></div>
+        <span class="topbar-hint" id="pHint">浏览全部数字教材资源</span>
+      </div>
+      <div class="topbar-right">
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="搜索教材名称、科目..." id="sInput" oninput="renderLib()">
+        </div>
+        <button class="tb-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+        <button class="tb-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+      </div>
+    </header>
+
+    <div class="scroll">
+      <div class="page active" id="page-library"></div>
+      <div class="page" id="page-my"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Book Detail Overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-bg" onclick="closeDetail()"></div>
+  <div class="detail-panel">
+    <button class="detail-close" onclick="closeDetail()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="detail-hero" id="detailHero"></div>
+    <div class="detail-body">
+      <div class="detail-tabs">
+        <div class="detail-tab active" data-tab="intro" onclick="switchTab('intro')">简介</div>
+        <div class="detail-tab" data-tab="toc" onclick="switchTab('toc')">目录</div>
+      </div>
+      <div class="detail-content">
+        <div class="tab-pane active" id="pane-intro"></div>
+        <div class="tab-pane" id="pane-toc"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Redeem Code Modal -->
+<div class="redeem-overlay" id="redeemOverlay">
+  <div class="redeem-bg" onclick="closeRedeem()"></div>
+  <div class="redeem-box">
+    <button class="redeem-close" onclick="closeRedeem()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="redeemForm">
+      <div class="redeem-title">兑换码激活</div>
+      <div class="redeem-desc">输入教材兑换码，免费获取数字教材使用权</div>
+      <div class="redeem-input-row">
+        <input class="redeem-input" id="redeemCode" type="text" placeholder="请输入16位兑换码" maxlength="19">
+        <button class="btn-redeem" onclick="doRedeem()">立即兑换</button>
+      </div>
+      <div class="redeem-hint">兑换码通常印刷在纸质教材封底或由学校统一发放。每个兑换码仅限使用一次，兑换后不可转让。如有问题请联系学校管理员。</div>
+    </div>
+    <div class="redeem-success" id="redeemSuccess">
+      <div class="redeem-success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="redeem-success-text">兑换成功</div>
+      <div class="redeem-success-sub">教材已添加至「我的教材」，可立即开始学习</div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Class Modal -->
+<div class="create-class-overlay" id="createClassOverlay">
+  <div class="create-class-bg" onclick="closeCreateClass()"></div>
+  <div class="create-class-box">
+    <button class="create-class-close" onclick="closeCreateClass()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="ccm-title">创建新班级</div>
+    <div class="ccm-desc">创建班级后可通过邀请码或二维码邀请学生加入</div>
+    <div class="ccm-field">
+      <label class="ccm-label">班级名称</label>
+      <input class="ccm-input" id="ccmName" type="text" placeholder="例如：高二（3）班语文学习组">
+    </div>
+    <div class="ccm-field">
+      <label class="ccm-label">关联科目</label>
+      <select class="ccm-select" id="ccmSubject">
+        <option value="语文">语文</option><option value="数学">数学</option>
+        <option value="英语">英语</option><option value="物理">物理</option>
+        <option value="化学">化学</option><option value="生物">生物</option>
+        <option value="历史">历史</option><option value="地理">地理</option>
+      </select>
+    </div>
+    <div class="ccm-field">
+      <label class="ccm-label">班级描述（选填）</label>
+      <input class="ccm-input" id="ccmDesc" type="text" placeholder="简要描述班级学习目标">
+    </div>
+    <button class="ccm-btn" onclick="doCreateClass()">创建班级</button>
+  </div>
+</div>
+
+<!-- Join class by invite code -->
+<div class="join-class-overlay" id="joinClassOverlay">
+  <div class="join-class-bg" onclick="closeJoinClass()"></div>
+  <div class="join-class-box">
+    <button type="button" class="join-class-close" onclick="closeJoinClass()" aria-label="关闭">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="joinClassForm">
+      <div class="join-class-title">加入班级</div>
+      <div class="join-class-desc">管理员向你发出邀请后，请向对方索取<strong>班级邀请码</strong>，在此输入即可加入。</div>
+      <div class="join-class-input-row">
+        <input class="join-class-input" id="joinClassCode" type="text" placeholder="请输入邀请码" autocomplete="off">
+        <button type="button" class="btn-join-class" onclick="doJoinClass()">加入</button>
+      </div>
+      <p class="join-class-err" id="joinClassErr" role="alert"></p>
+      <div class="join-class-hint">邀请码区分大小写无关；若无法加入，请联系管理员确认邀请是否有效。</div>
+    </div>
+    <div class="join-class-success" id="joinClassSuccess">
+      <div class="join-class-success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="join-class-success-text">加入成功</div>
+      <div class="join-class-success-sub">你已加入「<span id="joinSuccessName"></span>」</div>
+    </div>
+  </div>
+</div>
+
+<!-- Class Detail Overlay -->
+<div class="class-overlay" id="classOverlay">
+  <div class="class-overlay-bg" onclick="closeClassDetail()"></div>
+  <div class="class-panel">
+    <button class="class-detail-close" onclick="closeClassDetail()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="classDetailContent"></div>
+  </div>
+</div>
+
+<!-- Book Picker for Class -->
+<div class="book-picker-overlay" id="bookPickerOverlay">
+  <div class="book-picker-bg" onclick="closeBookPicker()"></div>
+  <div class="book-picker-box">
+    <button class="book-picker-close" onclick="closeBookPicker()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="bp-title">添加教材到班级</div>
+    <div class="bp-desc">从「我的教材」中选择要添加到该班级的教材</div>
+    <div class="bp-list" id="bpList"></div>
+  </div>
+</div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

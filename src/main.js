@@ -1843,7 +1843,7 @@ const READER_DEMO_QUIZ = {
 
 /** 第二套演示题（拓展阅读主题；与综合测评独立计分与完成态） */
 const READER_DEMO_QUIZ_B = {
-  title: '单元拓展测评',
+  title: '拓展练习',
   subtitle: '网络与数据安全基础（演示）',
   questions: [
     {
@@ -1881,13 +1881,11 @@ const READER_PRACTICE_SLOTS = [
     id: 'a',
     quiz: READER_DEMO_QUIZ,
     sectionTitle: '拓展练习',
-    eyebrow: '本节综合测评',
   },
   {
     id: 'b',
     quiz: READER_DEMO_QUIZ_B,
     sectionTitle: '拓展练习',
-    eyebrow: '单元拓展测评',
   },
 ];
 
@@ -1978,59 +1976,45 @@ function readerPracticeSectionHtml(b, slot) {
   const sectionCls = done
     ? 'reader-practice-section reader-practice-section--done reader-practice-section--under-extend'
     : 'reader-practice-section reader-practice-section--under-extend';
-  const iconCls = done ? 'reader-practice-icon reader-practice-icon--done' : 'reader-practice-icon';
-  const clipboardSvg =
-    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const checkSvg =
-    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const badge = done ? '<span class="reader-practice-done-pill">已完成</span>' : '';
+  const cardCls = done ? 'reader-practice-card reader-practice-card--done' : 'reader-practice-card';
+  const badge = done ? '<span class="reader-practice-badge">已完成</span>' : '';
   const desc = done
     ? '你已完成本节测评。如需巩固可再次作答，成绩以最近一次提交为准。'
-    : '含选择题、填空题、判断题与简答题；提交后自动判分，并生成答题报告、每题解析与 AI 学习评价（演示，可对接 CMS）。';
-  const meta = done
-    ? `<ul class="reader-practice-meta reader-practice-meta--done">
-        <li><span class="reader-practice-meta-k">题量</span> 共 ${nQ} 题</li>
-        <li><span class="reader-practice-meta-k">正确率</span> ${accPct != null ? `${accPct}%` : '—'}</li>
-        <li class="reader-practice-meta-report-cell">
-          <button type="button" class="reader-practice-report-open" onclick="readerOpenSavedReport('${slot.id}')" aria-label="查看答题报告">
-            <span class="reader-practice-report-open-glow" aria-hidden="true"></span>
-            <span class="reader-practice-report-open-ic" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span class="reader-practice-report-open-text">答题报告</span>
-            <span class="reader-practice-report-open-arrow" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-            </span>
-          </button>
-        </li>
-      </ul>`
-    : `<ul class="reader-practice-meta reader-practice-meta--todo">
-        <li><span class="reader-practice-meta-k">题量</span> 共 ${nQ} 题</li>
-      </ul>`;
-  const btnCls = done ? 'reader-practice-btn reader-practice-btn--secondary' : 'reader-practice-btn';
-  const btnLabel = done ? '再次测评' : '进入答题';
-  const ariaLab = escAttr(`${slot.sectionTitle} · ${slot.eyebrow}`);
+    : '含选择题、填空、判断与简答；提交后自动判分，可查看每题解析与 AI 学习评价（演示，可对接 CMS）。';
+  const accStat = done
+    ? `<li class="reader-practice-stat reader-practice-stat--accent"><span class="reader-practice-stat__lab">正确率</span><span class="reader-practice-stat__val">${
+        accPct != null ? `${accPct}%` : '—'
+      }</span></li>`
+    : '';
+  const kicker = slot.eyebrow && String(slot.eyebrow).trim() ? escAttr(String(slot.eyebrow).trim()) : '';
+  const kickerHtml = kicker ? `<p class="reader-practice-kicker">${kicker}</p>` : '';
+  const ariaBits = [slot.sectionTitle, slot.eyebrow && String(slot.eyebrow).trim()].filter(Boolean);
+  const ariaLab = escAttr(ariaBits.join(' · '));
   const titleHtml = escAttr(slot.sectionTitle);
-  const eyebrowHtml = escAttr(slot.eyebrow);
+  const ctaBlock = done
+    ? `<div class="reader-practice-cta reader-practice-cta--row" role="group" aria-label="报告与重测">
+        <button type="button" class="reader-practice-btn reader-practice-btn--primary" onclick="readerOpenSavedReport('${slot.id}')">查看报告</button>
+        <button type="button" class="reader-practice-btn reader-practice-btn--secondary" onclick="readerOpenQuizModal('${slot.id}')">再次测评</button>
+      </div>`
+    : `<div class="reader-practice-cta">
+        <button type="button" class="reader-practice-btn reader-practice-btn--primary" onclick="readerOpenQuizModal('${slot.id}')">进入答题</button>
+      </div>`;
   return `<section class="${sectionCls}" aria-label="${ariaLab}">
-        <div class="reader-practice-section-head">
-          <div class="reader-practice-section-head-start">
-            <span class="reader-practice-bar" aria-hidden="true"></span>
-            <span class="reader-practice-section-title">${titleHtml}</span>
-          </div>
-          ${badge}
-        </div>
-        <div class="reader-practice-panel">
-          <div class="reader-practice-panel-top">
-            <div class="${iconCls}" aria-hidden="true">${done ? checkSvg : clipboardSvg}</div>
-            <div class="reader-practice-panel-lead">
-              <span class="reader-practice-eyebrow">${eyebrowHtml}</span>
-              <p class="reader-practice-desc">${desc}</p>
+        <div class="${cardCls}">
+          <header class="reader-practice-card__head">
+            <div class="reader-practice-card__head-main">
+              ${kickerHtml}
+              <h3 class="reader-practice-h3">${titleHtml}</h3>
             </div>
-          </div>
-          <div class="reader-practice-panel-body">
-            ${meta}
-            <button type="button" class="${btnCls}" onclick="readerOpenQuizModal('${slot.id}')">${btnLabel}</button>
+            ${badge}
+          </header>
+          <div class="reader-practice-card__body">
+            <p class="reader-practice-lede">${desc}</p>
+            <ul class="reader-practice-statrow" aria-label="本组题概况">
+              <li class="reader-practice-stat"><span class="reader-practice-stat__lab">题量</span><span class="reader-practice-stat__val">${nQ} 题</span></li>
+              ${accStat}
+            </ul>
+            ${ctaBlock}
           </div>
         </div>
       </section>`;
@@ -2105,10 +2089,12 @@ function buildReaderArticleHtml(cid, b) {
     r1: `<div class="reader-block"><h2>导读与关键概念</h2><p>本课来自「${bt}」。请带着三个问题阅读：本课要解决什么岗位或项目问题？用到了哪类数据与模型？可能带来哪些伦理或安全风险？</p><p>建议先浏览小结与拓展资源，再回看术语表，在教材旁注中写下你的「可执行行动」。</p></div>`,
     r2: `<div class="reader-block"><h2>案例与拓展阅读</h2><p>智能辅导、代码补全、医学影像辅助、工业质检等，都是将统计学习与领域知识结合的实际场景。请思考：当模型输出与教师/工程师判断不一致时，应如何建立复核与反馈闭环。</p>
       <figure class="reader-figure"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80" alt="代码与数据" loading="lazy"><figcaption class="reader-figcap">图 · 计算与数据（示意）</figcaption></figure>
-      <div class="reader-video-wrap">
-        <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80">
-          <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-        </video>
+      <div class="reader-video-block">
+        <div class="reader-video-wrap">
+          <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+          </video>
+        </div>
         <p class="reader-video-cap">配套微课 · 案例导读（演示视频，支持播放/暂停与进度条）</p>
       </div>
       <div class="reader-gallery"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80" alt="" loading="lazy"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=400&q=80" alt="" loading="lazy"></div>
@@ -2118,10 +2104,12 @@ function buildReaderArticleHtml(cid, b) {
       <div class="reader-block reader-ext-read">
         <h2>拓展阅读与练习</h2>
         <p>阅读配套文章：从感知机到深度网络的技术脉络。思考：过拟合、数据偏差与提示攻击分别会在教学或实训中造成什么后果？可结合本组项目讨论缓解策略。</p>
-        <div class="reader-video-wrap">
-          <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80">
-            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
-          </video>
+        <div class="reader-video-block">
+          <div class="reader-video-wrap">
+            <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80">
+              <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+            </video>
+          </div>
           <p class="reader-video-cap">拓展素材 · 神经网络与实训安全（演示视频）</p>
         </div>
       </div>
@@ -2707,21 +2695,31 @@ function openReader(bookIdx, source, initialModeKey) {
   if (tEl) tEl.textContent = `${b.t} · ${b.s}`;
   const tocEl = document.getElementById('readerTocTree');
   if (tocEl) tocEl.innerHTML = renderReaderTocNodes(READER_OUTLINE, 0);
-  const validModes = new Set(['read', 'av', 'task', 'kg']);
-  const initial = validModes.has(initialModeKey) ? initialModeKey : 'read';
-  const bar = document.getElementById('readerModeBar');
-  if (bar) {
-    bar.innerHTML = [
-      ['read', '阅读模式'],
-      ['av', '视听模式'],
-      ['task', '任务模式'],
-      ['kg', '知识图谱'],
-    ]
+  let resolved = resolveLibReadModes(b);
+  if (!resolved.length) {
+    resolved = [...BOOK_READ_MODES];
+  }
+  const modeList = resolved;
+  const keySet = new Set(modeList.map((m) => m.key));
+  const initial = initialModeKey && keySet.has(initialModeKey) ? initialModeKey : modeList[0].key;
+  const listEl = document.getElementById('readerModeList');
+  const toolMode = document.getElementById('readerToolMode');
+  if (listEl) {
+    listEl.innerHTML = modeList
       .map(
-        ([k, lab]) =>
-          `<button type="button" data-mode="${k}" class="reader-mode-pill${initial === k ? ' reader-mode-pill--on' : ''}" onclick="readerQuickMode('${k}')">${readerModePillIconHtml(k)}<span class="reader-mode-pill-label">${lab}</span></button>`
+        (m) =>
+          `<button type="button" data-mode="${m.key}" class="reader-mode-pill${initial === m.key ? ' reader-mode-pill--on' : ''}" onclick="readerQuickMode('${m.key}')">${readerModePillIconHtml(m.key)}<span class="reader-mode-pill-label">${m.label}</span></button>`
       )
       .join('');
+  }
+  if (toolMode) {
+    if (modeList.length > 1) {
+      toolMode.style.display = '';
+      toolMode.removeAttribute('hidden');
+    } else {
+      toolMode.style.display = 'none';
+      toolMode.setAttribute('hidden', '');
+    }
   }
   const entry = readerDefaultEntryCid();
   if (entry) readerGo(entry);
@@ -2793,6 +2791,7 @@ function openReaderFromDetailMode(modeKey) {
 function readerQuickMode(k) {
   document.querySelectorAll('.reader-mode-pill').forEach((p) => p.classList.remove('reader-mode-pill--on'));
   document.querySelector(`.reader-mode-pill[data-mode="${k}"]`)?.classList.add('reader-mode-pill--on');
+  readerCloseToolSlots();
   if (k === 'read') return;
   const labels = { av: '视听模式', task: '任务模式', kg: '知识图谱' };
   showProfileToast(`正在进入「${labels[k] || k}」（演示）`);
@@ -2864,20 +2863,40 @@ function renderReaderNotesList() {
     .join('');
 }
 
+function readerToggleModePanel() {
+  const m = document.getElementById('readerToolMode');
+  if (!m || m.hasAttribute('hidden') || m.style.display === 'none') return;
+  const d = document.getElementById('readerToolDisplay');
+  const s = document.getElementById('readerToolSearch');
+  m.classList.toggle('is-open');
+  d?.classList.remove('is-open');
+  s?.classList.remove('is-open');
+  const btn = document.getElementById('readerModeToolBtn');
+  if (btn) btn.setAttribute('aria-expanded', m.classList.contains('is-open') ? 'true' : 'false');
+}
+
 function readerToggleDisplayPanel() {
+  const m = document.getElementById('readerToolMode');
   const d = document.getElementById('readerToolDisplay');
   const s = document.getElementById('readerToolSearch');
   if (!d) return;
   d.classList.toggle('is-open');
+  m?.classList.remove('is-open');
   s?.classList.remove('is-open');
+  const btn = document.getElementById('readerModeToolBtn');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
 function readerToggleSearch() {
+  const m = document.getElementById('readerToolMode');
   const d = document.getElementById('readerToolDisplay');
   const s = document.getElementById('readerToolSearch');
   if (!s) return;
   s.classList.toggle('is-open');
+  m?.classList.remove('is-open');
   d?.classList.remove('is-open');
+  const btn = document.getElementById('readerModeToolBtn');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
   if (s.classList.contains('is-open')) {
     setTimeout(() => document.getElementById('readerSearchInput')?.focus(), 30);
   }
@@ -2893,6 +2912,8 @@ function readerOnSearchInput() {
 
 function readerCloseToolSlots() {
   document.querySelectorAll('.reader-tool-slot.is-open').forEach((el) => el.classList.remove('is-open'));
+  const modeBtn = document.getElementById('readerModeToolBtn');
+  if (modeBtn) modeBtn.setAttribute('aria-expanded', 'false');
 }
 
 function readerClosePopovers() {
@@ -2937,7 +2958,7 @@ Object.assign(window, {
   readerOpenQuizModal, readerCloseQuizModal, readerSubmitQuizModal, readerQuizPickChoice, readerQuizPickTf,
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
   readerQuickMode, readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
-  readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
+  readerToggleModePanel, readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
   renderSettings, handleSettingsAvatar, openPhoneModal, closePhoneModal, sendPhoneChangeCode, confirmPhoneChange,
   openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,
   onFeedbackFilesChange, removeFeedbackImage, submitUserFeedback, openFeedbackModal, closeFeedbackModal

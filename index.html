@@ -286,7 +286,6 @@
         </button>
         <h1 class="reader-doc-title" id="readerDocTitle">教材阅读</h1>
       </div>
-      <nav class="reader-mode-bar" id="readerModeBar" aria-label="阅读模式快捷入口"></nav>
       <div class="reader-top-right">
         <button type="button" class="reader-ai-entry" onclick="readerToggleAi()" title="AI 阅读助手" aria-label="打开 AI 阅读助手">
           <span class="reader-ai-entry-icon" aria-hidden="true">
@@ -321,9 +320,25 @@
         <article class="reader-article" id="readerArticle"></article>
       </main>
       <aside class="reader-toolbar" id="readerToolbar" aria-label="阅读工具栏">
+        <div class="reader-tool-slot" id="readerToolMode" style="display:none" hidden>
+          <button type="button" class="reader-tool-rail-btn" id="readerModeToolBtn" onclick="readerToggleModePanel()" title="学习模式" aria-label="学习模式" aria-haspopup="dialog" aria-controls="readerModePopover" aria-expanded="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="9" rx="1.2"/>
+              <rect x="14" y="3" width="7" height="5" rx="1.2"/>
+              <rect x="14" y="10" width="7" height="11" rx="1.2"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.2"/>
+            </svg>
+            <span class="reader-tool-rail-lab">模式</span>
+          </button>
+          <div class="reader-toolbar-pop reader-toolbar-pop--mode" id="readerModePopover" role="dialog" aria-label="选择学习模式">
+            <div class="reader-popover-title">学习模式</div>
+            <nav class="reader-mode-rail" id="readerModeList" aria-label="本教材可切换的学习模式"></nav>
+          </div>
+        </div>
         <div class="reader-tool-slot" id="readerToolDisplay">
           <button type="button" class="reader-tool-rail-btn" onclick="readerToggleDisplayPanel()" title="显示设置（字号、背景）">
             <span class="reader-tool-rail-icon" aria-hidden="true">Aa</span>
+            <span class="reader-tool-rail-lab">显示</span>
           </button>
           <div class="reader-toolbar-pop reader-toolbar-pop--display" id="readerDisplayPopover" role="dialog" aria-label="显示设置">
             <div class="reader-pop-section">
@@ -343,14 +358,16 @@
         </div>
         <div class="reader-tool-slot" id="readerToolSearch">
           <button type="button" class="reader-tool-rail-btn" onclick="readerToggleSearch()" title="搜索">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span class="reader-tool-rail-lab">搜索</span>
           </button>
           <div class="reader-toolbar-pop reader-toolbar-pop--search" id="readerSearchPopover">
             <input type="search" class="reader-search-input" id="readerSearchInput" placeholder="搜索目录关键词…" autocomplete="off" oninput="readerOnSearchInput()">
           </div>
         </div>
         <button type="button" class="reader-tool-rail-btn" onclick="readerToggleNotes()" title="笔记">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+          <span class="reader-tool-rail-lab">笔记</span>
         </button>
       </aside>
     </div>

@@ -1,5 +1,8 @@
 import "./styles/main.css";
 
+/** 首版关闭：学校绑定、学校展示。改为 true 可恢复侧栏/我的教材/设置中的学校与激活码弹窗 */
+const FEATURE_SCHOOL_UI = false;
+
 // Pastel palette for covers — soft, airy
 const PAL=[
   ['#4aaa85','#78c8a8'],  // mint
@@ -12,7 +15,7 @@ const PAL=[
   ['#98804a','#b8a878'],  // sand
 ];
 
-const SM={语文:0,数学:1,英语:2,物理:3,化学:4,生物:5,历史:6,地理:7,政治:0,信息技术:1,美术:3,音乐:5};
+const SM={计算机基础:0,Python:1,程序设计:2,计算机网络:3,Web前端:4,办公应用:5,数字媒体:6,数据库:0,Linux:1,算法与结构:2,人工智能:3,机器学习:4,深度学习:5,自然语言:6,云计算:7,大数据:0,移动开发:1,网络安全:2,机器人:3};
 
 /** 数字教材书目：readModeKeys 为后台配置的阅读模式，仅展示已配置的项（可省略或 [] 表示不展示） */
 const BOOK_READ_MODES = [
@@ -84,39 +87,39 @@ function detailLearningModesSectionHtml(modeEntries) {
 }
 
 const books=[
-  {t:'语文',s:'必修上册',g:'高一',p:'人民教育出版社',tp:'r',sub:'语文',paperDigital:true,editor:'温儒敏',readModeKeys:['read','av','task','kg']},
-  {t:'语文',s:'必修下册',g:'高一',p:'人民教育出版社',tp:'r',sub:'语文',editor:'温儒敏',readModeKeys:['read','av','task']},
-  {t:'数学',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'数学',paperDigital:true,editor:'章建跃 等',readModeKeys:['read','task']},
-  {t:'数学',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'数学',editor:'章建跃 等',readModeKeys:['read']},
-  {t:'英语',s:'必修第一册',g:'高一',p:'外语教学与研究出版社',tp:'r',sub:'英语',editor:'陈琳 等',readModeKeys:['read','av','task','kg']},
-  {t:'英语',s:'必修第二册',g:'高一',p:'外语教学与研究出版社',tp:'r',sub:'英语',editor:'陈琳 等',readModeKeys:['read','av']},
-  {t:'物理',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'物理',paperDigital:true,editor:'彭前程 等',readModeKeys:['read','av','task']},
-  {t:'物理',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'物理',editor:'彭前程 等',readModeKeys:['read']},
-  {t:'化学',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'化学',editor:'王晶 等',readModeKeys:['read','task','kg']},
-  {t:'化学',s:'必修第二册',g:'高一',p:'人民教育出版社',tp:'r',sub:'化学',editor:'王晶 等'},
-  {t:'生物',s:'必修一 分子与细胞',g:'高一',p:'人民教育出版社',tp:'r',sub:'生物',editor:'赵占良 等',readModeKeys:['read']},
-  {t:'历史',s:'必修 中外历史纲要(上)',g:'高一',p:'人民教育出版社',tp:'r',sub:'历史',editor:'张海鹏 等',readModeKeys:['read','av','task','kg']},
-  {t:'地理',s:'必修第一册',g:'高一',p:'人民教育出版社',tp:'r',sub:'地理',editor:'樊杰 等',readModeKeys:['read','av']},
-  {t:'政治',s:'必修一 中国特色社会主义',g:'高一',p:'人民教育出版社',tp:'r',sub:'政治',editor:'秦宣 等',readModeKeys:['read','task']},
-  {t:'信息技术',s:'必修一 数据与计算',g:'高一',p:'教育科学出版社',tp:'o',sub:'信息技术',paperDigital:true,editor:'李晓明 等',readModeKeys:['read','av','task','kg']},
-  {t:'美术',s:'必修 美术鉴赏',g:'高一',p:'人民美术出版社',tp:'o',sub:'美术',editor:'黄宗贤 等',readModeKeys:['read','av']},
-  {t:'音乐',s:'必修 音乐鉴赏',g:'高一',p:'人民音乐出版社',tp:'o',sub:'音乐',editor:'于润洋 等',readModeKeys:['read']},
-  {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',tp:'r',sub:'语文',editor:'温儒敏',readModeKeys:['read','av','task','kg']},
-  {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'数学',editor:'章建跃 等',readModeKeys:['read','task','kg']},
-  {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',tp:'r',sub:'英语',editor:'陈琳 等',readModeKeys:['read','av','task']},
-  {t:'物理',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'物理',editor:'彭前程 等',readModeKeys:['read','av','task','kg']},
-  {t:'化学',s:'选择性必修一',g:'高二',p:'人民教育出版社',tp:'r',sub:'化学',editor:'王晶 等',readModeKeys:['read']},
-  {t:'生物',s:'选择性必修一 稳态与调节',g:'高二',p:'人民教育出版社',tp:'r',sub:'生物',editor:'赵占良 等',readModeKeys:['read','task']},
-  {t:'历史',s:'选择性必修一 国家制度',g:'高二',p:'人民教育出版社',tp:'r',sub:'历史',editor:'张海鹏 等',readModeKeys:['read','av','task','kg']},
+  {t:'计算机应用基础',s:'上册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'计算机基础',cat:'计算机基础',paperDigital:true,editor:'张炜 等',readModeKeys:['read','av','task','kg']},
+  {t:'计算机应用基础',s:'下册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'计算机基础',cat:'计算机基础',editor:'张炜 等',readModeKeys:['read','av','task']},
+  {t:'C语言程序设计',s:'上册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'程序设计',cat:'程序与开发',readModeKeys:['read','task']},
+  {t:'C语言程序设计',s:'下册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'程序设计',cat:'程序与开发',readModeKeys:['read']},
+  {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',paperDigital:true,editor:'李可 等',readModeKeys:['read','av','task']},
+  {t:'Python程序设计',s:'项目篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',editor:'李可 等',readModeKeys:['read']},
+  {t:'计算机网络技术',s:'基础与互联',g:'中职 一年级',p:'电子工业出版社',tp:'o',sub:'计算机网络',cat:'网络与运维',readModeKeys:['read','av','task','kg']},
+  {t:'网页设计与制作',s:'HTML5/CSS3',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Web前端',cat:'程序与开发',readModeKeys:['read','av']},
+  {t:'办公自动化',s:'WPS与信息素养',g:'中职 一年级',p:'中国劳动社会保障出版社',tp:'o',sub:'办公应用',cat:'计算机基础',readModeKeys:['read','task']},
+  {t:'数字媒体技术',s:'版式与图形',g:'中职 一年级',p:'中国劳动社会保障出版社',tp:'o',sub:'数字媒体',cat:'计算机基础',readModeKeys:['read']},
+  {t:'MySQL数据库应用',s:'基础与查询',g:'中职 二年级',p:'人民邮电出版社',tp:'o',sub:'数据库',cat:'数据与平台',readModeKeys:['read','task','kg']},
+  {t:'MySQL数据库应用',s:'设计与管理',g:'中职 二年级',p:'人民邮电出版社',tp:'o',sub:'数据库',cat:'数据与平台',readModeKeys:['read']},
+  {t:'Linux操作系统',s:'命令与Shell',g:'中职 二年级',p:'电子工业出版社',tp:'o',sub:'Linux',cat:'网络与运维',readModeKeys:['read','av','task']},
+  {t:'数据结构与算法',s:'C语言版',g:'中职 二年级',p:'清华大学出版社',tp:'o',sub:'算法与结构',cat:'程序与开发',readModeKeys:['read','task']},
+  {t:'Java程序设计',s:'面向对象',g:'中职 二年级',p:'人民邮电出版社',tp:'o',sub:'程序设计',cat:'程序与开发',readModeKeys:['read','av','task']},
+  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',paperDigital:true,editor:'赵明 等',readModeKeys:['read','av','task','kg']},
+  {t:'机器学习基础',s:'监督与评估',g:'中职 三年级',p:'人民邮电出版社',tp:'o',sub:'机器学习',cat:'人工智能',readModeKeys:['read']},
+  {t:'深度学习应用',s:'视觉与语音',g:'中职 三年级',p:'电子工业出版社',tp:'o',sub:'深度学习',cat:'人工智能',readModeKeys:['read','av','task']},
+  {t:'自然语言处理入门',s:'文本与对话',g:'中职 三年级',p:'人民邮电出版社',tp:'o',sub:'自然语言',cat:'人工智能',readModeKeys:['read','av','kg']},
+  {t:'云计算与虚拟化',s:'容器与运维入门',g:'中职 三年级',p:'人民邮电出版社',tp:'o',sub:'云计算',cat:'网络与运维',readModeKeys:['read']},
+  {t:'大数据技术',s:'采集与分析',g:'中职 三年级',p:'中国劳动社会保障出版社',tp:'o',sub:'大数据',cat:'数据与平台',readModeKeys:['read']},
+  {t:'移动应用开发',s:'Android基础',g:'中职 三年级',p:'电子工业出版社',tp:'o',sub:'移动开发',cat:'程序与开发',readModeKeys:['read']},
+  {t:'网络信息安全',s:'防护与合规',g:'中职 三年级',p:'中国劳动社会保障出版社',tp:'o',sub:'网络安全',cat:'网络与运维',readModeKeys:['read','task']},
+  {t:'机器人技术基础',s:'控制与视觉',g:'中职 三年级',p:'中国劳动社会保障出版社',tp:'o',sub:'机器人',cat:'人工智能',readModeKeys:['read']},
 ];
 
 const myB=[
-  {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',tp:'r',sub:'语文',pr:78,paperDigital:true,editor:'温儒敏',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
-  {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'数学',pr:45,editor:'章建跃 等'},
-  {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',tp:'r',sub:'英语',pr:92,paperDigital:true,editor:'陈琳 等',actionKeys:['read','task','questionBank','learnStats']},
-  {t:'物理',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',tp:'r',sub:'物理',pr:30,editor:'彭前程 等',actionKeys:['read','resourceLib']},
-  {t:'化学',s:'选择性必修一',g:'高二',p:'人民教育出版社',tp:'r',sub:'化学',pr:15,editor:'王晶 等'},
-  {t:'历史',s:'选择性必修一 国家制度',g:'高二',p:'人民教育出版社',tp:'r',sub:'历史',pr:60,paperDigital:true,editor:'张海鹏 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
+  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',pr:78,paperDigital:true,editor:'赵明 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
+  {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',pr:45,editor:'李可 等'},
+  {t:'计算机网络技术',s:'基础与互联',g:'中职 一年级',p:'电子工业出版社',tp:'o',sub:'计算机网络',cat:'网络与运维',pr:92,paperDigital:true,actionKeys:['read','task','questionBank','learnStats']},
+  {t:'数据结构与算法',s:'C语言版',g:'中职 二年级',p:'清华大学出版社',tp:'o',sub:'算法与结构',cat:'程序与开发',pr:30,editor:'王硕 等',actionKeys:['read','resourceLib']},
+  {t:'MySQL数据库应用',s:'基础与查询',g:'中职 二年级',p:'人民邮电出版社',tp:'o',sub:'数据库',cat:'数据与平台',pr:15,editor:'刘洋 等'},
+  {t:'机器学习基础',s:'监督与评估',g:'中职 三年级',p:'人民邮电出版社',tp:'o',sub:'机器学习',cat:'人工智能',pr:60,paperDigital:true,editor:'陈晨 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
 ];
 
 function c(sub){return PAL[SM[sub]??0]}
@@ -126,74 +129,105 @@ function isPaperDigital(b){return !!(b&&b.paperDigital)}
 
 // Book descriptions
 const DESC={
-  '语文':'本教材以立德树人为根本任务，落实语文学科核心素养，精选古今中外优秀作品，涵盖诗歌、散文、小说、戏剧等多种文体。教材注重培养学生的语言建构与运用、思维发展与提升、审美鉴赏与创造、文化传承与理解等能力，引导学生在阅读与写作实践中提升语文素养。',
-  '数学':'本教材遵循《普通高中数学课程标准》，系统介绍函数、几何与代数、概率与统计等核心内容。通过问题驱动的教学设计，注重数学抽象、逻辑推理、数学建模等核心素养的培养，帮助学生建立完整的数学知识体系。',
-  '英语':'本教材围绕"人与自然""人与社会""人与自我"三大主题语境，设计真实的语言交际活动。采用任务型教学法，融合听说读写看五项技能训练，注重跨文化交际能力和英语思维品质的培养。',
-  '物理':'本教材以物理学科核心素养为导向，涵盖力学、热学、电磁学等基础内容。通过实验探究和科学推理，培养学生的物理观念、科学思维、科学探究和科学态度，激发对自然规律的探索兴趣。',
-  '化学':'本教材以"宏观辨识与微观探析"为核心，系统讲授物质结构、化学反应原理、有机化学基础等内容。注重实验探究与创新意识的培养，帮助学生理解化学与生活、社会的密切联系。',
-  '生物':'本教材围绕生命的本质、生命活动的调节、生态系统等核心概念展开。通过观察、实验和探究活动，培养学生的生命观念、理性思维和社会责任感，理解生物学在现代社会中的重要作用。',
-  '历史':'本教材以唯物史观为指导，系统梳理中外历史发展的基本脉络。通过丰富的史料和多元视角，培养学生的时空观念、史料实证、历史解释和家国情怀，提升历史学科核心素养。',
-  '地理':'本教材以人地关系为主线，涵盖自然地理、人文地理和区域地理等内容。注重地理实践力的培养，引导学生用地理的眼光观察世界，理解人类活动与地理环境的相互关系。',
-  '政治':'本教材以习近平新时代中国特色社会主义思想为指导，系统讲授中国特色社会主义理论与实践。培养学生的政治认同、科学精神、法治意识和公共参与等学科核心素养。',
-  '信息技术':'本教材围绕数据与计算这一核心主题，介绍数据处理、算法设计、程序编写等基础知识。通过项目式学习，培养学生的信息意识、计算思维、数字化学习与创新能力。',
-  '美术':'本教材精选中外经典美术作品，涵盖绘画、雕塑、建筑、设计等领域。通过鉴赏与实践相结合的方式，培养学生的审美感知、艺术表现和文化理解能力。',
-  '音乐':'本教材精选中外经典音乐作品，涵盖声乐、器乐、戏曲等多种形式。通过聆听、演唱和音乐分析，培养学生的音乐审美感知和文化理解能力。',
+  计算机基础:'本教材依据中等职业学校信息技术课程标准，从计算机软硬件、操作系统、信息素养与安全等方面建立完整认知。通过上机任务与项目案例，培养规范操作、信息意识与基本的信息技术应用能力，为后续专业学习打牢基础。',
+  程序设计:'本教材以中职学生认知规律为主线，从语法基础到模块化与面向对象，配合大量例题与综合实训。强调算法思维、调试能力与代码规范，衔接岗位常见的控制台与小型应用开发场景。',
+  Python:'本教材选用 Python 作为首门编程语言，涵盖基本语法、数据结构、文件与异常、简单类与包管理等内容。以「做中学」为路径，通过脚本自动化、小工具与轻量项目培养计算思维与可迁移的编程能力。',
+  计算机网络:'本教材介绍网络体系结构、IP 与路由、交换与无线、常见服务与安全初步，配合仿真与实机操作。帮助理解互联网工作原理与常见网络故障的排查思路，为运维与开发岗位奠基。',
+  Web前端:'本教材围绕网站搭建与页面呈现，系统讲解 HTML 语义、CSS 布局与响应式、基础交互与可访问性意识。通过多页面项目串联，培养版面还原、规范编码与与后端协作的接口意识。',
+  办公应用:'本教材面向现代办公与信息化岗位，介绍文字处理、表格、演示与信息检索协作，并融入 WPS/Office 高效操作。强调版式、数据与汇报场景中的规范表达，提升信息整理与展示能力。',
+  数字媒体:'本教材从图形图像基础、版式设计、色彩与字体规范到简单动效，配合常用工具完成图文排版与轻量设计。培养审美意识、作品版权意识与在数字内容岗位中的基本产出能力。',
+  数据库:'本教材以关系型数据库为核心，讲解概念模型、SQL 增删改查、约束与简单程序访问，延伸到备份与安全常识。以真实业务小库为练手，提升数据组织能力与岗位常见的数据质量意识。',
+  Linux:'本教材从命令行与文件系统入手，介绍用户与权限、进程与服务、包管理与网络配置，并涉及 Shell 脚本初步。为服务器部署、运维与云主机操作提供实操路径。',
+  算法与结构:'本教材精选线性表、栈与队列、树与图、排序与查找等基础结构，以 C 语言实现为主，强调时间空间复杂度分析。为后续学习人工智能与工程实践建立严谨的抽象与推理能力。',
+  人工智能:'本教材以中职可理解的深度介绍智能时代的技术脉络、典型应用与数据伦理。涵盖搜索与推理、机器学习与深度学习概览、生成式与就业面向，并突出合规、隐私与可解释性讨论。',
+  机器学习:'本教材在人工智能导论基础上，从数据集划分、特征与评价指标切入，讲解决策树、近邻、朴素贝叶斯与基础神经网络等。配合开源工具链演示训练与调参的完整流程，强调可复现实验与报告习惯。',
+  深度学习:'本教材以计算机视觉与语音/文本的入门应用为主线，介绍张量、卷积与简单序列模型，配合轻量项目体验部署与端侧应用。注意算力、数据与模型风险的工程视角。',
+  自然语言:'本教材介绍分词、词向量、文本分类与简单对话等任务，并演示调用主流模型接口完成「文本理解+生成」小项目。关注提示工程、安全与内容审核在真实产品中的基本做法。',
+  云计算:'本教材以虚拟化与容器、公有云基本服务、自动化部署为线索，用演示环境完成站点发布与简单伸缩。帮助建立「资源即服务、配置即代码」的运维与协作意识。',
+  大数据:'本教材介绍数据生命周期、Hadoop 生态组件概念、ETL 与批流处理初体验，以可视化小案例理解指标与看板。强调数据治理、隐私与合规在采集与分析中的基本约束。',
+  移动开发:'本教材从 Android 工程结构、Activity 与布局、数据存储与网络请求入门，以小型 App 为牵引培养界面与交互实现能力。为对接前后端与上架规范预留扩展位。',
+  网络安全:'本教材从密码学常识、身份认证、常见漏洞与防护、等级保护与应急响应入门组织内容。以攻防演示培养底线思维与安全开发生命周期意识，强调合法合规的实验环境。',
+  机器人:'本教材涵盖传感器、执行器、开环与闭环控制、运动学与简单视觉，配合示教与仿真完成任务编程。与智能制造岗位衔接，培养机电软协同解决问题的基本能力。',
 };
 
 // TOC data per subject
 const TOC={
-  '语文':[
-    {u:'第一单元 青春的价值',ls:['1 沁园春·长沙','2 立在地球边上放号','3 峨日朵雪峰之侧','4 致云雀']},
-    {u:'第二单元 劳动光荣',ls:['5 喜看稻菽千重浪','6 心有一团火，温暖众人心','7 "探界者"钟扬']},
-    {u:'第三单元 生命的诗意',ls:['8 短歌行','9 归园田居（其一）','10 梦游天姥吟留别','11 登高','12 琵琶行']},
-    {u:'第四单元 家乡文化',ls:['13 故都的秋','14 荷塘月色','15 我与地坛（节选）']},
+  计算机基础:[
+    {u:'第一单元 信息与计算环境',ls:['1.1 信息与数字化','1.2 计算机组成概览','1.3 操作系统与界面操作']},
+    {u:'第二单元 网络与信息社会责任',ls:['2.1 互联网与常用服务','2.2 信息安全与密码常识','2.3 信息伦理与版权']},
   ],
-  '数学':[
-    {u:'第一章 集合与常用逻辑用语',ls:['1.1 集合的概念','1.2 集合间的基本关系','1.3 集合的基本运算','1.4 充分条件与必要条件']},
-    {u:'第二章 一元二次函数、方程和不等式',ls:['2.1 等式性质与不等式性质','2.2 基本不等式','2.3 二次函数与一元二次方程、不等式']},
-    {u:'第三章 函数的概念与性质',ls:['3.1 函数的概念及其表示','3.2 函数的基本性质','3.3 幂函数','3.4 函数的应用（一）']},
-    {u:'第四章 指数函数与对数函数',ls:['4.1 指数','4.2 指数函数','4.3 对数','4.4 对数函数','4.5 函数的应用（二）']},
+  程序设计:[
+    {u:'模块一 基础语法与流程',ls:['1.1 环境搭建与项目结构','1.2 变量、类型与输入输出','1.3 条件与循环']},
+    {u:'模块二 函数与工程习惯',ls:['2.1 函数与模块化','2.2 文件与项目组织','2.3 综合实训：小型工具']},
   ],
-  '英语':[
-    {u:'Unit 1 Teenage Life',ls:['Reading and Thinking','Discovering Useful Structures','Listening and Talking','Reading for Writing']},
-    {u:'Unit 2 Travelling Around',ls:['Reading and Thinking','Discovering Useful Structures','Listening and Talking','Reading for Writing']},
-    {u:'Unit 3 Sports and Fitness',ls:['Reading and Thinking','Discovering Useful Structures','Listening and Talking','Reading for Writing']},
-    {u:'Unit 4 Natural Disasters',ls:['Reading and Thinking','Discovering Useful Structures','Listening and Talking','Reading for Writing']},
+  Python:[
+    {u:'入门篇 语法与数据',ls:['第1课 环境、变量与基本类型','第2课 条件与循环','第3课 函数与包导入']},
+    {u:'入门篇 结构化数据',ls:['第4课 列表与字典','第5课 文件与异常']},
+    {u:'项目篇 综合案例',ls:['项目一 数据清洗脚本','项目二 简易成绩统计']},
   ],
-  '物理':[
-    {u:'第一章 运动的描述',ls:['1.1 质点 参考系','1.2 时间 位移','1.3 位置变化快慢的描述——速度','1.4 速度变化快慢的描述——加速度']},
-    {u:'第二章 匀变速直线运动的研究',ls:['2.1 实验：探究小车速度随时间变化的规律','2.2 匀变速直线运动的速度与时间的关系','2.3 匀变速直线运动的位移与时间的关系','2.4 自由落体运动']},
-    {u:'第三章 相互作用——力',ls:['3.1 重力与弹力','3.2 摩擦力','3.3 牛顿第三定律']},
+  计算机网络:[
+    {u:'第1章 网络与协议栈',ls:['1.1 局域网与因特网','1.2 OSI 与 TCP/IP 简介','1.3 IP 地址与 DNS']},
+    {u:'第2章 传输与互联',ls:['2.1 路由与交换','2.2 应用层：HTTP/HTTPS','2.3 安全基础：防火墙与常见攻击']},
   ],
-  '化学':[
-    {u:'第一章 物质及其变化',ls:['1.1 物质的分类及转化','1.2 离子反应','1.3 氧化还原反应']},
-    {u:'第二章 海水中的重要元素——钠和氯',ls:['2.1 钠及其化合物','2.2 氯及其化合物','2.3 物质的量']},
-    {u:'第三章 铁 金属材料',ls:['3.1 铁及其化合物','3.2 金属材料']},
+  Web前端:[
+    {u:'第1章 语义化页面',ls:['1.1 文档结构与文本','1.2 超链接、图像与媒体','1.3 列表与表格']},
+    {u:'第2章 样式与布局',ls:['2.1 盒模型与布局入门','2.2 Flex 与响应式','2.3 可访问性初步']},
   ],
-  '生物':[
-    {u:'第一章 走近细胞',ls:['1.1 细胞是生命活动的基本单位','1.2 细胞的多样性和统一性']},
-    {u:'第二章 组成细胞的分子',ls:['2.1 细胞中的元素和化合物','2.2 细胞中的无机物','2.3 细胞中的糖类和脂质','2.4 蛋白质是生命活动的主要承担者','2.5 核酸是遗传信息的携带者']},
-    {u:'第三章 细胞的基本结构',ls:['3.1 细胞膜的结构和功能','3.2 细胞器之间的分工合作','3.3 细胞核的结构和功能']},
+  办公应用:[
+    {u:'单元一 文档与表格',ls:['1.1 格式与样式','1.2 长文档与目录','1.3 数据表与基础函数']},
+    {u:'单元二 报告与展示',ls:['2.1 图表与数据可视化','2.2 演讲稿与放映','2.3 协作与版本']},
   ],
-  '历史':[
-    {u:'第一单元 从中华文明起源到秦汉统一多民族封建国家的建立与巩固',ls:['1 中华文明的起源与早期国家','2 诸侯纷争与变法运动','3 秦统一多民族封建国家的建立','4 西汉与东汉——统一多民族封建国家的巩固']},
-    {u:'第二单元 三国两晋南北朝的民族交融与隋唐统一多民族封建国家的发展',ls:['5 三国两晋南北朝的政权更迭与民族交融','6 从隋唐盛世到五代十国','7 隋唐制度的变化与创新']},
-    {u:'第三单元 辽宋夏金多民族政权的并立与元朝的统一',ls:['8 两宋的政治和军事','9 辽夏金元的统治','10 辽宋夏金元的经济与社会']},
+  数字媒体:[
+    {u:'上篇 设计基础',ls:['1 平面构成与版式','2 色彩与对比','3 品牌与信息层级']},
+    {u:'下篇 项目实训',ls:['4 海报与多页宣传册','5 自媒体封面']},
   ],
-  '地理':[
-    {u:'第一章 宇宙中的地球',ls:['1.1 地球的宇宙环境','1.2 太阳对地球的影响','1.3 地球的历史','1.4 地球的圈层结构']},
-    {u:'第二章 地球上的大气',ls:['2.1 大气的组成和垂直分层','2.2 大气受热过程和大气运动','2.3 常见天气系统']},
-    {u:'第三章 地球上的水',ls:['3.1 水循环','3.2 海水的性质','3.3 海水的运动']},
+  数据库:[
+    {u:'第1部分 关系与 SQL',ls:['1.1 概念、键与关系','1.2 查询、过滤与排序','1.3 连接与聚合']},
+    {u:'第2部分 设计与管理',ls:['2.1 表设计与范式初步','2.2 用户权限与备份']},
   ],
-  '政治':[
-    {u:'第一课 社会主义从空想到科学',ls:['1.1 原始社会的解体和阶级社会的演进','1.2 科学社会主义的理论与实践']},
-    {u:'第二课 只有社会主义才能救中国',ls:['2.1 新民主主义革命的胜利','2.2 社会主义制度在中国的确立']},
-    {u:'第三课 只有中国特色社会主义才能发展中国',ls:['3.1 伟大的改革开放','3.2 中国特色社会主义的创立、发展和完善']},
+  Linux:[
+    {u:'第1章 Shell 与文件',ls:['1.1 发行版与目录树','1.2 用户与权限','1.3 重定向与管道']},
+    {u:'第2章 服务与网络',ls:['2.1 进程与 systemd','2.2 包管理与环境变量','2.3 网络配置与排障']},
+  ],
+  算法与结构:[
+    {u:'基础结构',ls:['1.1 线性表与链式存储','1.2 栈与队列','1.3 树与简单遍历']},
+    {u:'经典算法',ls:['2.1 查找与排序','2.2 分治与递推']},
+  ],
+  人工智能:[
+    {u:'模块1 导论与伦理',ls:['1.1 从规则到学习','1.2 数据、模型与可解释性','1.3 安全、隐私与法规']},
+    {u:'模块2 技术脉络',ls:['2.1 机器学习与深度学习关系','2.2 大模型与就业面向']},
+  ],
+  机器学习:[
+    {u:'第1章 问题定义与数据',ls:['1.1 监督/无监督','1.2 划分、验证与过拟合','1.3 指标与混淆矩阵']},
+    {u:'第2章 模型入门',ls:['2.1 线性/逻辑与决策树','2.2 集成与调参']},
+  ],
+  深度学习:[
+    {u:'视觉篇',ls:['1.1 张量与网络','1.2 卷积与池化','1.3 迁移学习']},
+    {u:'多模态篇',ls:['2.1 基础序列模型','2.2 语音/文本小实践']},
+  ],
+  自然语言:[
+    {u:'文本与词表示',ls:['1.1 分词与 n-gram','1.2 向量化与相似度']},
+    {u:'应用与工程',ls:['2.1 分类与命名实体','2.2 提示工程与接口']},
+  ],
+  云计算:[
+    {u:'虚拟化与容器',ls:['1.1 虚机与镜像','1.2 Docker 基础','1.3 CI/CD 概念']},
+  ],
+  大数据:[
+    {u:'生态与平台',ls:['1.1 批与流处理','1.2 HDFS/MapReduce 概览']},
+  ],
+  移动开发:[
+    {u:'基础开发',ls:['1.1 工程与界面','1.2 活动与数据存储']},
+  ],
+  网络安全:[
+    {u:'防护体系',ls:['1.1 威胁与漏洞','1.2 安全开发生命周期']},
+  ],
+  机器人:[
+    {u:'机电与控制',ls:['1.1 传感器与执行器','1.2 开环与反馈']},
   ],
 };
 
 // Prices
-const PRICES={语文:18.90,数学:22.50,英语:24.00,物理:20.80,化学:19.50,生物:18.00,历史:17.50,地理:16.80,政治:17.00,信息技术:25.00,美术:15.50,音乐:14.00};
+const PRICES={计算机基础:21.00,程序设计:23.50,Python:26.00,计算机网络:25.00,Web前端:24.50,办公应用:19.80,数字媒体:20.00,数据库:25.50,Linux:24.00,算法与结构:22.00,人工智能:28.00,机器学习:28.50,深度学习:29.00,自然语言:27.50,云计算:26.50,大数据:26.00,移动开发:27.00,网络安全:25.80,机器人:23.00};
 
 /** 数字教材：未购时默认可试读目录前 N 条，其余锁定；演示内「立即购买」写入会话 */
 const LIB_PREVIEW_LESSON_COUNT = 2;
@@ -246,6 +280,7 @@ function resolveSchoolName(code) {
 let schoolModalMode = 'bind';
 
 function openSchoolModal(mode) {
+  if (!FEATURE_SCHOOL_UI) return;
   schoolModalMode = mode === 'change' ? 'change' : 'bind';
   const input = document.getElementById('schoolActivationCode');
   const school = getBoundSchool();
@@ -264,6 +299,7 @@ function closeSchoolModal() {
 }
 
 function confirmSchoolBind() {
+  if (!FEATURE_SCHOOL_UI) return;
   const input = document.getElementById('schoolActivationCode');
   const raw = (input?.value || '').trim();
   if (raw.length < 4) {
@@ -288,6 +324,7 @@ function confirmSchoolBind() {
 }
 
 function clearSchoolBind() {
+  if (!FEATURE_SCHOOL_UI) return;
   setBoundSchool(null);
   refreshSchoolDependentPages();
   const toast = document.createElement('div');
@@ -306,7 +343,7 @@ const PROFILE_STORAGE_KEY = 'sc-user-profile';
 const DEFAULT_USER_PROFILE = {
   nickname: '李明远',
   phone: '13800138000',
-  roleLine: '成都七中 · 高二教师',
+  roleLine: '省示范中职 · 计算机专业教师',
   avatarDataUrl: '',
 };
 
@@ -334,6 +371,24 @@ function escAttr(s) {
     .replace(/</g, '&lt;');
 }
 
+/** 脱敏显示 11 位手机号 */
+function maskPhone(phone) {
+  const s = String(phone || '').replace(/\D/g, '');
+  if (s.length === 11) return `${s.slice(0, 3)}****${s.slice(7)}`;
+  if (s.length) return s;
+  return '未绑定';
+}
+
+/** 换绑手机号：演示用短信验证码状态（正式环境接短信网关） */
+let _phoneOtp = { code: '', target: '', cool: 0 };
+let _phoneOtpTimer = null;
+function _clearPhoneOtpTimer() {
+  if (_phoneOtpTimer) {
+    clearInterval(_phoneOtpTimer);
+    _phoneOtpTimer = null;
+  }
+}
+
 function syncSidebarUser() {
   const u = getUserProfile();
   const av = document.getElementById('sidebarAvatar') || document.querySelector('.sidebar-foot .avatar');
@@ -354,10 +409,14 @@ function syncSidebarUser() {
   const nameEl = document.getElementById('sidebarUserName') || document.querySelector('.sidebar-foot .user-name');
   if (nameEl) nameEl.textContent = u.nickname || DEFAULT_USER_PROFILE.nickname;
   const schoolEl = document.getElementById('sidebarUserSchool');
-  const sch = getBoundSchool();
   if (schoolEl) {
-    schoolEl.textContent = sch && sch.name ? sch.name : '成都市第七中学（演示）';
-    schoolEl.hidden = false;
+    if (!FEATURE_SCHOOL_UI) {
+      schoolEl.hidden = true;
+    } else {
+      const sch = getBoundSchool();
+      schoolEl.textContent = sch && sch.name ? sch.name : '成都市第七中学（演示）';
+      schoolEl.hidden = false;
+    }
   }
 }
 
@@ -469,17 +528,23 @@ function showProfileToast(msg) {
 
 function renderSettings() {
   const u = getUserProfile();
-  const sch = getBoundSchool();
-  const schoolHtml = sch
-    ? `<div class="settings-school-line"><span class="settings-school-name">${escAttr(sch.name)}</span><span class="settings-school-sub">已绑定</span></div>
+  const schoolBlock = FEATURE_SCHOOL_UI
+    ? (() => {
+        const sch = getBoundSchool();
+        const schoolHtml = sch
+          ? `<div class="settings-school-line"><span class="settings-school-name">${escAttr(sch.name)}</span><span class="settings-school-sub">已绑定</span></div>
        <div class="settings-school-actions">
          <button type="button" class="btn-settings-ghost" onclick="openSchoolModal('change')">更换学校</button>
          <button type="button" class="settings-link-danger" onclick="clearSchoolBind()">解除绑定</button>
        </div>`
-    : `<div class="settings-school-line muted">未绑定学校</div>
+          : `<div class="settings-school-line muted">未绑定学校</div>
        <div class="settings-school-actions">
          <button type="button" class="btn-settings-primary" onclick="openSchoolModal('bind')">绑定学校</button>
        </div>`;
+        return `<label class="settings-label">学校 <span class="settings-optional">（选填）</span></label>
+            ${schoolHtml}`;
+      })()
+    : '';
 
   const avLetter = escAttr((u.nickname && u.nickname.trim()) ? u.nickname.trim().slice(0, 1) : '用');
 
@@ -497,17 +562,18 @@ function renderSettings() {
           <div class="settings-fields-col">
             <label class="settings-label" for="settingsNickname">昵称</label>
             <input type="text" id="settingsNickname" class="settings-input" maxlength="32" value="${escAttr(u.nickname)}" placeholder="请输入昵称" autocomplete="nickname">
-            <label class="settings-label">学校 <span class="settings-optional">（选填）</span></label>
-            ${schoolHtml}
+            ${schoolBlock}
           </div>
         </div>
       </div>
       <div class="settings-card">
         <h2 class="settings-card-title">账户信息</h2>
-        <label class="settings-label" for="settingsPhone">手机号</label>
-        <input type="tel" id="settingsPhone" class="settings-input" maxlength="11" value="${escAttr(u.phone)}" placeholder="11 位手机号码" autocomplete="tel">
-        <p class="settings-hint">用于登录与安全验证，修改后请牢记新号码</p>
-        <button type="button" class="btn-settings-save" onclick="saveSettingsProfile()">保存资料</button>
+        <label class="settings-label">手机号</label>
+        <div class="settings-phone-row">
+          <span class="settings-phone-val" id="settingsPhoneDisplay">${escAttr(maskPhone(u.phone))}</span>
+          <button type="button" class="btn-settings-ghost" onclick="openPhoneModal()">修改</button>
+        </div>
+        <p class="settings-hint">用于登录与安全验证。换绑请点击「修改」，在弹窗中输入新号码与短信验证码。</p>
       </div>
       <div class="settings-card settings-card--compact">
         <h2 class="settings-card-title">安全</h2>
@@ -533,22 +599,27 @@ function renderSettings() {
     avDisp.classList.add('settings-avatar--img');
     avDisp.textContent = '';
   }
-}
-
-function saveSettingsProfile() {
-  const nick = document.getElementById('settingsNickname')?.value.trim() || '';
-  const phone = document.getElementById('settingsPhone')?.value.trim() || '';
-  if (!nick) {
-    showProfileToast('请填写昵称');
-    return;
+  const nickInp = document.getElementById('settingsNickname');
+  if (nickInp) {
+    const onNickBlur = () => {
+      if (!document.getElementById('page-settings')?.classList.contains('active')) return;
+      const v = String(nickInp.value).trim() || '';
+      const prev = getUserProfile().nickname || '';
+      if (v === prev) return;
+      if (!v) {
+        nickInp.value = prev;
+        showProfileToast('昵称不能为空');
+        return;
+      }
+      saveUserProfile({ nickname: v });
+      showProfileToast('昵称已保存');
+      const ad = document.getElementById('settingsAvatarDisplay');
+      if (ad && !getUserProfile().avatarDataUrl) {
+        ad.textContent = v.slice(0, 1);
+      }
+    };
+    nickInp.addEventListener('blur', onNickBlur);
   }
-  if (phone && !/^1\d{10}$/.test(phone)) {
-    showProfileToast('请输入正确的 11 位手机号');
-    return;
-  }
-  saveUserProfile({ nickname: nick, phone });
-  showProfileToast('资料已保存');
-  renderSettings();
 }
 
 function handleSettingsAvatar(e) {
@@ -566,6 +637,103 @@ function handleSettingsAvatar(e) {
     renderSettings();
   };
   reader.readAsDataURL(f);
+}
+
+function openPhoneModal() {
+  const u = getUserProfile();
+  const cur = document.getElementById('phoneModalCurrent');
+  if (cur) cur.textContent = maskPhone(u.phone);
+  const inp = document.getElementById('phoneNew');
+  const code = document.getElementById('phoneCode');
+  const err = document.getElementById('phoneModalErr');
+  const btn = document.getElementById('phoneSendCodeBtn');
+  if (inp) inp.value = '';
+  if (code) code.value = '';
+  if (err) err.textContent = '';
+  _phoneOtp = { code: '', target: '', cool: 0 };
+  _clearPhoneOtpTimer();
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '获取验证码';
+  }
+  document.getElementById('phoneModalOverlay')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('phoneNew')?.focus(), 50);
+}
+
+function closePhoneModal() {
+  _clearPhoneOtpTimer();
+  document.getElementById('phoneModalOverlay')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function sendPhoneChangeCode() {
+  const p = document.getElementById('phoneNew')?.value.trim() || '';
+  const err = document.getElementById('phoneModalErr');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(p)) {
+    if (err) err.textContent = '请输入正确的 11 位新手机号';
+    return;
+  }
+  const current = getUserProfile().phone;
+  if (p === current) {
+    if (err) err.textContent = '新号码与当前号码相同，无需更换';
+    return;
+  }
+  if (_phoneOtp.cool > 0) return;
+  const code = String(100000 + Math.floor(Math.random() * 900000));
+  _phoneOtp.code = code;
+  _phoneOtp.target = p;
+  const btn = document.getElementById('phoneSendCodeBtn');
+  _phoneOtp.cool = 60;
+  showProfileToast(`验证码已发送（演示：${code}）`);
+  const tick = () => {
+    _phoneOtp.cool = Math.max(0, _phoneOtp.cool - 1);
+    if (btn) {
+      btn.textContent = _phoneOtp.cool > 0 ? `${_phoneOtp.cool} s 后重发` : '获取验证码';
+      btn.disabled = _phoneOtp.cool > 0;
+    }
+    if (_phoneOtp.cool <= 0) _clearPhoneOtpTimer();
+  };
+  tick();
+  _phoneOtpTimer = setInterval(tick, 1000);
+}
+
+function confirmPhoneChange() {
+  const p = document.getElementById('phoneNew')?.value.trim() || '';
+  const c = document.getElementById('phoneCode')?.value.trim() || '';
+  const err = document.getElementById('phoneModalErr');
+  if (!/^1\d{10}$/.test(p)) {
+    if (err) err.textContent = '请输入正确的 11 位新手机号';
+    return;
+  }
+  if (!/^\d{6}$/.test(c)) {
+    if (err) err.textContent = '请输入 6 位短信验证码';
+    return;
+  }
+  if (!_phoneOtp.code) {
+    if (err) err.textContent = '请先点击「获取验证码」';
+    return;
+  }
+  if (p !== _phoneOtp.target) {
+    if (err) err.textContent = '新手机号与接收验证码的号码不一致，请重新获取验证码';
+    return;
+  }
+  if (c !== _phoneOtp.code) {
+    if (err) err.textContent = '验证码错误';
+    return;
+  }
+  if (p === getUserProfile().phone) {
+    if (err) err.textContent = '新号码与当前号码相同';
+    return;
+  }
+  if (err) err.textContent = '';
+  saveUserProfile({ phone: p });
+  _phoneOtp = { code: '', target: '', cool: 0 };
+  _clearPhoneOtpTimer();
+  closePhoneModal();
+  showProfileToast('手机号已更新');
+  renderSettings();
 }
 
 function openPasswordModal() {
@@ -619,70 +787,72 @@ function logoutAccount() {
 
 const classGroups=[
   {
-    id:1,name:'高二（3）班语文研读组',subject:'语文',desc:'语文选择性必修课程深度研读',
+    id:1,name:'中职·人工智能研读组',subject:'人工智能',desc:'《人工智能导论》与《机器学习》共读',
     code:'SCH2-YWRD',created:'2026-03-15',admin:'李明远',
     books:[
-      {t:'语文',s:'选择性必修上册',g:'高二',p:'人民教育出版社',sub:'语文'},
-      {t:'语文',s:'必修下册',g:'高一',p:'人民教育出版社',sub:'语文'},
-      {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',sub:'数学'},
+      {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',sub:'人工智能'},
+      {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',sub:'Python'},
+      {t:'机器学习基础',s:'监督与评估',g:'中职 三年级',p:'人民邮电出版社',sub:'机器学习'},
     ],
     students:[
-      {name:'王思涵',id:'2024030101',bp:[95,88,72],last:'今天'},
-      {name:'张子墨',id:'2024030102',bp:[82,79,68],last:'今天'},
-      {name:'刘雨桐',id:'2024030103',bp:[78,65,61],last:'昨天'},
-      {name:'陈思远',id:'2024030104',bp:[70,60,58],last:'昨天'},
-      {name:'赵梓涵',id:'2024030105',bp:[66,55,52],last:'2天前'},
-      {name:'孙晓彤',id:'2024030106',bp:[62,50,48],last:'2天前'},
-      {name:'周文博',id:'2024030107',bp:[55,48,44],last:'3天前'},
-      {name:'吴思琪',id:'2024030108',bp:[50,40,39],last:'3天前'},
-      {name:'郑浩然',id:'2024030109',bp:[42,35,33],last:'4天前'},
-      {name:'马欣怡',id:'2024030110',bp:[35,28,30],last:'5天前'},
-      {name:'黄子轩',id:'2024030111',bp:[28,20,25],last:'6天前'},
-      {name:'林雅琪',id:'2024030112',bp:[22,15,20],last:'1周前'},
+      {name:'王思涵',id:'2024030101',bp:[95,88,72],qp:[92,85,70],last:'今天'},
+      {name:'张子墨',id:'2024030102',bp:[82,79,68],qp:[80,75,64],last:'今天'},
+      {name:'刘雨桐',id:'2024030103',bp:[78,65,61],qp:[74,62,58],last:'昨天'},
+      {name:'陈思远',id:'2024030104',bp:[70,60,58],qp:[68,58,55],last:'昨天'},
+      {name:'赵梓涵',id:'2024030105',bp:[66,55,52],qp:[64,51,50],last:'2天前'},
+      {name:'孙晓彤',id:'2024030106',bp:[62,50,48],qp:[60,48,45],last:'2天前'},
+      {name:'周文博',id:'2024030107',bp:[55,48,44],qp:[52,45,40],last:'3天前'},
+      {name:'吴思琪',id:'2024030108',bp:[50,40,39],qp:[48,38,36],last:'3天前'},
+      {name:'郑浩然',id:'2024030109',bp:[42,35,33],qp:[40,33,30],last:'4天前'},
+      {name:'马欣怡',id:'2024030110',bp:[35,28,30],qp:[33,26,28],last:'5天前'},
+      {name:'黄子轩',id:'2024030111',bp:[28,20,25],qp:[26,18,22],last:'6天前'},
+      {name:'林雅琪',id:'2024030112',bp:[22,15,20],qp:[20,14,18],last:'1周前'},
     ]
   },
   {
-    id:2,name:'高二数学提高班',subject:'数学',desc:'选择性必修函数与导数专题',
+    id:2,name:'数据结构与网络实训',subject:'计算机',desc:'数据结构与网络综合练习',
     code:'SCH2-SXTG',created:'2026-03-20',admin:'李明远',
     books:[
-      {t:'数学',s:'选择性必修第一册',g:'高二',p:'人民教育出版社',sub:'数学'},
+      {t:'数据结构与算法',s:'C语言版',g:'中职 二年级',p:'清华大学出版社',sub:'算法与结构'},
+      {t:'计算机网络技术',s:'基础与互联',g:'中职 一年级',p:'电子工业出版社',sub:'计算机网络'},
     ],
     students:[
-      {name:'李泽宇',id:'2024030201',bp:[88],last:'今天'},
-      {name:'杨思涵',id:'2024030202',bp:[82],last:'今天'},
-      {name:'何子豪',id:'2024030203',bp:[75],last:'昨天'},
-      {name:'罗雨萱',id:'2024030204',bp:[70],last:'昨天'},
-      {name:'谢明轩',id:'2024030205',bp:[62],last:'2天前'},
-      {name:'韩思琪',id:'2024030206',bp:[55],last:'3天前'},
-      {name:'唐文杰',id:'2024030207',bp:[48],last:'4天前'},
-      {name:'曹雅婷',id:'2024030208',bp:[40],last:'5天前'},
+      {name:'李泽宇',id:'2024030201',bp:[88,85],qp:[86,83],last:'今天'},
+      {name:'杨思涵',id:'2024030202',bp:[82,80],qp:[80,78],last:'今天'},
+      {name:'何子豪',id:'2024030203',bp:[75,72],qp:[72,70],last:'昨天'},
+      {name:'罗雨萱',id:'2024030204',bp:[70,65],qp:[68,62],last:'昨天'},
+      {name:'谢明轩',id:'2024030205',bp:[62,58],qp:[60,55],last:'2天前'},
+      {name:'韩思琪',id:'2024030206',bp:[55,52],qp:[52,50],last:'3天前'},
+      {name:'唐文杰',id:'2024030207',bp:[48,45],qp:[45,42],last:'4天前'},
+      {name:'曹雅婷',id:'2024030208',bp:[40,38],qp:[38,35],last:'5天前'},
     ]
   },
   {
-    id:3,name:'高二英语共读组',subject:'英语',desc:'选择性必修同步阅读训练',
+    id:3,name:'Web 与移动开发组',subject:'开发',desc:'《网页设计》+《移动应用》项目学习',
     code:'SCH2-ENRD',created:'2026-04-02',admin:'刘芳',
     books:[
-      {t:'英语',s:'选择性必修第一册',g:'高二',p:'外语教学与研究出版社',sub:'英语'},
+      {t:'网页设计与制作',s:'HTML5/CSS3',g:'中职 一年级',p:'人民邮电出版社',sub:'Web前端'},
+      {t:'移动应用开发',s:'Android基础',g:'中职 三年级',p:'电子工业出版社',sub:'移动开发'},
     ],
     students:[
-      {name:'周洋',id:'2024030301',bp:[90],last:'今天'},
-      {name:'吴静',id:'2024030302',bp:[76],last:'昨天'},
-      {name:'李明远',id:'2024030303',bp:[68],last:'昨天'},
+      {name:'周洋',id:'2024030301',bp:[90,88],qp:[88,85],last:'今天'},
+      {name:'吴静',id:'2024030302',bp:[76,74],qp:[74,70],last:'昨天'},
+      {name:'李明远',id:'2024030303',bp:[68,65],qp:[65,60],last:'昨天'},
     ]
   },
 ];
 
-/** 当前用户可见的班级：创建者或已加入的成员 */
+/** 当前用户可见的组群：创建者或已加入的成员 */
 function isClassVisibleForUser(cls) {
   return cls.admin === CURRENT_USER || cls.students.some((s) => s.name === CURRENT_USER);
 }
 
-/** 班级教材条目与「我的教材」是否为同一本书（与添加教材逻辑一致） */
+/** 组群教材条目与「我的教材」是否为同一本书（与添加教材逻辑一致） */
 function classBookMatchesMyBook(cb, b) {
   return cb.t === b.t && cb.s === b.s;
 }
 
-/** 本书被哪些（当前用户可见的）班级用作教材，一书可对应多班 */
+/** 本书被哪些（当前用户可见的）组群用作教材，一书可对应多群 */
 function getClassNamesForMyBook(b) {
   const names = [];
   for (const cls of classGroups) {
@@ -748,27 +918,26 @@ function openDetail(bookIdx, source){
       ${isMine ? mkDetailGroupUseHtml(b) : ''}
       <div class="detail-actions">
         ${isMine
-          ? `<button class="btn-buy purchased">已购买</button>
+          ? `<button type="button" class="btn-enter-reader" onclick="openReaderFromDetail()">开始阅读</button>
              <button class="btn-print" onclick="handlePrint(event)">
                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                打印教材
              </button>`
           : libUnlocked
-            ? `<button type="button" class="btn-buy purchased" disabled>已购买</button>`
+            ? `<button type="button" class="btn-buy" onclick="openReaderFromDetail()">开始阅读</button>`
             : `<button type="button" class="btn-buy" onclick="handleBuy(this)">立即购买</button>
              <button type="button" class="btn-trial" onclick="openRedeem()">
                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:4px;vertical-align:-2px"><path d="M21 5H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><path d="M16 2v6M8 2v6"/></svg>兑换码
              </button>
-             <button type="button" class="btn-trial">免费试读</button>
+             <button type="button" class="btn-trial" onclick="openReaderFromDetail()">免费试读</button>
              <span class="detail-price">¥${price.toFixed(2)}</span>
              <span class="detail-price-orig">¥${(price*1.5).toFixed(2)}</span>`
         }
-        <button type="button" class="btn-enter-reader" onclick="openReaderFromDetail()">进入阅读</button>
       </div>
     </div>`;
 
   // Intro（我的教材：四种学习模式；数字教材：按 readModeKeys 展示）
-  const desc = DESC[b.sub] || '本教材严格按照国家课程标准编写，内容科学规范，注重学科核心素养的培养。';
+  const desc = DESC[b.sub] || '本教材面向中等职业教育相关专业编写，内容对接岗位与实训要求，强调规范操作、项目能力与职业素养。';
   const modeSectionHtml = isMine
     ? detailLearningModesSectionHtml(BOOK_READ_MODES)
     : detailLearningModesSectionHtml(resolveLibReadModes(b));
@@ -781,13 +950,13 @@ function openDetail(bookIdx, source){
     </div>
     <div class="intro-section">
       <div class="intro-heading"><span class="bar"></span>教材特色</div>
-      <div class="intro-text">本教材具有以下特色：紧扣课程标准，科学设计教学内容；注重情境创设，激发学习兴趣；设置多样化练习，巩固知识要点；融入信息技术，支持数字化学习。配套丰富的数字资源，包括教学课件、微课视频、在线练习等。</div>
+      <div class="intro-text">本教材具有以下特色：面向中职专业岗位能力，以项目与任务组织教学；强调做中学、安全与规范；提供微课、上机指导、拓展阅读与组群学情看板等数字资源，帮助形成可迁移的计算机与人工智能应用能力。</div>
       <div class="intro-tags">
         <span class="intro-tag">${b.g}</span>
         ${isPaperDigital(b)?'<span class="intro-tag intro-tag--pd">纸数融合</span>':''}
         <span class="intro-tag">数字版</span>
         <span class="intro-tag">配套资源</span>
-        <span class="intro-tag">课程标准</span>
+        <span class="intro-tag">中职·专业</span>
       </div>
     </div>`;
 
@@ -872,7 +1041,7 @@ function onTocLockedClick(e) {
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(document.getElementById('readerOverlay')?.classList.contains('open')){closeReader();return;}
-    closeRedeem();closeDetail();closeCreateClass();closeClassDetail();closeBookPicker();closeJoinClass();closeSchoolModal();closePasswordModal();closeFeedbackModal();
+    closeRedeem();closeDetail();closeCreateClass();closeClassDetail();closeBookPicker();closeJoinClass();closeSchoolModal();closePhoneModal();closePasswordModal();closeFeedbackModal();
   }
 });
 
@@ -935,8 +1104,8 @@ function handlePrint(e){
 
 // === CLASS GROUP FUNCTIONS ===
 function openCreateClass(){
-  document.getElementById('ccmName').value='';
-  document.getElementById('ccmDesc').value='';
+  const n = document.getElementById('ccmName');
+  if (n) n.value = '';
   document.getElementById('createClassOverlay').classList.add('open');
 }
 function closeCreateClass(){
@@ -950,16 +1119,24 @@ function doCreateClass(){
     setTimeout(()=>{document.getElementById('ccmName').style.borderColor='';document.getElementById('ccmName').style.boxShadow=''},1500);
     return;
   }
-  const sub=document.getElementById('ccmSubject').value;
-  const desc=document.getElementById('ccmDesc').value.trim();
-  const code='SC'+String.fromCharCode(65+Math.floor(Math.random()*26))+Math.floor(Math.random()*9)+'-'+sub.slice(0,2).toUpperCase()+Math.floor(1000+Math.random()*9000);
-  classGroups.push({id:Date.now(),name,subject:sub,desc:desc||sub+'学习小组',code,created:new Date().toISOString().slice(0,10),admin:'李明远',books:[],students:[]});
+  const code = `SC${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${Math.floor(Math.random() * 9)}-GRP${Math.floor(1000 + Math.random() * 9000)}`;
+  classGroups.push({
+    id: Date.now(),
+    name,
+    subject: '综合',
+    desc: name,
+    code,
+    created: new Date().toISOString().slice(0, 10),
+    admin: '李明远',
+    books: [],
+    students: [],
+  });
   closeCreateClass();
   renderMy();
   // success toast
   const toast=document.createElement('div');
   toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
-  toast.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>班级「${name}」创建成功`;
+  toast.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>组群「${name}」创建成功`;
   document.body.appendChild(toast);
   setTimeout(()=>{toast.style.opacity='0';toast.style.transition='opacity 0.3s';setTimeout(()=>toast.remove(),300)},2000);
 }
@@ -999,19 +1176,21 @@ function doJoinClass(){
     return;
   }
   if(cls.admin===CURRENT_USER){
-    errEl.textContent='你已是该班级的管理员，无需通过邀请码加入';
+    errEl.textContent='你已是该组群的管理员，无需通过邀请码加入';
     return;
   }
   if(cls.students.some(s=>s.name===CURRENT_USER)){
-    errEl.textContent='你已在该班级中';
+    errEl.textContent='你已在该组群中';
     return;
   }
   const nBooks=cls.books.length;
   const bp=nBooks?Array.from({length:nBooks},()=>Math.floor(Math.random()*45)+35):[];
+  const qp=nBooks?bp.map((p)=>Math.max(0, Math.min(100, p - Math.floor(4 + Math.random() * 15)))):[];
   cls.students.push({
     name:CURRENT_USER,
     id:'2024'+String(Math.floor(100000+Math.random()*900000)),
     bp,
+    qp,
     last:'今天'
   });
   document.getElementById('joinSuccessName').textContent=cls.name;
@@ -1022,7 +1201,7 @@ function doJoinClass(){
     renderMy();
     const toast=document.createElement('div');
     toast.style.cssText='position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
-    toast.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已加入班级「${cls.name}」`;
+    toast.innerHTML=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已加入组群「${cls.name}」`;
     document.body.appendChild(toast);
     setTimeout(()=>{toast.style.opacity='0';toast.style.transition='opacity 0.3s';setTimeout(()=>toast.remove(),300)},2200);
   },1600);
@@ -1054,26 +1233,32 @@ function drawQR(canvas,text){
 
 let currentClassIdx=null;
 
-function openClassDetail(idx){
+function ensureStudentBookMetrics(st) {
+  const n = (st.bp && st.bp.length) || 0;
+  if (!n) {
+    st.bp = st.bp || [];
+    st.qp = st.qp || [];
+    return;
+  }
+  if (!st.qp || st.qp.length !== n) {
+    st.qp = st.bp.map((p) => Math.max(0, Math.min(100, (p|0) - 8 + ((n + p) % 5))));
+  }
+}
+
+function openClassDetail(idx, bookIdx) {
   currentClassIdx=idx;
   const cls=classGroups[idx];
   if(!cls)return;
+  cls.students.forEach(ensureStudentBookMetrics);
+  const nBooks=cls.books.length;
+  let selB=0;
+  if (typeof bookIdx==='number' && !Number.isNaN(bookIdx) && nBooks) {
+    selB=Math.max(0, Math.min(nBooks-1, Math.floor(bookIdx)));
+  }
   const isClassAdmin=cls.admin===CURRENT_USER;
-  // Compute avg progress per student across class books
-  const students=[...cls.students].map(st=>{
-    const avg=st.bp.length?Math.round(st.bp.reduce((a,b)=>a+b,0)/st.bp.length):0;
-    return {...st,pr:avg};
-  }).sort((a,b)=>b.pr-a.pr);
-  const totalPr=students.length?Math.round(students.reduce((s,st)=>s+st.pr,0)/students.length):0;
-  const activeCnt=students.filter(s=>s.last==='今天'||s.last==='昨天').length;
-  const completedCnt=students.filter(s=>s.pr>=80).length;
 
-  // Class books HTML
   const classBooksHtml=cls.books.map((bk,bi)=>{
     const [c1,c2]=c(bk.sub);
-    // Avg progress for this book across students
-    const bAvg=cls.students.length?Math.round(cls.students.reduce((s,st)=>s+(st.bp[bi]||0),0)/cls.students.length):0;
-    const bpc=bAvg>=70?'var(--mint-deep)':bAvg>=40?'var(--peach-deep)':'var(--rose-deep)';
     const removeBtn=isClassAdmin?`<button class="class-book-remove" title="移除教材" onclick="removeClassBook(${idx},${bi})">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>`:'';
@@ -1085,13 +1270,16 @@ function openClassDetail(idx){
         <div class="class-book-name">${bk.t} · ${bk.s}</div>
         <div class="class-book-pub">${bk.p} · ${bk.g}</div>
       </div>
-      <div class="class-book-avg">
-        <div class="class-book-avg-val" style="color:${bpc}">${bAvg}%</div>
-        <div class="class-book-avg-lab">班级均分</div>
-      </div>
       ${removeBtn}
     </div>`;
   }).join('');
+
+  const studentsSorted=nBooks? [...cls.students].map(st=>{
+    ensureStudentBookMetrics(st);
+    const readP=st.bp[selB]??0;
+    const quizP=st.qp[selB]??0;
+    return { ...st, readP, quizP };
+  }).sort((a,b)=>b.readP-a.readP): [];
 
   const titleBadge=isClassAdmin
     ?`<span class="admin-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>管理员</span>`
@@ -1100,11 +1288,11 @@ function openClassDetail(idx){
   const dangerBlock=isClassAdmin
     ?`<div class="class-detail-danger">
         <button type="button" class="btn-class-dissolve" onclick="dissolveClass(${idx})">解散群组</button>
-        <p class="class-detail-danger-hint">解散后班级将从所有成员的「我的班级」中移除，且不可恢复。</p>
+        <p class="class-detail-danger-hint">解散后组群将从所有成员的「我的组群」中移除，且不可恢复。</p>
       </div>`
     :`<div class="class-detail-danger">
         <button type="button" class="btn-class-leave" onclick="leaveClass(${idx})">退出群组</button>
-        <p class="class-detail-danger-hint">退出后你将不再出现在该班级成员列表中，可凭邀请码再次加入。</p>
+        <p class="class-detail-danger-hint">退出后你将不再出现在该组群成员列表中，可凭邀请码再次加入。</p>
       </div>`;
 
   const inviteBlock=isClassAdmin?`
@@ -1123,7 +1311,7 @@ function openClassDetail(idx){
       </div>
     </div>`:`
     <div class="invite-readonly">
-      <p class="invite-readonly-text">班级由 <strong>${cls.admin}</strong> 管理。邀请码仅管理员可见；如需邀请其他同学，请联系管理员获取邀请码。</p>
+      <p class="invite-readonly-text">组群由 <strong>${cls.admin}</strong> 管理。邀请码仅管理员可见；如需邀请其他同学，请联系管理员获取邀请码。</p>
     </div>`;
 
   const addBookBtn=isClassAdmin?`
@@ -1134,7 +1322,18 @@ function openClassDetail(idx){
 
   const emptyBooksMsg=cls.books.length?'':(isClassAdmin
     ?'<div style="text-align:center;padding:24px;color:var(--stone);font-size:12.5px">暂未添加教材，点击上方按钮从「我的教材」中添加</div>'
-    :'<div style="text-align:center;padding:24px;color:var(--stone);font-size:12.5px">班级暂未添加教材</div>');
+    :'<div style="text-align:center;padding:24px;color:var(--stone);font-size:12.5px">组群暂未添加教材</div>');
+
+  const bookTabsHtml=nBooks? cls.books.map((bk, bi) => {
+    const active=bi===selB ? ' is-active' : '';
+    const raw=bk.t.length>12?`${bk.t.slice(0,12)}…`:`${bk.t}`;
+    return `<button type="button" class="class-book-tab${active}" title="${escAttr(`${bk.t} · ${bk.s}`)}" role="tab" aria-selected="${bi===selB}" onclick="openClassDetail(${idx},${bi})">${escAttr(raw)}</button>`;
+  }).join('') :'';
+
+  const nMembers=cls.students.length;
+  const curBookLine=nBooks && cls.books[selB] ? escAttr(`${cls.books[selB].t} · ${cls.books[selB].s}`) : '';
+
+  const colorFor=(pct)=>{const p=pct|0;if(p>=80)return 'var(--mint-deep)';if(p>=50)return 'var(--peach-deep)';return 'var(--rose-deep)';};
 
   const content=document.getElementById('classDetailContent');
   content.innerHTML=`
@@ -1143,7 +1342,7 @@ function openClassDetail(idx){
       <div class="class-detail-meta">
         <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>${cls.subject}</span>
         <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${cls.created}</span>
-        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${students.length} 名学生</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>${nMembers} 名学生</span>
         <span>创建者: ${cls.admin}</span>
       </div>
     </div>
@@ -1152,7 +1351,7 @@ function openClassDetail(idx){
       <div class="class-books-head">
         <div class="class-books-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          班级教材
+          组群教材
           <span class="class-books-count">${cls.books.length} 本</span>
         </div>
         ${addBookBtn}
@@ -1161,51 +1360,57 @@ function openClassDetail(idx){
         ${cls.books.length?classBooksHtml:emptyBooksMsg}
       </div>
     </div>
-    <div class="class-stats-row">
-      <div class="cs-box"><div class="cs-val">${students.length}</div><div class="cs-lab">班级人数</div></div>
-      <div class="cs-box"><div class="cs-val">${totalPr}%</div><div class="cs-lab">平均进度</div></div>
-      <div class="cs-box"><div class="cs-val">${activeCnt}</div><div class="cs-lab">近期活跃</div></div>
-      <div class="cs-box"><div class="cs-val">${completedCnt}</div><div class="cs-lab">已完成</div></div>
+    <div class="class-stats-row class-stats-row--duo">
+      <div class="cs-box"><div class="cs-val">${nMembers}</div><div class="cs-lab">组群人数</div></div>
+      <div class="cs-box"><div class="cs-val">${nBooks}</div><div class="cs-lab">组群教材</div></div>
     </div>
     <div class="student-section">
       <div class="student-head">
-        <div class="student-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          学生学习进度排行
+        <div class="student-title-wrap">
+          <div class="student-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            学情排行
+          </div>
+          <p class="student-lead-hint">多本教材时无法综合排名；请切换下方教材，查看该书中的<strong>阅读进度</strong>与<strong>答题进度</strong>（随堂测验、章末练习等）。</p>
         </div>
-        <span class="student-count">共 ${students.length} 人</span>
+        <span class="student-count">共 ${nMembers} 人</span>
       </div>
-      ${cls.books.length?`<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-        ${cls.books.map((bk,bi)=>{
-          const [bc1]=c(bk.sub);
-          return `<span style="font-size:10px;padding:3px 10px;border-radius:6px;background:${bc1}18;color:${bc1};font-weight:500">${bk.t}·${bk.s.length>6?bk.s.slice(0,6)+'…':bk.s}</span>`;
-        }).join('')}
+      ${nBooks?`<div class="class-book-tabs" role="tablist" aria-label="组群教材">
+        ${bookTabsHtml}
+        <span class="class-book-tab-cur" title="当前统计范围">${curBookLine}</span>
       </div>`:''}
       <div class="student-list">
-        ${students.map((st,i)=>{
+        ${nBooks? studentsSorted.map((st,i)=>{
           const ac=AVATAR_COLORS[i%AVATAR_COLORS.length];
-          const pc=st.pr>=80?'var(--mint-deep)':st.pr>=50?'var(--peach-deep)':'var(--rose-deep)';
+          const rCol=colorFor(st.readP);
+          const qCol=colorFor(st.quizP);
           const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
-          // Per-book progress bars
-          const bpHtml=cls.books.length?`<div class="student-book-progress">${st.bp.map((p,bi)=>{
-            const bpc=p>=70?'var(--mint-deep)':p>=40?'var(--peach-deep)':'var(--rose-deep)';
-            return `<div class="sbp-item"><div class="sbp-bar"><div class="sbp-fill" style="width:${p}%;background:${bpc}"></div></div><div class="sbp-pct" style="color:${bpc}">${p}%</div></div>`;
-          }).join('')}</div>`:'';
-          return `<div class="student-row">
+          return `<div class="student-row student-row--by-book">
             <div class="student-rank ${rc}">${i+1}</div>
             <div class="student-avatar" style="background:linear-gradient(135deg,${ac[0]},${ac[1]})">${st.name.slice(-1)}</div>
             <div class="student-info">
               <div class="student-name">${st.name}</div>
               <div class="student-id">${st.id}</div>
             </div>
-            <div class="student-progress">
-              <div class="student-bar"><div class="student-bar-fill" style="width:${st.pr}%;background:${pc}"></div></div>
-              <span class="student-pct" style="color:${pc}">${st.pr}%</span>
+            <div class="student-metric-cols">
+              <div class="sm-col" title="本教材已读章节/页码进度（演示数据）">
+                <div class="sm-lab">阅读</div>
+                <div class="sm-row">
+                  <div class="student-bar sm-bar"><div class="student-bar-fill" style="width:${st.readP}%;background:${rCol}"></div></div>
+                  <span class="student-pct sm-pct" style="color:${rCol}">${st.readP}%</span>
+                </div>
+              </div>
+              <div class="sm-col" title="本教材内测验与练习完成情况（演示数据）">
+                <div class="sm-lab">答题</div>
+                <div class="sm-row">
+                  <div class="student-bar sm-bar"><div class="student-bar-fill" style="width:${st.quizP}%;background:${qCol}"></div></div>
+                  <span class="student-pct sm-pct" style="color:${qCol}">${st.quizP}%</span>
+                </div>
+              </div>
             </div>
-            ${bpHtml}
             <div class="student-last">${st.last}</div>
           </div>`;
-        }).join('')}
+        }).join(''):`<div class="class-leaderboard-empty">请先在组群内添加教材，再按教材查看学情与排行</div>`}
       </div>
     </div>
     ${dangerBlock}`;
@@ -1226,7 +1431,7 @@ function closeClassDetail(){
 function dissolveClass(idx) {
   const cls = classGroups[idx];
   if (!cls || cls.admin !== CURRENT_USER) return;
-  if (!confirm('确定解散该班级？解散后所有成员将无法再从「我的班级」进入本群，此操作不可恢复。')) return;
+  if (!confirm('确定解散该组群？解散后所有成员将无法再从「我的组群」进入，此操作不可恢复。')) return;
   classGroups.splice(idx, 1);
   currentClassIdx = null;
   closeClassDetail();
@@ -1234,7 +1439,7 @@ function dissolveClass(idx) {
   const toast = document.createElement('div');
   toast.style.cssText =
     'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
-  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已解散班级「${cls.name}」`;
+  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已解散组群「${cls.name}」`;
   document.body.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -1248,7 +1453,7 @@ function leaveClass(idx) {
   if (!cls || cls.admin === CURRENT_USER) return;
   const si = cls.students.findIndex((s) => s.name === CURRENT_USER);
   if (si < 0) return;
-  if (!confirm('确定退出该班级？退出后将不再显示在「我的班级」中。')) return;
+  if (!confirm('确定退出该组群？退出后将不再显示在「我的组群」中。')) return;
   cls.students.splice(si, 1);
   currentClassIdx = null;
   closeClassDetail();
@@ -1256,7 +1461,7 @@ function leaveClass(idx) {
   const toast = document.createElement('div');
   toast.style.cssText =
     'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 28px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;display:flex;align-items:center;gap:10px';
-  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已退出班级「${cls.name}」`;
+  toast.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>已退出组群「${cls.name}」`;
   document.body.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -1300,9 +1505,12 @@ function addBookToClass(classIdx,bookIdx,el){
   const cls=classGroups[classIdx];
   if(!cls||cls.admin!==CURRENT_USER)return;
   const bk=myB[bookIdx];
-  cls.books.push({t:bk.t,s:bk.s,g:bk.g,p:bk.p,sub:bk.sub,paperDigital:!!bk.paperDigital,editor:bk.editor||''});
-  // Add random progress for existing students
-  cls.students.forEach(st=>{st.bp.push(Math.floor(Math.random()*60))});
+  cls.books.push({t:bk.t,s:bk.s,g:bk.g,p:bk.p,sub:bk.sub,cat:bk.cat,paperDigital:!!bk.paperDigital,editor:bk.editor||''});
+  cls.students.forEach((st) => {
+    st.bp.push(Math.floor(Math.random() * 60) + 20);
+    if (!st.qp) st.qp = [];
+    st.qp.push(Math.floor(Math.random() * 55) + 15);
+  });
   el.classList.add('added');
   el.onclick=null;
   // Refresh detail
@@ -1315,7 +1523,10 @@ function removeClassBook(classIdx,bookIdx){
   const cls=classGroups[classIdx];
   if(!cls||cls.admin!==CURRENT_USER)return;
   cls.books.splice(bookIdx,1);
-  cls.students.forEach(st=>{st.bp.splice(bookIdx,1)});
+  cls.students.forEach((st) => {
+    st.bp.splice(bookIdx, 1);
+    if (st.qp && st.qp.length > bookIdx) st.qp.splice(bookIdx, 1);
+  });
   openClassDetail(classIdx);
   refreshMyPageIfActive();
 }
@@ -1395,13 +1606,14 @@ let fG='全部',fS='全部科目';
 function setGradeFilter(g){fG=g;renderLib();}
 function setSubjectFilter(s){fS=s;renderLib();}
 
-const GS=['全部','高一','高二','高三'];
-const SS=['全部科目','语文','数学','英语','物理','化学','生物','历史','地理','政治'];
+const GS=['全部','中职 一年级','中职 二年级','中职 三年级'];
+/** 数字教材页「科目」筛选项（大类）；与书目字段 cat 对应，细分类仍用 sub 展示简介/目录 */
+const SS=['全部科目','计算机基础','程序与开发','网络与运维','数据与平台','人工智能'];
 
 function renderLib(){
   let list=books;
   if(fG!=='全部')list=list.filter(b=>b.g===fG);
-  if(fS!=='全部科目')list=list.filter(b=>b.sub===fS);
+  if(fS!=='全部科目')list=list.filter(b=>(b.cat||b.sub)===fS);
   const q=(document.getElementById('sInput').value||'').trim().toLowerCase();
   if(q)list=list.filter(b=>b.t.includes(q)||b.s.includes(q)||b.p.includes(q));
 
@@ -1418,9 +1630,12 @@ function renderLib(){
 }
 
 function renderMy(){
-  const school = getBoundSchool();
-  const schoolCardHtml = school
-    ? `<div class="school-bind-card school-bind-card--in-grid">
+  const schoolCardHtml = !FEATURE_SCHOOL_UI
+    ? ''
+    : (() => {
+        const school = getBoundSchool();
+        return school
+          ? `<div class="school-bind-card school-bind-card--in-grid">
       <div class="school-bind-main">
         <div class="school-bind-ic">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -1435,30 +1650,26 @@ function renderMy(){
         <button type="button" class="btn-school-ghost" onclick="event.stopPropagation();openSchoolModal('change')">更换学校</button>
       </div>
     </div>`
-    : `<div class="school-bind-card school-bind-card--in-grid">
+          : `<div class="school-bind-card school-bind-card--in-grid">
       <div class="school-bind-main">
         <div class="school-bind-ic">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </div>
         <div class="school-bind-text">
           <div class="school-bind-label">学校信息</div>
-          <div class="school-bind-value muted">尚未绑定学校（可选）。绑定后可与学校课程、班级服务关联</div>
+          <div class="school-bind-value muted">尚未绑定学校（可选）。绑定后可与学校课程、组群服务关联</div>
         </div>
       </div>
       <div class="school-bind-actions">
         <button type="button" class="btn-school-primary" onclick="event.stopPropagation();openSchoolModal('bind')">绑定学校</button>
       </div>
     </div>`;
+      })();
 
   const myClassEntries = classGroups
     .map((cls, i) => ({ cls, i }))
     .filter(({ cls }) => isClassVisibleForUser(cls));
   const classHtml=myClassEntries.map(({cls,i})=>{
-    const avgPr=cls.students.length?Math.round(cls.students.reduce((s,st)=>{
-      const sp=st.bp.length?Math.round(st.bp.reduce((a,b)=>a+b,0)/st.bp.length):0;
-      return s+sp;
-    },0)/cls.students.length):0;
-    const barColor=avgPr>=60?'var(--mint-deep)':avgPr>=30?'var(--peach-deep)':'var(--rose-deep)';
     return `<div class="class-card" onclick="openClassDetail(${i})">
       ${cls.admin===CURRENT_USER?'<div class="class-card-admin"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>管理员</div>':''}
       <div class="class-card-head">
@@ -1472,10 +1683,8 @@ function renderMy(){
       </div>
       <div class="class-card-stats">
         <div class="class-stat"><div class="class-stat-val">${cls.students.length}</div><div class="class-stat-lab">学生人数</div></div>
-        <div class="class-stat"><div class="class-stat-val">${avgPr}%</div><div class="class-stat-lab">平均进度</div></div>
-        <div class="class-stat"><div class="class-stat-val">${cls.books.length}</div><div class="class-stat-lab">班级教材</div></div>
+        <div class="class-stat"><div class="class-stat-val">${cls.books.length}</div><div class="class-stat-lab">组群教材</div></div>
       </div>
-      <div class="class-card-bar"><div class="class-card-bar-fill" style="width:${avgPr}%;background:${barColor}"></div></div>
       <div class="class-card-foot">
         <div class="class-card-date">创建于 ${cls.created}</div>
         <svg class="class-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1500,8 +1709,8 @@ function renderMy(){
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div class="join-class-entry-text">
-          <div class="join-class-entry-title">加入班级</div>
-          <div class="join-class-entry-desc">输入管理员提供的邀请码加入对应班级</div>
+          <div class="join-class-entry-title">加入组群</div>
+          <div class="join-class-entry-desc">输入管理员提供的邀请码加入对应组群</div>
         </div>
         <svg class="join-class-entry-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
@@ -1510,9 +1719,9 @@ function renderMy(){
     <div class="grid grid--my-books">${myB.map((b,i)=>mkCard(b,i,true)).join('')}</div>
     <div class="class-section">
       <div class="sec-head">
-        <div class="sec-title"><span class="dot"></span>我的班级</div>
+        <div class="sec-title"><span class="dot"></span>我的组群</div>
         <div class="sec-head-actions">
-          <span class="sec-extra">共 ${myClassEntries.length} 个班级</span>
+          <span class="sec-extra">共 ${myClassEntries.length} 个组群</span>
         </div>
       </div>
       <div class="class-grid">
@@ -1522,7 +1731,7 @@ function renderMy(){
           <div class="class-create-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </div>
-          <div class="class-create-text">创建新班级</div>
+          <div class="class-create-text">创建组群</div>
         </div>
       </div>
     </div>`;
@@ -1554,31 +1763,35 @@ document.getElementById('pwdNew2')?.addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault();confirmPasswordChange();}
 });
 
+document.getElementById('phoneCode')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();confirmPhoneChange();}
+});
+
 // === 数字教材阅读页 ===
 /** 三级目录演示数据（可对接接口替换） */
 const READER_OUTLINE = [
   {
-    title: '第一单元 阅读与鉴赏',
+    title: '第一模块 智能技术与社会',
     children: [
       {
-        title: '第1课 沁园春·长沙',
+        title: '第1课 人工智能能做什么？',
         children: [
-          { title: '学习提示', cid: 'r1' },
-          { title: '课文正文', cid: 'r2' },
+          { title: '导读与关键概念', cid: 'r1' },
+          { title: '案例与拓展阅读', cid: 'r2' },
         ],
       },
       {
-        title: '第2课 立在地球边上放号',
+        title: '第2课 数据、模型与风险',
         children: [{ title: '综合练习', cid: 'r3' }],
       },
     ],
   },
   {
-    title: '第二单元 劳动光荣',
+    title: '第二模块 项目式学习',
     children: [
       {
-        title: '第5课 喜看稻菽千重浪',
-        children: [{ title: '拓展阅读', cid: 'r4' }],
+        title: '第3课 从分类到简单神经网络',
+        children: [{ title: '拓展阅读与练习', cid: 'r4' }],
       },
     ],
   },
@@ -1587,43 +1800,43 @@ const READER_OUTLINE = [
 /** 阅读页嵌入「测试/练习」演示题库（可对接 CMS） */
 const READER_DEMO_QUIZ = {
   title: '本节综合测评',
-  subtitle: '《沁园春·长沙》与「劳动光荣」单元（演示）',
+  subtitle: '《人工智能导论》· 智能技术与社会（演示）',
   questions: [
     {
       id: 'q1',
       type: 'choice',
-      stem: '下列对「劳动精神」在当代的内涵理解，最恰当的一项是？',
+      stem: '下列哪一项最符合「可解释性」在人工智能应用中的含义？',
       options: [
-        '仅指体力劳动与技能训练',
-        '体脑结合、敬业精益、创新创造的价值取向',
-        '与学科学习、立德树人无关',
+        '模型参数量必须尽可能大',
+        '能向用户或监管方说明关键预测依据，便于审计与纠偏',
+        '完全禁止在课堂中使用大模型',
       ],
       correctIndex: 1,
-      explain: '劳动精神强调正确的劳动观念与品质，涵盖脑力与体力劳动，并与社会主义核心价值观相联系。',
+      explain: '可解释性强调在医疗、教育、金融等场景下，关键决策应可被理解与追溯，以落实责任与合规。',
     },
     {
       id: 'q2',
       type: 'fill',
-      stem: '《沁园春·长沙》上阕以「________」一句收束写景，写出万物竞发的生命力。',
-      answers: ['万类霜天竞自由'],
-      explain: '该句意象开阔，总写上阕秋景，为下阕抒情张本。',
+      stem: '监督学习通常需要带________的数据来训练预测模型。',
+      answers: ['标签', '标注', 'label'],
+      explain: '监督学习依赖输入与对应输出（标签），以便学习从特征到目标的映射关系。',
     },
     {
       id: 'q3',
       type: 'tf',
-      stem: '「沁园春」是词牌，「长沙」为题目，二者分别标示格律与内容或地点。',
+      stem: '在大模型时代，学生仍应关注数据来源、版权与引用规范，避免将他人作品标为自己的成果。',
       correct: true,
-      explain: '词牌规定格律句式，题目往往标示题材、地点或主旨。',
+      explain: '学术与工程实践均要求诚信与版权合规，技术能力与人文规范同样重要。',
     },
     {
       id: 'q4',
       type: 'short',
-      stem: '请简要说明：「问苍茫大地，谁主沉浮」表达了作者怎样的情怀与思考？（建议不少于 25 字）',
-      keywords: ['时代', '家国', '青年', '责任', '主宰', '命运', '豪情'],
+      stem: '请简要说明：在课堂或实训中使用生成式人工智能时，你应至少注意哪两类风险？（建议不少于 25 字）',
+      keywords: ['隐私', '信息', '偏见', '幻觉', '安全', '版权', '学术', '规范'],
       minLen: 25,
       sampleAnswer:
-        '由自然之景上升到对时代与民族命运的追问，体现以天下为己任的担当与改造社会的青年豪情。',
-      explain: '应联系上下阕，指出从写景到抒怀的升华，以及对「谁主沉浮」的历史之问。',
+        '一是注意隐私与敏感信息泄露，避免把个人或学校未公开数据直接输入公网服务；二是注意「幻觉」与事实错误，对输出进行查证，并遵守学术诚信与版权要求。',
+      explain: '可围绕隐私/安全、事实性、版权、学术诚信、模型偏见等任两点展开，表述清楚即可。',
     },
   ],
 };
@@ -1631,29 +1844,33 @@ const READER_DEMO_QUIZ = {
 /** 第二套演示题（拓展阅读主题；与综合测评独立计分与完成态） */
 const READER_DEMO_QUIZ_B = {
   title: '单元拓展测评',
-  subtitle: '报告文学与典型人物报道（演示）',
+  subtitle: '网络与数据安全基础（演示）',
   questions: [
     {
       id: 'bq1',
       type: 'choice',
-      stem: '报告文学与新闻通讯相比，最突出的体裁特征通常是？',
-      options: ['以虚构情节增强可读性', '在真实基础上允许适度夸张细节', '强调文学性表达与典型形象的深度刻画', '以短平快时效为唯一目标'],
-      correctIndex: 2,
-      explain: '报告文学在真实新闻材料基础上，注重文学手法与人物/事件的典型化呈现。',
+      stem: '在公共 Wi-Fi 下访问学校内网或传输作业，较稳妥的做法是？',
+      options: [
+        '直接连接并关闭所有安全提示以提速',
+        '使用学校提供的 VPN/加密通道或可信蜂窝网络，并避免明文传输敏感信息',
+        '将账号密码保存到便签并拍照上传云盘',
+      ],
+      correctIndex: 1,
+      explain: '不可信网络宜通过加密通道访问内网，并减少敏感数据在公共链路上的暴露面。',
     },
     {
       id: 'bq2',
       type: 'fill',
-      stem: '人物通讯常通过________、细节与语言等手法，使形象立得住、传得开。',
-      answers: ['典型事例', '事例'],
-      explain: '典型事例是通讯写人的重要抓手，常与细节描写、人物语言结合。',
+      stem: '对称加密中，加解密使用________密钥；非对称加密常使用公钥与私钥配对。',
+      answers: ['相同', '同一', '一样'],
+      explain: '对称加密用同一密钥加解密，速度快但密钥分发是难点；非对称可更好解决身份与密钥交换问题。',
     },
     {
       id: 'bq3',
       type: 'tf',
-      stem: '「劳动光荣」主题报道选材时，应优先选取能体现爱岗敬业与时代精神的平凡岗位故事。',
+      stem: '将同学或客户的个人信息用于「训练自己的模型」而不告知用途，可能违反个人信息保护与学校管理制度。',
       correct: true,
-      explain: '主题报道重在价值导向与可感可学的榜样力量，平凡岗位同样具有典型意义。',
+      explain: '收集与使用个人信息应遵循目的限制与告知同意，教学演示也应使用脱敏或公开数据集。',
     },
   ],
 };
@@ -1885,27 +2102,27 @@ function readerGo(cid, opts) {
 function buildReaderArticleHtml(cid, b) {
   const bt = b ? `${b.t} · ${b.s}` : '本教材';
   const blocks = {
-    r1: `<div class="reader-block"><h2>学习提示</h2><p>本课为「${bt}」的导读与学法提示。请结合单元目标，关注关键词句与情感脉络。</p><p>阅读时建议先通读全篇，再分段批注：标出意象、修辞与抒情线索。</p></div>`,
-    r2: `<div class="reader-block"><h2>课文正文</h2><p>独立寒秋，湘江北去，橘子洲头。看万山红遍，层林尽染；漫江碧透，百舸争流。鹰击长空，鱼翔浅底，万类霜天竞自由……</p><p>（以下为演示正文占位，正式环境由 CMS 或排版引擎渲染。）</p>
-      <figure class="reader-figure"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" alt="插图" loading="lazy"><figcaption class="reader-figcap">图 · 山川意象（示意）</figcaption></figure>
+    r1: `<div class="reader-block"><h2>导读与关键概念</h2><p>本课来自「${bt}」。请带着三个问题阅读：本课要解决什么岗位或项目问题？用到了哪类数据与模型？可能带来哪些伦理或安全风险？</p><p>建议先浏览小结与拓展资源，再回看术语表，在教材旁注中写下你的「可执行行动」。</p></div>`,
+    r2: `<div class="reader-block"><h2>案例与拓展阅读</h2><p>智能辅导、代码补全、医学影像辅助、工业质检等，都是将统计学习与领域知识结合的实际场景。请思考：当模型输出与教师/工程师判断不一致时，应如何建立复核与反馈闭环。</p>
+      <figure class="reader-figure"><img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80" alt="代码与数据" loading="lazy"><figcaption class="reader-figcap">图 · 计算与数据（示意）</figcaption></figure>
       <div class="reader-video-wrap">
-        <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80">
+        <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80">
           <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
         </video>
-        <p class="reader-video-cap">配套微课 · 意象与节奏（演示视频，支持播放/暂停与进度条）</p>
+        <p class="reader-video-cap">配套微课 · 案例导读（演示视频，支持播放/暂停与进度条）</p>
       </div>
-      <div class="reader-gallery"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=80" alt="" loading="lazy"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" alt="" loading="lazy"></div>
+      <div class="reader-gallery"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80" alt="" loading="lazy"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=400&q=80" alt="" loading="lazy"></div>
       </div>`,
-    r3: `<div class="reader-block"><h2>综合练习</h2><p>请概括本诗主旨，并结合时代背景说明「问苍茫大地，谁主沉浮」的意蕴。</p></div>`,
+    r3: `<div class="reader-block"><h2>综合练习</h2><p>试比较「规则系统」与「从数据学习」的适用条件；各举一个在校园生活中可以合规收集数据的例子，并说明你会如何脱敏与存储。</p></div>`,
     r4: `<div class="reader-r4-split">
       <div class="reader-block reader-ext-read">
-        <h2>拓展阅读</h2>
-        <p>对比阅读：新闻通讯与报告文学在叙事视角上的差异；结合本单元「劳动光荣」主题，思考典型人物报道的选材与结构。</p>
+        <h2>拓展阅读与练习</h2>
+        <p>阅读配套文章：从感知机到深度网络的技术脉络。思考：过拟合、数据偏差与提示攻击分别会在教学或实训中造成什么后果？可结合本组项目讨论缓解策略。</p>
         <div class="reader-video-wrap">
-          <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80">
+          <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80">
             <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
           </video>
-          <p class="reader-video-cap">拓展素材 · 报告文学导读（演示视频）</p>
+          <p class="reader-video-cap">拓展素材 · 神经网络与实训安全（演示视频）</p>
         </div>
       </div>
       <div class="reader-practice-below" aria-label="拓展阅读之下的测评区">
@@ -2263,15 +2480,15 @@ function readerBuildDemoReportResult(slotId) {
 function readerQuizAiSummary(score, total, details) {
   const ratio = total ? score / total : 0;
   const weak = details.filter((d) => !d.ok).map((d) => readerQuizTypeLabel(d.q.type));
-  const weakHint = weak.length ? `建议重点回顾：${[...new Set(weak)].join('、')}。` : '各题型表现均衡，可尝试拓展阅读与综合写作。';
+  const weakHint = weak.length ? `建议重点回顾：${[...new Set(weak)].join('、')}。` : '各题型表现均衡，可继续结合教材案例做小项目或拓展练习。';
   let tone =
     ratio >= 0.85
-      ? '整体掌握扎实，能理解核心概念与关键语句。'
+      ? '整体掌握扎实，能理解本节的原理要点与在实训中的应用场景。'
       : ratio >= 0.5
-        ? '已掌握部分要点，仍有提升空间，可针对错题回到课文与注释精读。'
-        : '基础尚可加强，建议先梳理课文结构与术语，再完成同类题型巩固。';
+        ? '已掌握部分要点，可针对错题回到相关章节，对照操作步骤与术语再练一遍。'
+        : '基础可继续夯实，建议先画概念关系图或复现实验，再补做同类题巩固。';
   const pct = total ? Math.round((score / total) * 100) : 0;
-  return `综合 AI 评价（演示）：本题组正确率 ${pct}%（${score}/${total} 题）。${tone}${weakHint}正式环境中可接入大模型，结合班级学情生成个性化学习路径与错题再练。`;
+  return `综合 AI 评价（演示）：本题组正确率 ${pct}%（${score}/${total} 题）。${tone}${weakHint}正式环境中可接入大模型，结合组群学情生成个性化学习路径与错题再练。`;
 }
 
 function readerRenderQuizReport(result) {
@@ -2413,7 +2630,7 @@ function readerOpenSavedReport(slotId) {
         </div>
         <div class="reader-quiz-report-hero-text">
           <div class="reader-quiz-report-hero-kicker">答题报告</div>
-          <h3 class="reader-quiz-report-hero-title">历史记录</h3>
+          <h3 class="reader-quiz-report-hero-title">答题历史</h3>
           <p class="reader-quiz-report-hero-sub">答对 <strong>${sc}</strong> / <strong>${tot}</strong> 题</p>
         </div>
       </div>
@@ -2721,7 +2938,8 @@ Object.assign(window, {
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
   readerQuickMode, readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
   readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
-  renderSettings, saveSettingsProfile, handleSettingsAvatar, openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,
+  renderSettings, handleSettingsAvatar, openPhoneModal, closePhoneModal, sendPhoneChangeCode, confirmPhoneChange,
+  openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,
   onFeedbackFilesChange, removeFeedbackImage, submitUserFeedback, openFeedbackModal, closeFeedbackModal
 });
 

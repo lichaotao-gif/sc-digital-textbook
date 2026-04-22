@@ -367,6 +367,22 @@
       <button type="button" class="reader-notes-save" onclick="readerSaveNote()">保存笔记</button>
     </div>
   </aside>
+  <!-- 阅读页：综合测试弹层（选择题 / 填空 / 判断 / 简答 + 报告） -->
+  <div class="reader-quiz-overlay" id="readerQuizOverlay" aria-hidden="true">
+    <div class="reader-quiz-backdrop" onclick="readerCloseQuizModal()"></div>
+    <div class="reader-quiz-panel" role="dialog" aria-modal="true" aria-labelledby="readerQuizTitle">
+      <div class="reader-quiz-head">
+        <div>
+          <div class="reader-quiz-kicker" id="readerQuizKicker">测试 · 练习</div>
+          <h2 class="reader-quiz-title" id="readerQuizTitle">本节综合测评</h2>
+          <p class="reader-quiz-sub" id="readerQuizSub"></p>
+        </div>
+        <button type="button" class="reader-quiz-x" onclick="readerCloseQuizModal()" aria-label="关闭">×</button>
+      </div>
+      <div class="reader-quiz-scroll" id="readerQuizBody"></div>
+      <div class="reader-quiz-foot" id="readerQuizFoot"></div>
+    </div>
+  </div>
 </div>
 
 <!-- Book Picker for Class -->

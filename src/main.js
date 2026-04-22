@@ -1359,43 +1359,6 @@ function bookShortcut(bookIdx, actionKey) {
   }, 2400);
 }
 
-/** 数字教材卡片：阅读模式入口（与详情页「学习模式」四类一致，按 readModeKeys 展示） */
-function libReadModeShortcut(bookIdx, modeKey) {
-  const b = books[bookIdx];
-  if (!b) return;
-  if (modeKey === 'read') {
-    openReader(bookIdx, 'lib', 'read');
-    return;
-  }
-  const m = BOOK_READ_MODES.find((x) => x.key === modeKey);
-  if (!m) return;
-  closeDetail();
-  const toast = document.createElement('div');
-  toast.style.cssText =
-    'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 24px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;max-width:min(420px,calc(100vw - 48px));text-align:center;line-height:1.5';
-  toast.innerHTML = `<span style="opacity:0.9">「${b.t} · ${b.s}」</span><br><span style="font-weight:500">正在进入「${m.label}」</span> <span style="opacity:0.75">（演示）</span>`;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s';
-    setTimeout(() => toast.remove(), 300);
-  }, 2400);
-}
-
-function mkLibReadModesRow(b, bookIdx) {
-  const entries = resolveLibReadModes(b);
-  if (!entries.length) return '';
-  return `<div class="lib-read-modes" onclick="event.stopPropagation()">
-    <div class="lib-read-modes-label">阅读模式</div>
-    <div class="lib-read-modes-scroll" role="toolbar" aria-label="阅读模式">
-      ${entries.map(
-        (a) =>
-          `<button type="button" class="lib-read-mode-btn" onclick="event.stopPropagation();libReadModeShortcut(${bookIdx},'${a.key}')">${a.label}</button>`
-      ).join('')}
-    </div>
-  </div>`;
-}
-
 function mkMyActionRow(b, i) {
   const entries = resolveBookActionEntries(b);
   if (!entries.length) return '';
@@ -1425,10 +1388,6 @@ function mkCard(b,i,wp){
     return `<div class="${cardCls}" style="animation-delay:${i*0.04}s">${st}<div class="cover cover--open" ${open} title="打开教材详情">${coverInner}</div><div class="detail"><div class="detail-main" ${open}><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span>${pdTag}</div>${pg}</div>${actions}</div></div>`;
   }
   const bookIdx=i;
-  const libModes=mkLibReadModesRow(b,bookIdx);
-  if(libModes){
-    return `<div class="card card--lib" style="animation-delay:${bookIdx*0.04}s">${st}<div class="cover" onclick="openDetail(${bookIdx},'lib')">${coverInner}</div><div class="detail"><div class="detail-shop-main" onclick="openDetail(${bookIdx},'lib')"><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span>${pdTag}</div>${pg}</div>${libModes}</div></div>`;
-  }
   return `<div class="${cardCls}" style="animation-delay:${bookIdx*0.04}s" onclick="openDetail(${bookIdx},'lib')">${st}<div class="cover">${coverInner}</div><div class="detail"><div class="detail-title">${b.t} · ${b.s}</div><div class="detail-row"><span class="detail-pub">${b.p}</span>${pdTag}</div>${pg}</div></div>`;
 }
 
@@ -1625,6 +1584,241 @@ const READER_OUTLINE = [
   },
 ];
 
+/** 阅读页嵌入「测试/练习」演示题库（可对接 CMS） */
+const READER_DEMO_QUIZ = {
+  title: '本节综合测评',
+  subtitle: '《沁园春·长沙》与「劳动光荣」单元（演示）',
+  questions: [
+    {
+      id: 'q1',
+      type: 'choice',
+      stem: '下列对「劳动精神」在当代的内涵理解，最恰当的一项是？',
+      options: [
+        '仅指体力劳动与技能训练',
+        '体脑结合、敬业精益、创新创造的价值取向',
+        '与学科学习、立德树人无关',
+      ],
+      correctIndex: 1,
+      explain: '劳动精神强调正确的劳动观念与品质，涵盖脑力与体力劳动，并与社会主义核心价值观相联系。',
+    },
+    {
+      id: 'q2',
+      type: 'fill',
+      stem: '《沁园春·长沙》上阕以「________」一句收束写景，写出万物竞发的生命力。',
+      answers: ['万类霜天竞自由'],
+      explain: '该句意象开阔，总写上阕秋景，为下阕抒情张本。',
+    },
+    {
+      id: 'q3',
+      type: 'tf',
+      stem: '「沁园春」是词牌，「长沙」为题目，二者分别标示格律与内容或地点。',
+      correct: true,
+      explain: '词牌规定格律句式，题目往往标示题材、地点或主旨。',
+    },
+    {
+      id: 'q4',
+      type: 'short',
+      stem: '请简要说明：「问苍茫大地，谁主沉浮」表达了作者怎样的情怀与思考？（建议不少于 25 字）',
+      keywords: ['时代', '家国', '青年', '责任', '主宰', '命运', '豪情'],
+      minLen: 25,
+      sampleAnswer:
+        '由自然之景上升到对时代与民族命运的追问，体现以天下为己任的担当与改造社会的青年豪情。',
+      explain: '应联系上下阕，指出从写景到抒怀的升华，以及对「谁主沉浮」的历史之问。',
+    },
+  ],
+};
+
+/** 第二套演示题（拓展阅读主题；与综合测评独立计分与完成态） */
+const READER_DEMO_QUIZ_B = {
+  title: '单元拓展测评',
+  subtitle: '报告文学与典型人物报道（演示）',
+  questions: [
+    {
+      id: 'bq1',
+      type: 'choice',
+      stem: '报告文学与新闻通讯相比，最突出的体裁特征通常是？',
+      options: ['以虚构情节增强可读性', '在真实基础上允许适度夸张细节', '强调文学性表达与典型形象的深度刻画', '以短平快时效为唯一目标'],
+      correctIndex: 2,
+      explain: '报告文学在真实新闻材料基础上，注重文学手法与人物/事件的典型化呈现。',
+    },
+    {
+      id: 'bq2',
+      type: 'fill',
+      stem: '人物通讯常通过________、细节与语言等手法，使形象立得住、传得开。',
+      answers: ['典型事例', '事例'],
+      explain: '典型事例是通讯写人的重要抓手，常与细节描写、人物语言结合。',
+    },
+    {
+      id: 'bq3',
+      type: 'tf',
+      stem: '「劳动光荣」主题报道选材时，应优先选取能体现爱岗敬业与时代精神的平凡岗位故事。',
+      correct: true,
+      explain: '主题报道重在价值导向与可感可学的榜样力量，平凡岗位同样具有典型意义。',
+    },
+  ],
+};
+
+/** 拓展阅读页可挂载多组练习（id 对应 localStorage 槽位与弹层题库） */
+const READER_PRACTICE_SLOTS = [
+  {
+    id: 'a',
+    quiz: READER_DEMO_QUIZ,
+    sectionTitle: '拓展练习',
+    eyebrow: '本节综合测评',
+  },
+  {
+    id: 'b',
+    quiz: READER_DEMO_QUIZ_B,
+    sectionTitle: '拓展练习',
+    eyebrow: '单元拓展测评',
+  },
+];
+
+/** 演示：无 localStorage 记录时，该槽位默认展示「已完成」样例（另一槽位仍为未完成；作答提交后以真实记录为准） */
+const READER_DEMO_PRESET_COMPLETED_SLOT = 'a';
+
+let readerQuizPhase = 'idle';
+let readerActiveQuizSlot = 'a';
+let readerQuizStepIndex = 0;
+/** 单题作答：跨题暂存答案（题号切换时写入） */
+let readerQuizDraftAnswers = {};
+
+/** 嵌入练习题库（演示；正式环境可按书目 id 从接口取） */
+function readerGetQuizBySlot(slotId) {
+  const s = READER_PRACTICE_SLOTS.find((x) => x.id === slotId);
+  return s ? s.quiz : READER_DEMO_QUIZ;
+}
+
+function readerGetCurrentQuiz() {
+  return readerGetQuizBySlot(readerActiveQuizSlot);
+}
+
+function readerQuizLsKey(b, slotId = 'a') {
+  if (!b || !b.t) return null;
+  return `readerQuizDone:v2:${b.t}::${b.s}::${slotId}`;
+}
+
+function readerGetQuizCompletion(b, slotId = 'a') {
+  const k = readerQuizLsKey(b, slotId);
+  if (!k || typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) return JSON.parse(raw);
+    if (slotId === 'a') {
+      const legacy = `readerQuizDone:v1:${b.t}::${b.s}`;
+      const raw2 = localStorage.getItem(legacy);
+      if (raw2) return JSON.parse(raw2);
+    }
+  } catch {
+    return null;
+  }
+  if (slotId === READER_DEMO_PRESET_COMPLETED_SLOT) {
+    const report = readerBuildDemoReportResult(slotId);
+    if (!report) return null;
+    return {
+      done: true,
+      score: report.score,
+      total: report.total,
+      at: 0,
+      report,
+      demoPreset: true,
+    };
+  }
+  return null;
+}
+
+function readerSaveQuizCompletion(b, result, slotId = 'a') {
+  const k = readerQuizLsKey(b, slotId);
+  if (!k || !result) return;
+  try {
+    localStorage.setItem(
+      k,
+      JSON.stringify({
+        done: true,
+        score: result.score,
+        total: result.total,
+        at: Date.now(),
+        report: result,
+      })
+    );
+  } catch (_) {}
+}
+
+/** 正确率 0–100，整数 */
+function readerQuizAccuracyPercent(score, total) {
+  if (score == null || total == null || !Number.isFinite(total) || total <= 0) return null;
+  return Math.round((score / total) * 100);
+}
+
+/** 「拓展练习」板块 HTML */
+function readerPracticeSectionHtml(b, slot) {
+  const comp = readerGetQuizCompletion(b, slot.id);
+  const done = !!(comp && comp.done);
+  const nQ = slot.quiz.questions.length;
+  const score = comp && Number.isFinite(comp.score) ? comp.score : null;
+  const total = comp && Number.isFinite(comp.total) ? comp.total : nQ;
+  const accPct = done ? readerQuizAccuracyPercent(score, total) : null;
+  const sectionCls = done
+    ? 'reader-practice-section reader-practice-section--done reader-practice-section--under-extend'
+    : 'reader-practice-section reader-practice-section--under-extend';
+  const iconCls = done ? 'reader-practice-icon reader-practice-icon--done' : 'reader-practice-icon';
+  const clipboardSvg =
+    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const checkSvg =
+    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const badge = done ? '<span class="reader-practice-done-pill">已完成</span>' : '';
+  const desc = done
+    ? '你已完成本节测评。如需巩固可再次作答，成绩以最近一次提交为准。'
+    : '含选择题、填空题、判断题与简答题；提交后自动判分，并生成答题报告、每题解析与 AI 学习评价（演示，可对接 CMS）。';
+  const meta = done
+    ? `<ul class="reader-practice-meta reader-practice-meta--done">
+        <li><span class="reader-practice-meta-k">题量</span> 共 ${nQ} 题</li>
+        <li><span class="reader-practice-meta-k">正确率</span> ${accPct != null ? `${accPct}%` : '—'}</li>
+        <li class="reader-practice-meta-report-cell">
+          <button type="button" class="reader-practice-report-open" onclick="readerOpenSavedReport('${slot.id}')" aria-label="查看答题报告">
+            <span class="reader-practice-report-open-glow" aria-hidden="true"></span>
+            <span class="reader-practice-report-open-ic" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="reader-practice-report-open-text">答题报告</span>
+            <span class="reader-practice-report-open-arrow" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </span>
+          </button>
+        </li>
+      </ul>`
+    : `<ul class="reader-practice-meta reader-practice-meta--todo">
+        <li><span class="reader-practice-meta-k">题量</span> 共 ${nQ} 题</li>
+      </ul>`;
+  const btnCls = done ? 'reader-practice-btn reader-practice-btn--secondary' : 'reader-practice-btn';
+  const btnLabel = done ? '再次测评' : '进入答题';
+  const ariaLab = escAttr(`${slot.sectionTitle} · ${slot.eyebrow}`);
+  const titleHtml = escAttr(slot.sectionTitle);
+  const eyebrowHtml = escAttr(slot.eyebrow);
+  return `<section class="${sectionCls}" aria-label="${ariaLab}">
+        <div class="reader-practice-section-head">
+          <div class="reader-practice-section-head-start">
+            <span class="reader-practice-bar" aria-hidden="true"></span>
+            <span class="reader-practice-section-title">${titleHtml}</span>
+          </div>
+          ${badge}
+        </div>
+        <div class="reader-practice-panel">
+          <div class="reader-practice-panel-top">
+            <div class="${iconCls}" aria-hidden="true">${done ? checkSvg : clipboardSvg}</div>
+            <div class="reader-practice-panel-lead">
+              <span class="reader-practice-eyebrow">${eyebrowHtml}</span>
+              <p class="reader-practice-desc">${desc}</p>
+            </div>
+          </div>
+          <div class="reader-practice-panel-body">
+            ${meta}
+            <button type="button" class="${btnCls}" onclick="readerOpenQuizModal('${slot.id}')">${btnLabel}</button>
+          </div>
+        </div>
+      </section>`;
+}
+
 let readerContext = { bookIdx: null, source: null, b: null, currentCid: null };
 const readerNotesStore = [];
 
@@ -1637,6 +1831,20 @@ function firstReaderCid(nodes) {
     }
   }
   return null;
+}
+
+function readerOutlineHasCid(nodes, cid) {
+  for (const n of nodes) {
+    if (n.cid === cid) return true;
+    if (n.children && readerOutlineHasCid(n.children, cid)) return true;
+  }
+  return false;
+}
+
+/** 打开阅读器时默认进入的章节（优先 r4「拓展阅读」，便于直接看到「测试与练习」板块） */
+function readerDefaultEntryCid() {
+  if (readerOutlineHasCid(READER_OUTLINE, 'r4')) return 'r4';
+  return firstReaderCid(READER_OUTLINE);
 }
 
 function renderReaderTocNodes(nodes, depth) {
@@ -1662,58 +1870,603 @@ function readerToggleTocGroup(btn) {
   if (g) g.classList.toggle('open');
 }
 
-function readerGo(cid) {
+function readerGo(cid, opts) {
   readerContext.currentCid = cid;
   document.querySelectorAll('#readerTocTree .reader-toc-leaf').forEach((el) => {
     el.classList.toggle('is-active', el.dataset.cid === cid);
   });
   const el = document.getElementById('readerArticle');
   if (el) el.innerHTML = buildReaderArticleHtml(cid, readerContext.b);
-  document.getElementById('readerMain')?.scrollTo(0, 0);
+  if (!opts || !opts.noScroll) {
+    document.getElementById('readerMain')?.scrollTo(0, 0);
+  }
 }
 
 function buildReaderArticleHtml(cid, b) {
   const bt = b ? `${b.t} · ${b.s}` : '本教材';
   const blocks = {
     r1: `<div class="reader-block"><h2>学习提示</h2><p>本课为「${bt}」的导读与学法提示。请结合单元目标，关注关键词句与情感脉络。</p><p>阅读时建议先通读全篇，再分段批注：标出意象、修辞与抒情线索。</p></div>`,
-    r2: `<div class="reader-block"><h2>课文正文</h2><p>独立寒秋，湘江北去，橘子洲头。看万山红遍，层林尽染；漫江碧透，百舸争流……</p><p>（以下为演示正文占位，正式环境由 CMS 或排版引擎渲染。）</p>
+    r2: `<div class="reader-block"><h2>课文正文</h2><p>独立寒秋，湘江北去，橘子洲头。看万山红遍，层林尽染；漫江碧透，百舸争流。鹰击长空，鱼翔浅底，万类霜天竞自由……</p><p>（以下为演示正文占位，正式环境由 CMS 或排版引擎渲染。）</p>
       <figure class="reader-figure"><img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" alt="插图" loading="lazy"><figcaption class="reader-figcap">图 · 山川意象（示意）</figcaption></figure>
+      <div class="reader-video-wrap">
+        <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80">
+          <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+        </video>
+        <p class="reader-video-cap">配套微课 · 意象与节奏（演示视频，支持播放/暂停与进度条）</p>
+      </div>
       <div class="reader-gallery"><img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&q=80" alt="" loading="lazy"><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" alt="" loading="lazy"></div>
       </div>`,
     r3: `<div class="reader-block"><h2>综合练习</h2><p>请概括本诗主旨，并结合时代背景说明「问苍茫大地，谁主沉浮」的意蕴。</p></div>`,
-    r4: `<div class="reader-block"><h2>拓展阅读</h2><p>对比阅读：新闻通讯与报告文学在叙事视角上的差异。</p>
-      <div class="reader-video" onclick="readerVideoDemo()" role="button" tabindex="0">配套微课 · 点击播放（演示）</div>
-      <div class="reader-quiz" data-correct="B" data-done="">
-        <p class="reader-quiz-q">下列对「劳动精神」理解最恰当的一项是？</p>
-        <div class="reader-quiz-options">
-          <button type="button" class="reader-quiz-opt" data-choice="A" onclick="readerAnswerQuiz(this,'A')">A. 仅指体力劳动</button>
-          <button type="button" class="reader-quiz-opt" data-choice="B" onclick="readerAnswerQuiz(this,'B')">B. 体脑结合、敬业与创造的价值取向</button>
-          <button type="button" class="reader-quiz-opt" data-choice="C" onclick="readerAnswerQuiz(this,'C')">C. 与学科学习无关</button>
+    r4: `<div class="reader-r4-split">
+      <div class="reader-block reader-ext-read">
+        <h2>拓展阅读</h2>
+        <p>对比阅读：新闻通讯与报告文学在叙事视角上的差异；结合本单元「劳动光荣」主题，思考典型人物报道的选材与结构。</p>
+        <div class="reader-video-wrap">
+          <video class="reader-video-el" controls playsinline preload="metadata" poster="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+          </video>
+          <p class="reader-video-cap">拓展素材 · 报告文学导读（演示视频）</p>
         </div>
-        <p class="reader-quiz-feedback" style="margin:0"></p>
-      </div></div>`,
+      </div>
+      <div class="reader-practice-below" aria-label="拓展阅读之下的测评区">
+        ${READER_PRACTICE_SLOTS.map((s) => readerPracticeSectionHtml(b, s)).join('')}
+      </div>
+    </div>`,
   };
   return blocks[cid] || `<div class="reader-block"><p>本节暂无演示内容。</p></div>`;
 }
 
-function readerAnswerQuiz(btn, choice) {
-  const quiz = btn.closest('.reader-quiz');
-  if (!quiz || quiz.dataset.done === '1') return;
-  const correct = quiz.dataset.correct;
-  quiz.querySelectorAll('.reader-quiz-opt').forEach((o) => {
-    o.classList.remove('is-right', 'is-wrong');
-    o.disabled = true;
-    if (o.dataset.choice === correct) o.classList.add('is-right');
-    else if (o.dataset.choice === choice) o.classList.add('is-wrong');
-  });
-  quiz.dataset.done = '1';
-  const fb = quiz.querySelector('.reader-quiz-feedback');
-  if (fb) fb.textContent = choice === correct ? '回答正确。' : `正确选项为 ${correct}。`;
+function readerQuizNormalizeText(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\u3000，。、；：""''（）()．·]/g, '');
 }
 
-function readerVideoDemo() {
-  showProfileToast('播放配套视频（演示，可对接点播地址）');
+function readerQuizGradeFill(user, acceptedList) {
+  const u = readerQuizNormalizeText(user);
+  if (!u) return false;
+  return acceptedList.some((a) => {
+    const t = readerQuizNormalizeText(a);
+    return t && (u === t || u.includes(t));
+  });
 }
+
+function readerQuizGradeShort(user, q) {
+  const raw = (user || '').trim();
+  if (raw.length < (q.minLen || 15)) return false;
+  const low = raw.toLowerCase();
+  const kws = q.keywords || [];
+  let hits = 0;
+  for (const kw of kws) {
+    if (low.includes(String(kw).toLowerCase())) hits += 1;
+  }
+  return hits >= 2 || (raw.length >= (q.minLen || 25) && hits >= 1);
+}
+
+function readerQuizTypeLabel(type) {
+  const m = { choice: '选择题', fill: '填空题', tf: '判断题', short: '简答题' };
+  return m[type] || type;
+}
+
+function readerQuizPickChoice(btn) {
+  const wrap = btn.closest('.reader-q-choices');
+  if (!wrap) return;
+  wrap.querySelectorAll('.reader-q-choice').forEach((b) => b.classList.remove('is-on'));
+  btn.classList.add('is-on');
+  readerQuizAfterAnswerChange();
+}
+
+function readerQuizPickTf(btn, qid, val) {
+  const row = btn.closest('.reader-q-tf');
+  if (!row) return;
+  row.querySelectorAll('.reader-q-tf-btn').forEach((b) => b.classList.remove('is-on'));
+  btn.classList.add('is-on');
+  row.dataset.picked = val;
+  readerQuizAfterAnswerChange();
+}
+
+function readerQuizAfterAnswerChange() {
+  if (readerQuizPhase !== 'questions') return;
+  readerQuizSyncCurrentToDraft();
+  readerQuizUpdateSheet();
+}
+
+function readerQuizOnInputChanged() {
+  readerQuizAfterAnswerChange();
+}
+
+/** 将当前屏这一题的作答写入草稿 */
+function readerQuizSyncCurrentToDraft() {
+  const quiz = readerGetCurrentQuiz();
+  if (!quiz || readerQuizPhase !== 'questions') return;
+  const q = quiz.questions[readerQuizStepIndex];
+  if (!q) return;
+  if (q.type === 'choice') {
+    const on = document.querySelector(`.reader-q-choice.is-on[data-qid="${q.id}"]`);
+    if (on) readerQuizDraftAnswers[q.id] = parseInt(on.dataset.idx, 10);
+    else delete readerQuizDraftAnswers[q.id];
+  } else if (q.type === 'fill') {
+    const inp = document.getElementById(`reader-q-fill-${q.id}`);
+    const t = inp ? String(inp.value).trim() : '';
+    if (t) readerQuizDraftAnswers[q.id] = inp.value;
+    else delete readerQuizDraftAnswers[q.id];
+  } else if (q.type === 'tf') {
+    const row = document.querySelector(`.reader-q-tf[data-qid="${q.id}"]`);
+    const p = row && row.dataset.picked;
+    if (p === 'true') readerQuizDraftAnswers[q.id] = true;
+    else if (p === 'false') readerQuizDraftAnswers[q.id] = false;
+    else delete readerQuizDraftAnswers[q.id];
+  } else if (q.type === 'short') {
+    const ta = document.getElementById(`reader-q-short-${q.id}`);
+    const t = ta ? String(ta.value).trim() : '';
+    if (t) readerQuizDraftAnswers[q.id] = ta.value;
+    else delete readerQuizDraftAnswers[q.id];
+  }
+}
+
+function readerQuizApplyDraftToDom(q) {
+  const v = readerQuizDraftAnswers[q.id];
+  if (v === undefined) return;
+  if (q.type === 'choice' && typeof v === 'number' && !Number.isNaN(v)) {
+    const btn = document.querySelector(`.reader-q-choice[data-qid="${q.id}"][data-idx="${v}"]`);
+    if (btn) btn.classList.add('is-on');
+  } else if (q.type === 'fill') {
+    const inp = document.getElementById(`reader-q-fill-${q.id}`);
+    if (inp) inp.value = v;
+  } else if (q.type === 'tf' && (v === true || v === false)) {
+    const row = document.querySelector(`.reader-q-tf[data-qid="${q.id}"]`);
+    if (row) {
+      row.dataset.picked = String(v);
+      row.querySelectorAll('.reader-q-tf-btn').forEach((b) => b.classList.remove('is-on'));
+      const btn = row.querySelector(`.reader-q-tf-btn[data-val="${v}"]`);
+      btn?.classList.add('is-on');
+    }
+  } else if (q.type === 'short') {
+    const ta = document.getElementById(`reader-q-short-${q.id}`);
+    if (ta) ta.value = v;
+  }
+}
+
+function readerQuizIsDraftAnswered(q) {
+  const v = readerQuizDraftAnswers[q.id];
+  if (q.type === 'choice') return v != null && !Number.isNaN(v);
+  if (q.type === 'tf') return v === true || v === false;
+  if (q.type === 'fill' || q.type === 'short') return String(v || '').trim().length > 0;
+  return false;
+}
+
+function readerRenderQuizQuestionForm(q, index) {
+  const n = index + 1;
+  const lab = readerQuizTypeLabel(q.type);
+  if (q.type === 'choice') {
+    return `<div class="reader-q-item" data-qid="${q.id}">
+      <div class="reader-q-label"><span class="reader-q-num">${n}</span><span class="reader-q-type">${lab}</span></div>
+      <p class="reader-q-stem">${escAttr(q.stem)}</p>
+      <div class="reader-q-choices">
+        ${q.options
+          .map(
+            (opt, j) =>
+              `<button type="button" class="reader-q-choice" data-qid="${q.id}" data-idx="${j}" onclick="readerQuizPickChoice(this)">${escAttr(opt)}</button>`
+          )
+          .join('')}
+      </div>
+    </div>`;
+  }
+  if (q.type === 'fill') {
+    return `<div class="reader-q-item" data-qid="${q.id}">
+      <div class="reader-q-label"><span class="reader-q-num">${n}</span><span class="reader-q-type">${lab}</span></div>
+      <p class="reader-q-stem">${escAttr(q.stem)}</p>
+      <input type="text" class="reader-q-fill" id="reader-q-fill-${q.id}" placeholder="请填写答案" autocomplete="off" oninput="readerQuizOnInputChanged()">
+    </div>`;
+  }
+  if (q.type === 'tf') {
+    return `<div class="reader-q-item" data-qid="${q.id}">
+      <div class="reader-q-label"><span class="reader-q-num">${n}</span><span class="reader-q-type">${lab}</span></div>
+      <p class="reader-q-stem">${escAttr(q.stem)}</p>
+      <div class="reader-q-tf" data-qid="${q.id}" data-picked="">
+        <button type="button" class="reader-q-tf-btn" data-val="true" onclick="readerQuizPickTf(this,'${q.id}', 'true')">正确</button>
+        <button type="button" class="reader-q-tf-btn" data-val="false" onclick="readerQuizPickTf(this,'${q.id}', 'false')">错误</button>
+      </div>
+    </div>`;
+  }
+  if (q.type === 'short') {
+    return `<div class="reader-q-item" data-qid="${q.id}">
+      <div class="reader-q-label"><span class="reader-q-num">${n}</span><span class="reader-q-type">${lab}</span></div>
+      <p class="reader-q-stem">${escAttr(q.stem)}</p>
+      <textarea class="reader-q-short" id="reader-q-short-${q.id}" rows="4" placeholder="请输入作答内容" oninput="readerQuizOnInputChanged()"></textarea>
+    </div>`;
+  }
+  return '';
+}
+
+function readerCollectQuizAnswers() {
+  readerQuizSyncCurrentToDraft();
+  const out = {};
+  const quiz = readerGetCurrentQuiz();
+  if (!quiz) return out;
+  for (const q of quiz.questions) {
+    const v = readerQuizDraftAnswers[q.id];
+    if (q.type === 'choice') {
+      out[q.id] = v == null || Number.isNaN(v) ? null : v;
+    } else if (q.type === 'fill' || q.type === 'short') {
+      out[q.id] = v != null ? String(v) : '';
+    } else if (q.type === 'tf') {
+      out[q.id] = v === true || v === false ? v : null;
+    }
+  }
+  return out;
+}
+
+function readerQuizLayoutHtml() {
+  return `<div class="reader-quiz-layout">
+    <div class="reader-quiz-main-col">
+      <div class="reader-quiz-step-hint" id="readerQuizStepHint"></div>
+      <div class="reader-quiz-step-inner" id="readerQuizStepInner"></div>
+    </div>
+    <aside class="reader-quiz-sheet-col" aria-label="答题卡">
+      <div class="reader-quiz-sheet-head">答题卡</div>
+      <p class="reader-quiz-sheet-progress" id="readerQuizSheetProgress"></p>
+      <div class="reader-quiz-sheet-grid" id="readerQuizSheetGrid"></div>
+    </aside>
+  </div>`;
+}
+
+function readerQuizUpdateSheet() {
+  const quiz = readerGetCurrentQuiz();
+  const grid = document.getElementById('readerQuizSheetGrid');
+  const prog = document.getElementById('readerQuizSheetProgress');
+  if (!quiz || !grid) return;
+  readerQuizSyncCurrentToDraft();
+  let answered = 0;
+  for (const q of quiz.questions) {
+    if (readerQuizIsDraftAnswered(q)) answered += 1;
+  }
+  if (prog) {
+    prog.textContent = `共 ${quiz.questions.length} 题 · 已答 ${answered} 题`;
+  }
+  grid.innerHTML = quiz.questions
+    .map((q, i) => {
+      const ok = readerQuizIsDraftAnswered(q);
+      const cur = i === readerQuizStepIndex;
+      let cls = 'reader-quiz-sheet-pill';
+      if (cur) cls += ' is-current';
+      if (ok) cls += ' is-answered';
+      const ac = cur ? ' aria-current="step"' : '';
+      return `<button type="button" class="${cls}" data-i="${i}" aria-label="第 ${i + 1} 题${ok ? '，已作答' : '，未作答'}${cur ? '，当前' : ''}"${ac} onclick="readerQuizJumpToStep(${i})">${i + 1}</button>`;
+    })
+    .join('');
+}
+
+function readerQuizUpdateFoot() {
+  const quiz = readerGetCurrentQuiz();
+  const foot = document.getElementById('readerQuizFoot');
+  if (!quiz || !foot) return;
+  const total = quiz.questions.length;
+  const isFirst = readerQuizStepIndex === 0;
+  const isLast = readerQuizStepIndex === total - 1;
+  const prevDis = isFirst ? ' disabled' : '';
+  const primaryLabel = isLast ? '提交并生成报告' : '下一题';
+  const primaryFn = isLast ? 'readerSubmitQuizModal()' : 'readerQuizGoNext()';
+  foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">取消</button>
+    <button type="button" class="reader-quiz-btn" onclick="readerQuizGoPrev()"${prevDis}>上一题</button>
+    <button type="button" class="reader-quiz-btn reader-quiz-btn--primary" onclick="${primaryFn}">${primaryLabel}</button>`;
+}
+
+function readerQuizRenderCurrentStep() {
+  const quiz = readerGetCurrentQuiz();
+  const inner = document.getElementById('readerQuizStepInner');
+  const hint = document.getElementById('readerQuizStepHint');
+  if (!quiz || !inner) return;
+  const q = quiz.questions[readerQuizStepIndex];
+  const total = quiz.questions.length;
+  if (!q) return;
+  if (hint) hint.textContent = `第 ${readerQuizStepIndex + 1} / ${total} 题 · ${readerQuizTypeLabel(q.type)}`;
+  inner.innerHTML = readerRenderQuizQuestionForm(q, readerQuizStepIndex);
+  readerQuizApplyDraftToDom(q);
+  readerQuizUpdateSheet();
+  readerQuizUpdateFoot();
+}
+
+function readerQuizGoNext() {
+  const quiz = readerGetCurrentQuiz();
+  if (!quiz || readerQuizPhase !== 'questions') return;
+  readerQuizSyncCurrentToDraft();
+  if (readerQuizStepIndex >= quiz.questions.length - 1) return;
+  readerQuizStepIndex += 1;
+  readerQuizRenderCurrentStep();
+}
+
+function readerQuizGoPrev() {
+  const quiz = readerGetCurrentQuiz();
+  if (!quiz || readerQuizPhase !== 'questions') return;
+  if (readerQuizStepIndex <= 0) return;
+  readerQuizSyncCurrentToDraft();
+  readerQuizStepIndex -= 1;
+  readerQuizRenderCurrentStep();
+}
+
+function readerQuizJumpToStep(i) {
+  const quiz = readerGetCurrentQuiz();
+  if (!quiz || readerQuizPhase !== 'questions') return;
+  if (i < 0 || i >= quiz.questions.length || i === readerQuizStepIndex) return;
+  readerQuizSyncCurrentToDraft();
+  readerQuizStepIndex = i;
+  readerQuizRenderCurrentStep();
+}
+
+function readerGradeQuizSession(answers) {
+  const details = [];
+  let score = 0;
+  const quiz = readerGetCurrentQuiz();
+  if (!quiz) return { score: 0, total: 0, details: [] };
+  const total = quiz.questions.length;
+  for (const q of quiz.questions) {
+    const u = answers[q.id];
+    let ok = false;
+    let displayUser = '';
+    let displayCorrect = '';
+    if (q.type === 'choice') {
+      ok = u === q.correctIndex;
+      displayUser = u == null ? '（未作答）' : q.options[u] || '（无效选项）';
+      displayCorrect = q.options[q.correctIndex];
+    } else if (q.type === 'fill') {
+      ok = readerQuizGradeFill(u, q.answers);
+      displayUser = (u && String(u).trim()) || '（未作答）';
+      displayCorrect = q.answers.join(' / ');
+    } else if (q.type === 'tf') {
+      ok = u === q.correct;
+      displayUser =
+        u === null ? '（未作答）' : u ? '正确' : '错误';
+      displayCorrect = q.correct ? '正确' : '错误';
+    } else if (q.type === 'short') {
+      ok = readerQuizGradeShort(u, q);
+      displayUser = (u && String(u).trim()) || '（未作答）';
+      displayCorrect = q.sampleAnswer;
+    }
+    if (ok) score += 1;
+    details.push({
+      q,
+      ok,
+      userLabel: displayUser,
+      correctLabel: displayCorrect,
+    });
+  }
+  return { score, total, details };
+}
+
+/** 演示用：生成一套「错一题」的判分结果，用于无存档时的预设已完成态与查看报告 */
+function readerBuildDemoReportResult(slotId) {
+  const slot = READER_PRACTICE_SLOTS.find((s) => s.id === slotId);
+  if (!slot) return null;
+  const quiz = slot.quiz;
+  const answers = {};
+  quiz.questions.forEach((q, i) => {
+    if (i === 0) {
+      if (q.type === 'choice') answers[q.id] = q.correctIndex === 0 ? 1 : 0;
+      else if (q.type === 'fill') answers[q.id] = '（演示错题）';
+      else if (q.type === 'tf') answers[q.id] = !q.correct;
+      else answers[q.id] = 'x';
+    } else if (q.type === 'choice') {
+      answers[q.id] = q.correctIndex;
+    } else if (q.type === 'fill') {
+      answers[q.id] = q.answers[0];
+    } else if (q.type === 'tf') {
+      answers[q.id] = q.correct;
+    } else {
+      answers[q.id] = q.sampleAnswer || '演示作答';
+    }
+  });
+  return readerGradeQuizSession(answers);
+}
+
+function readerQuizAiSummary(score, total, details) {
+  const ratio = total ? score / total : 0;
+  const weak = details.filter((d) => !d.ok).map((d) => readerQuizTypeLabel(d.q.type));
+  const weakHint = weak.length ? `建议重点回顾：${[...new Set(weak)].join('、')}。` : '各题型表现均衡，可尝试拓展阅读与综合写作。';
+  let tone =
+    ratio >= 0.85
+      ? '整体掌握扎实，能理解核心概念与关键语句。'
+      : ratio >= 0.5
+        ? '已掌握部分要点，仍有提升空间，可针对错题回到课文与注释精读。'
+        : '基础尚可加强，建议先梳理课文结构与术语，再完成同类题型巩固。';
+  const pct = total ? Math.round((score / total) * 100) : 0;
+  return `综合 AI 评价（演示）：本题组正确率 ${pct}%（${score}/${total} 题）。${tone}${weakHint}正式环境中可接入大模型，结合班级学情生成个性化学习路径与错题再练。`;
+}
+
+function readerRenderQuizReport(result) {
+  const { score, total, details } = result;
+  const aiText = readerQuizAiSummary(score, total, details);
+  const pct = total ? Math.round((score / total) * 100) : 0;
+  const rows = details
+    .map((d, i) => {
+      const tag = d.ok
+        ? '<span class="reader-quiz-tag-ok">正确</span>'
+        : '<span class="reader-quiz-tag-bad">待加强</span>';
+      const u = escAttr(String(d.userLabel));
+      const c = escAttr(String(d.correctLabel));
+      const ex = escAttr(d.q.explain);
+      const cardMod = d.ok ? ' reader-quiz-qreport--ok' : ' reader-quiz-qreport--miss';
+      return `<div class="reader-quiz-qreport${cardMod}">
+        <div class="reader-quiz-qreport-head">
+          <span class="reader-quiz-qreport-num">${i + 1}</span>
+          <div class="reader-quiz-qreport-head-text">
+            <div class="reader-quiz-qreport-title">${readerQuizTypeLabel(d.q.type)} · 第 ${i + 1} 题 ${tag}</div>
+          </div>
+        </div>
+        <div class="reader-quiz-qreport-body">
+          <div class="reader-quiz-qreport-row"><span class="reader-quiz-qreport-k">你的答案</span><span class="reader-quiz-qreport-v">${u}</span></div>
+          <div class="reader-quiz-qreport-row"><span class="reader-quiz-qreport-k">参考答案</span><span class="reader-quiz-qreport-v">${c}</span></div>
+          <div class="reader-quiz-parse"><span class="reader-quiz-parse-k">解析</span>${ex}</div>
+        </div>
+      </div>`;
+    })
+    .join('');
+  return `<div class="reader-quiz-report-wrap">
+    <div class="reader-quiz-report-hero">
+      <div class="reader-quiz-report-donut" style="--acc:${pct}">
+        <div class="reader-quiz-report-donut-hole">
+          <span class="reader-quiz-report-donut-pct">${pct}<span class="reader-quiz-report-donut-unit">%</span></span>
+          <span class="reader-quiz-report-donut-lab">正确率</span>
+        </div>
+      </div>
+      <div class="reader-quiz-report-hero-text">
+        <div class="reader-quiz-report-hero-kicker">测评报告</div>
+        <h3 class="reader-quiz-report-hero-title">本次作答概览</h3>
+        <p class="reader-quiz-report-hero-sub">共 <strong>${total}</strong> 题 · 答对 <strong>${score}</strong> 题</p>
+      </div>
+    </div>
+    <div class="reader-quiz-report-ai-card">
+      <div class="reader-quiz-report-ai-card-head">
+        <span class="reader-quiz-report-ai-spark" aria-hidden="true"></span>
+        <span class="reader-quiz-report-ai-label">AI 学习评价</span>
+      </div>
+      <p class="reader-quiz-report-ai">${escAttr(aiText)}</p>
+    </div>
+  </div>
+  <div class="reader-quiz-report-detail-head">逐题解析</div>
+  ${rows}`;
+}
+
+function readerOpenQuizModal(slotId) {
+  if (slotId && READER_PRACTICE_SLOTS.some((s) => s.id === slotId)) {
+    readerActiveQuizSlot = slotId;
+  } else {
+    readerActiveQuizSlot = 'a';
+  }
+  const qz = readerGetCurrentQuiz();
+  const ov = document.getElementById('readerQuizOverlay');
+  const body = document.getElementById('readerQuizBody');
+  const foot = document.getElementById('readerQuizFoot');
+  const sub = document.getElementById('readerQuizSub');
+  const title = document.getElementById('readerQuizTitle');
+  if (!qz || !ov || !body || !foot) return;
+  if (title) title.textContent = qz.title;
+  if (sub) sub.textContent = qz.subtitle;
+  readerQuizPhase = 'questions';
+  readerQuizStepIndex = 0;
+  readerQuizDraftAnswers = {};
+  body.innerHTML = readerQuizLayoutHtml();
+  readerQuizRenderCurrentStep();
+  ov.classList.add('open');
+  ov.setAttribute('aria-hidden', 'false');
+}
+
+function readerCloseQuizModal() {
+  const ov = document.getElementById('readerQuizOverlay');
+  if (!ov) return;
+  ov.classList.remove('open');
+  ov.setAttribute('aria-hidden', 'true');
+  readerQuizPhase = 'idle';
+  readerQuizStepIndex = 0;
+  readerQuizDraftAnswers = {};
+}
+
+/** 已完成：从本地存档打开最近一次答题报告（无逐题存档时仅展示正确率说明） */
+function readerOpenSavedReport(slotId) {
+  if (slotId && READER_PRACTICE_SLOTS.some((s) => s.id === slotId)) {
+    readerActiveQuizSlot = slotId;
+  } else {
+    readerActiveQuizSlot = 'a';
+  }
+  const b = readerContext.b;
+  if (!b) {
+    showProfileToast('请先打开教材阅读');
+    return;
+  }
+  const comp = readerGetQuizCompletion(b, slotId);
+  if (!comp || !comp.done) {
+    showProfileToast('暂无答题报告');
+    return;
+  }
+  let result = comp.report;
+  if (!result && comp.demoPreset && slotId === READER_DEMO_PRESET_COMPLETED_SLOT) {
+    result = readerBuildDemoReportResult(slotId);
+  }
+  const qz = readerGetQuizBySlot(readerActiveQuizSlot);
+  const ov = document.getElementById('readerQuizOverlay');
+  const body = document.getElementById('readerQuizBody');
+  const foot = document.getElementById('readerQuizFoot');
+  const title = document.getElementById('readerQuizTitle');
+  const sub = document.getElementById('readerQuizSub');
+  if (!qz || !ov || !body || !foot) return;
+  if (title) title.textContent = qz.title;
+  if (sub) sub.textContent = qz.subtitle;
+  readerQuizPhase = 'report';
+  const sid = readerActiveQuizSlot;
+  if (result) {
+    body.innerHTML = readerRenderQuizReport(result);
+  } else {
+    const sc = comp.score != null ? comp.score : '—';
+    const tot = comp.total != null ? comp.total : '—';
+    const legacyPct =
+      sc !== '—' && tot !== '—' && Number.isFinite(Number(sc)) && Number.isFinite(Number(tot)) && Number(tot) > 0
+        ? Math.round((Number(sc) / Number(tot)) * 100)
+        : null;
+    body.innerHTML = `<div class="reader-quiz-report-wrap">
+      <div class="reader-quiz-report-hero reader-quiz-report-hero--simple">
+        <div class="reader-quiz-report-donut" style="--acc:${legacyPct != null ? legacyPct : 0}">
+          <div class="reader-quiz-report-donut-hole">
+            <span class="reader-quiz-report-donut-pct">${legacyPct != null ? legacyPct : '—'}${legacyPct != null ? '<span class="reader-quiz-report-donut-unit">%</span>' : ''}</span>
+            <span class="reader-quiz-report-donut-lab">正确率</span>
+          </div>
+        </div>
+        <div class="reader-quiz-report-hero-text">
+          <div class="reader-quiz-report-hero-kicker">答题报告</div>
+          <h3 class="reader-quiz-report-hero-title">历史记录</h3>
+          <p class="reader-quiz-report-hero-sub">答对 <strong>${sc}</strong> / <strong>${tot}</strong> 题</p>
+        </div>
+      </div>
+      <div class="reader-quiz-report-ai-card reader-quiz-report-ai-card--muted">
+        <p class="reader-quiz-report-ai">暂无逐题解析存档。可点击「再测一次」重新作答以生成完整报告与 AI 评价。</p>
+      </div>
+    </div>`;
+  }
+  foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">关闭</button>
+    <button type="button" class="reader-quiz-btn reader-quiz-btn--primary" onclick="readerOpenQuizModal('${sid}')">再测一次</button>`;
+  ov.classList.add('open');
+  ov.setAttribute('aria-hidden', 'false');
+}
+
+function readerSubmitQuizModal() {
+  if (readerQuizPhase !== 'questions') return;
+  const qz = readerGetCurrentQuiz();
+  if (!qz) return;
+  const answers = readerCollectQuizAnswers();
+  const missing = qz.questions.some((q) => {
+    const v = answers[q.id];
+    if (q.type === 'choice') return v == null || Number.isNaN(v);
+    if (q.type === 'tf') return v !== true && v !== false;
+    if (q.type === 'fill' || q.type === 'short') return !String(v || '').trim();
+    return false;
+  });
+  if (missing) {
+    showProfileToast('请完成全部题目后再提交');
+    return;
+  }
+  const result = readerGradeQuizSession(answers);
+  readerSaveQuizCompletion(readerContext.b, result, readerActiveQuizSlot);
+  const body = document.getElementById('readerQuizBody');
+  const foot = document.getElementById('readerQuizFoot');
+  const slot = readerActiveQuizSlot;
+  if (body) body.innerHTML = readerRenderQuizReport(result);
+  if (foot) {
+    foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">关闭</button>
+      <button type="button" class="reader-quiz-btn reader-quiz-btn--primary" onclick="readerOpenQuizModal('${slot}')">再测一次</button>`;
+  }
+  readerQuizPhase = 'report';
+  if (readerContext.currentCid === 'r4') {
+    readerGo('r4', { noScroll: true });
+  }
+}
+
+function readerQuizOnKeydown(ev) {
+  if (ev.key !== 'Escape') return;
+  if (document.getElementById('readerQuizOverlay')?.classList.contains('open')) {
+    readerCloseQuizModal();
+  }
+}
+document.addEventListener('keydown', readerQuizOnKeydown);
 
 /** 阅读顶栏模式 pill 前的彩色小图标（与模式 key 对应） */
 function readerModePillIconHtml(modeKey) {
@@ -1730,6 +2483,8 @@ function openReader(bookIdx, source, initialModeKey) {
   const list = source === 'my' ? myB : books;
   const b = list[bookIdx];
   if (!b) return;
+  readerCloseQuizModal();
+  readerActiveQuizSlot = 'a';
   readerContext = { bookIdx, source, b, currentCid: null };
   const tEl = document.getElementById('readerDocTitle');
   if (tEl) tEl.textContent = `${b.t} · ${b.s}`;
@@ -1751,8 +2506,8 @@ function openReader(bookIdx, source, initialModeKey) {
       )
       .join('');
   }
-  const first = firstReaderCid(READER_OUTLINE);
-  if (first) readerGo(first);
+  const entry = readerDefaultEntryCid();
+  if (entry) readerGo(entry);
   const ov = document.getElementById('readerOverlay');
   if (ov) {
     ov.classList.add('open');
@@ -1768,6 +2523,7 @@ function openReader(bookIdx, source, initialModeKey) {
 }
 
 function closeReader() {
+  readerCloseQuizModal();
   const ov = document.getElementById('readerOverlay');
   if (ov) {
     ov.classList.remove('open', 'ai-open', 'notes-open', 'toc-collapsed');
@@ -1959,8 +2715,10 @@ Object.assign(window, {
   openClassDetail, closeClassDetail, copyCode, openBookPicker, closeBookPicker, dissolveClass, leaveClass,
   addBookToClass, removeClassBook, setGradeFilter, setSubjectFilter,
   openSchoolModal, closeSchoolModal, confirmSchoolBind, clearSchoolBind,
-  bookShortcut, libReadModeShortcut,
-  openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, readerGo, readerToggleTocGroup, readerAnswerQuiz, readerVideoDemo,
+  bookShortcut,
+  openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, readerGo, readerToggleTocGroup,
+  readerOpenQuizModal, readerCloseQuizModal, readerSubmitQuizModal, readerQuizPickChoice, readerQuizPickTf,
+  readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
   readerQuickMode, readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
   readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
   renderSettings, saveSettingsProfile, handleSettingsAvatar, openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,

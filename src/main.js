@@ -20,6 +20,7 @@ const SM={计算机基础:0,Python:1,程序设计:2,计算机网络:3,Web前端:
 /** 数字教材书目：readModeKeys 为后台配置的阅读模式，仅展示已配置的项（可省略或 [] 表示不展示） */
 const BOOK_READ_MODES = [
   { key: 'read', label: '阅读模式' },
+  { key: 'teach', label: '教学模式' },
   { key: 'av', label: '视听模式' },
   { key: 'task', label: '任务模式' },
   { key: 'kg', label: '知识图谱' },
@@ -28,13 +29,16 @@ const BOOK_READ_MODES = [
 function resolveLibReadModes(b) {
   const keys = b && Array.isArray(b.readModeKeys) ? b.readModeKeys : [];
   if (!keys.length) return [];
-  return keys.map((k) => BOOK_READ_MODES.find((a) => a.key === k)).filter(Boolean);
+  return keys
+    .map((k) => BOOK_READ_MODES.find((a) => a.key === k))
+    .filter(Boolean)
+    .filter((m) => m.key !== 'teach' || isCurrentUserClassGroupAdmin());
 }
 
 const MODE_ARROW_SVG_DETAIL =
   '<svg class="mode-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
 
-/** 教材详情「学习模式」单卡（点击进入阅读器并选中对应模式） */
+/** 教材详情「学习模式」单卡（「阅读模式」进阅读器；其他模式为外链式入口的演示） */
 function detailModeCardHtml(modeKey) {
   const blocks = {
     read: {
@@ -60,6 +64,12 @@ function detailModeCardHtml(modeKey) {
       icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/><line x1="5" y1="19" x2="19" y2="19"/></svg>',
       name: '知识图谱',
       desc: '可视化知识结构，智能关联跨章节概念与考点脉络',
+    },
+    teach: {
+      cls: 'mi-teach',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="10" rx="1.2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5" y1="15" x2="7" y2="19"/><line x1="19" y1="15" x2="17" y2="19"/><line x1="4" y1="19" x2="8" y2="19"/></svg>',
+      name: '教学模式',
+      desc: '组群教师可用：投屏/板书同步、学情看板、课堂随练与组群学情联调（演示，仅管理员）',
     },
   };
   const m = blocks[modeKey];
@@ -842,6 +852,26 @@ const classGroups=[
   },
 ];
 
+/** 当前用户是否担任至少一个组群的「管理员 / 创建者」 */
+function isCurrentUserClassGroupAdmin() {
+  return classGroups.some((c) => c.admin === CURRENT_USER);
+}
+
+/** 在学习模式列表中、紧跟「阅读模式」后注入「教学模式」（仅组群管理员；不由书目 readModeKeys 配置） */
+function withTeachIfAdmin(modes) {
+  if (!isCurrentUserClassGroupAdmin() || !modes || !modes.length) return modes;
+  if (modes.some((m) => m.key === 'teach')) return modes;
+  const t = BOOK_READ_MODES.find((a) => a.key === 'teach');
+  if (!t) return modes;
+  const out = [...modes];
+  const ri = out.findIndex((m) => m.key === 'read');
+  if (ri >= 0) {
+    out.splice(ri + 1, 0, t);
+    return out;
+  }
+  return [...out, t];
+}
+
 /** 当前用户可见的组群：创建者或已加入的成员 */
 function isClassVisibleForUser(cls) {
   return cls.admin === CURRENT_USER || cls.students.some((s) => s.name === CURRENT_USER);
@@ -921,7 +951,7 @@ function openDetail(bookIdx, source){
           ? `<button type="button" class="btn-enter-reader" onclick="openReaderFromDetail()">开始阅读</button>
              <button class="btn-print" onclick="handlePrint(event)">
                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-               打印教材
+               打印
              </button>`
           : libUnlocked
             ? `<button type="button" class="btn-buy" onclick="openReaderFromDetail()">开始阅读</button>`
@@ -936,11 +966,12 @@ function openDetail(bookIdx, source){
       </div>
     </div>`;
 
-  // Intro（我的教材：四种学习模式；数字教材：按 readModeKeys 展示）
+  // Intro（我的教材：按配置展示学习模式；组群管理员额外可见「教学模式」；数字教材按 readModeKeys 展示）
   const desc = DESC[b.sub] || '本教材面向中等职业教育相关专业编写，内容对接岗位与实训要求，强调规范操作、项目能力与职业素养。';
+  const modeEntriesMine = BOOK_READ_MODES.filter((m) => m.key !== 'teach' || isCurrentUserClassGroupAdmin());
   const modeSectionHtml = isMine
-    ? detailLearningModesSectionHtml(BOOK_READ_MODES)
-    : detailLearningModesSectionHtml(resolveLibReadModes(b));
+    ? detailLearningModesSectionHtml(modeEntriesMine)
+    : detailLearningModesSectionHtml(withTeachIfAdmin(resolveLibReadModes(b)));
 
   document.getElementById('pane-intro').innerHTML = `
     ${modeSectionHtml}
@@ -1778,6 +1809,8 @@ const READER_OUTLINE = [
         children: [
           { title: '导读与关键概念', cid: 'r1' },
           { title: '案例与拓展阅读', cid: 'r2' },
+          { title: '实训与互动', cid: 'r5' },
+          { title: '交互案例', cid: 'r6' },
         ],
       },
       {
@@ -2020,6 +2053,592 @@ function readerPracticeSectionHtml(b, slot) {
       </section>`;
 }
 
+/** 阅读页「在线实训」可挂载项（点击后在全屏页中打开，可接 CMS / 多实训 id） */
+const READER_LAB_UNITS = [
+  {
+    id: 'image-classify',
+    kicker: '在线实训',
+    title: '体验人工智能：图片识别物体',
+    desc: '在浏览器中完成一次图像分类与置信度体验：可选择示例图或本地上传（演示为模拟输出，不调用外网大模型）。',
+  },
+];
+
+const READER_LAB_IMAGE_SAMPLES = [
+  { src: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=640&q=80', label: '猫' },
+  { src: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=640&q=80', label: '狗' },
+  { src: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=640&q=80', label: '汽车' },
+  { src: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=640&q=80', label: '花卉' },
+];
+
+let readerLabActiveObjectUrl = null;
+/** { type:'sample', index:number } | { type:'file' } */
+let readerLabPicked = null;
+
+function readerLabUnitHtml(unit) {
+  const kicker = unit.kicker && String(unit.kicker).trim();
+  const kickerHtml = kicker ? `<p class="reader-lab-kicker">${escAttr(kicker)}</p>` : '';
+  const t = escAttr(String(unit.title));
+  const d = escAttr(String(unit.desc));
+  const aria = escAttr([kicker, unit.title].filter(Boolean).join(' · '));
+  const id = String(unit.id).replace(/"/g, '');
+  return `<section class="reader-lab-section" aria-label="${aria}">
+    <div class="reader-lab-card">
+      <header class="reader-lab-card__head">
+        <div class="reader-lab-card__head-main">
+          ${kickerHtml}
+          <h3 class="reader-lab-h3">${t}</h3>
+        </div>
+        <span class="reader-lab-pill" aria-hidden="true">实训</span>
+      </header>
+      <div class="reader-lab-card__body">
+        <p class="reader-lab-lede">${d}</p>
+        <div class="reader-lab-cta">
+          <button type="button" class="reader-lab-btn" onclick="readerOpenLab('${id}')">进入实训</button>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+/** 阅读页「交互案例」可挂载项（可在线调参、观察可视化，可接 CMS / 多案例 id） */
+const READER_ICASE_UNITS = [
+  {
+    id: 'gradient-toy',
+    kicker: '交互案例',
+    title: '人工智能算法原理：学习率与梯度下降',
+    desc: '在最小化 L(w)=½(w−2)² 的示例中，用滑块改变学习率、初值和迭代步数，观察损失曲线和参数在横轴上如何向最优解移动。',
+  },
+];
+
+function readerICaseUnitHtml(unit) {
+  const kicker = unit.kicker && String(unit.kicker).trim();
+  const kickerHtml = kicker ? `<p class="reader-icase-kicker">${escAttr(kicker)}</p>` : '';
+  const t = escAttr(String(unit.title));
+  const d = escAttr(String(unit.desc));
+  const aria = escAttr([kicker, unit.title].filter(Boolean).join(' · '));
+  const id = String(unit.id).replace(/"/g, '');
+  return `<section class="reader-icase-section" aria-label="${aria}">
+    <div class="reader-icase-card">
+      <header class="reader-icase-card__head">
+        <div class="reader-icase-card__head-main">
+          ${kickerHtml}
+          <h3 class="reader-icase-h3">${t}</h3>
+        </div>
+        <span class="reader-icase-pill" aria-hidden="true">案例</span>
+      </header>
+      <div class="reader-icase-card__body">
+        <p class="reader-icase-lede">${d}</p>
+        <div class="reader-icase-cta">
+          <button type="button" class="reader-icase-btn" onclick="readerOpenICase('${id}')">体验案例</button>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function readerBuildImageClassifyBodyHtml() {
+  const tiles = READER_LAB_IMAGE_SAMPLES.map(
+    (s, i) =>
+      `<button type="button" class="reader-lab-ic__tile" data-idx="${i}" aria-pressed="false" aria-label="使用示例图 ${i + 1}：${escAttr(
+        s.label
+      )}">
+        <img src="${escAttr(s.src)}" alt="" class="reader-lab-ic__img" loading="lazy" width="160" height="120">
+        <span class="reader-lab-ic__cap">示例：${escAttr(s.label)}</span>
+      </button>`
+  ).join('');
+  return `<div class="reader-lab-ic">
+    <p class="reader-lab-ic__lead">下方每张示例图在演示环境中对应固定的<strong>「模拟」识别标签</strong>。你也可以上传本地图片：当前为教学演示，上传结果以随机标签示意，正式部署时可接入云端或边缘推理服务。</p>
+    <div class="reader-lab-ic__samples" role="group" aria-label="示例图片">${tiles}</div>
+    <div class="reader-lab-ic__upload">
+      <label class="reader-lab-ic__uplab">
+        <span>或上传图片</span>
+        <input type="file" id="readerLabFileInput" class="reader-lab-ic__file" accept="image/*" title="从本机选择图片">
+      </label>
+    </div>
+    <p class="reader-lab-ic__preview" id="readerLabPreview" hidden>已选择本机图片，可点击下方开始识别（演示用）。</p>
+    <div class="reader-lab-ic__go">
+      <button type="button" class="reader-lab-ic__run" id="readerLabRunBtn" disabled>开始识别</button>
+    </div>
+    <div class="reader-lab-ic__out" id="readerLabClassifyOut" role="status" aria-live="polite"></div>
+  </div>`;
+}
+
+function _readerLabTeardownPickedTiles() {
+  document.querySelectorAll('.reader-lab-ic__tile[aria-pressed="true"]').forEach((b) => {
+    b.setAttribute('aria-pressed', 'false');
+    b.classList.remove('is-on');
+  });
+}
+
+function readerBindImageClassifyPage() {
+  const runBtn = document.getElementById('readerLabRunBtn');
+  const out = document.getElementById('readerLabClassifyOut');
+  const prev = document.getElementById('readerLabPreview');
+  const fileIn = document.getElementById('readerLabFileInput');
+  if (!runBtn || !out) return;
+  document.querySelectorAll('.reader-lab-ic__tile').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (readerLabActiveObjectUrl) {
+        try {
+          URL.revokeObjectURL(readerLabActiveObjectUrl);
+        } catch (_) {}
+        readerLabActiveObjectUrl = null;
+      }
+      if (fileIn) fileIn.value = '';
+      _readerLabTeardownPickedTiles();
+      btn.setAttribute('aria-pressed', 'true');
+      btn.classList.add('is-on');
+      const idx = Number(btn.dataset.idx);
+      readerLabPicked = { type: 'sample', index: Number.isFinite(idx) ? idx : 0 };
+      if (prev) prev.hidden = true;
+      out.innerHTML = '';
+      runBtn.disabled = false;
+    });
+  });
+  if (fileIn) {
+    fileIn.addEventListener('change', () => {
+      const f = fileIn.files && fileIn.files[0];
+      _readerLabTeardownPickedTiles();
+      out.innerHTML = '';
+      if (readerLabActiveObjectUrl) {
+        try {
+          URL.revokeObjectURL(readerLabActiveObjectUrl);
+        } catch (_) {}
+        readerLabActiveObjectUrl = null;
+      }
+      if (!f) {
+        readerLabPicked = null;
+        if (prev) prev.hidden = true;
+        runBtn.disabled = true;
+        return;
+      }
+      try {
+        readerLabActiveObjectUrl = URL.createObjectURL(f);
+      } catch (_) {
+        readerLabPicked = null;
+        if (prev) prev.hidden = true;
+        runBtn.disabled = true;
+        return;
+      }
+      readerLabPicked = { type: 'file' };
+      if (prev) prev.hidden = false;
+      runBtn.disabled = false;
+    });
+  }
+  runBtn.addEventListener('click', () => {
+    if (!readerLabPicked) return;
+    out.innerHTML = '<p class="reader-lab-ic__status">正在推理（演示）…</p>';
+    runBtn.disabled = true;
+    const delay = 650 + Math.random() * 500;
+    window.setTimeout(() => {
+      if (readerLabPicked && readerLabPicked.type === 'sample') {
+        const s = READER_LAB_IMAGE_SAMPLES[readerLabPicked.index];
+        const conf = 0.86 + Math.random() * 0.12;
+        const pct = (conf * 100).toFixed(1);
+        out.innerHTML = `<div class="reader-lab-ic__result">
+          <p class="reader-lab-ic__result-head">识别结果</p>
+          <p>预测标签：<strong>${escAttr(s.label)}</strong></p>
+          <p>模拟置信度：<strong>${pct}%</strong>（本示例为固定对应关系，便于理解「分类+置信度」过程）</p>
+        </div>`;
+      } else {
+        const pool = ['日常物品', '自然风景', '建筑', '交通工具', '食品', '人物', '植物'];
+        const pick = pool[Math.floor(Math.random() * pool.length)];
+        const conf = 0.52 + Math.random() * 0.3;
+        const pct = (conf * 100).toFixed(1);
+        out.innerHTML = `<div class="reader-lab-ic__result reader-lab-ic__result--file">
+          <p class="reader-lab-ic__result-head">识别结果</p>
+          <p>预测标签（演示随机）：<strong>${escAttr(pick)}</strong></p>
+          <p>模拟置信度：<strong>${pct}%</strong></p>
+          <p class="reader-lab-ic__hint">本地上传在演示中未做真实特征提取，仅供课堂流程体验；可对接 TensorFlow.js、云端 API 等实现实识别别。</p>
+        </div>`;
+      }
+      runBtn.disabled = !readerLabPicked;
+    }, delay);
+  });
+}
+
+function readerOpenLab(labId) {
+  const u = READER_LAB_UNITS.find((x) => x.id === labId);
+  if (!u) return;
+  readerCloseICase();
+  readerCloseQuizModal();
+  readerClosePopovers();
+  if (document.getElementById('readerAiDrawer')?.getAttribute('aria-hidden') === 'false') {
+    readerToggleAi();
+  }
+  if (document.getElementById('readerNotesDrawer')?.getAttribute('aria-hidden') === 'false') {
+    readerToggleNotes();
+  }
+  readerLabPicked = null;
+  if (readerLabActiveObjectUrl) {
+    try {
+      URL.revokeObjectURL(readerLabActiveObjectUrl);
+    } catch (_) {}
+    readerLabActiveObjectUrl = null;
+  }
+  const tEl = document.getElementById('readerLabPageTitle');
+  if (tEl) tEl.textContent = u.title;
+  const kEl = document.getElementById('readerLabPageKicker');
+  if (kEl) kEl.textContent = u.kicker || '在线实训';
+  const root = document.getElementById('readerLabPageRoot');
+  if (labId === 'image-classify' && root) {
+    root.innerHTML = readerBuildImageClassifyBodyHtml();
+    readerBindImageClassifyPage();
+  } else if (root) {
+    root.innerHTML = '<p class="reader-lab-page__empty">该实训未配置或暂不可用。</p>';
+  }
+  const page = document.getElementById('readerLabPage');
+  if (page) {
+    page.classList.add('open');
+    page.setAttribute('aria-hidden', 'false');
+  }
+  document.getElementById('readerLabPageRoot')?.focus({ preventScroll: true });
+}
+
+function readerCloseLab() {
+  if (readerLabActiveObjectUrl) {
+    try {
+      URL.revokeObjectURL(readerLabActiveObjectUrl);
+    } catch (_) {}
+    readerLabActiveObjectUrl = null;
+  }
+  readerLabPicked = null;
+  const page = document.getElementById('readerLabPage');
+  if (page) {
+    page.classList.remove('open');
+    page.setAttribute('aria-hidden', 'true');
+  }
+  const root = document.getElementById('readerLabPageRoot');
+  if (root) root.innerHTML = '';
+}
+
+/** 一维平方损失上的梯度下降轨迹（教学演示，纯前端计算与绘图） */
+function readerIcaseRunGradient(eta, w0, maxSteps) {
+  const wStar = 2;
+  const safeEta = Math.max(0, Number(eta) || 0);
+  const wInit = Number(w0) === 0 ? 0 : Number.isFinite(w0) ? w0 : 0;
+  const n = Math.max(1, Math.min(120, Math.floor(maxSteps) || 30));
+  const ws = [wInit];
+  const losses = [0.5 * (wInit - wStar) ** 2];
+  let w = wInit;
+  for (let i = 0; i < n; i += 1) {
+    const g = w - wStar;
+    w = w - safeEta * g;
+    if (!Number.isFinite(w)) {
+      break;
+    }
+    ws.push(w);
+    losses.push(0.5 * (w - wStar) ** 2);
+    if (Math.abs(w - wStar) < 1e-5) {
+      break;
+    }
+  }
+  return { ws, losses, wStar };
+}
+
+function readerBuildGradientToyBodyHtml() {
+  return `<div class="reader-icase-toy">
+    <p class="reader-icase-toy__lead">在目标函数 <em>L(w) = ½(w−2)²</em> 中，自变量 w 的梯度为 <em>g = w−2</em>。用梯度下降更新 w ← w − η g。拖动滑块，观察 <strong>学习率 η</strong> 过大时轨迹会在最优点附近震荡甚至发散、适中时则平滑逼近 <strong>w* = 2</strong>。</p>
+    <div class="reader-icase-toy__sliders" role="group" aria-label="调整参数">
+      <div class="reader-icase-toy__row">
+        <span class="reader-icase-toy__name">学习率 η</span>
+        <input type="range" id="icaseEta" class="reader-icase-toy__range" min="0.01" max="1.2" step="0.01" value="0.3">
+        <output class="reader-icase-toy__out" for="icaseEta" id="icaseEtaVal">0.30</output>
+      </div>
+      <div class="reader-icase-toy__row">
+        <span class="reader-icase-toy__name">初值 w₀</span>
+        <input type="range" id="icaseW0" class="reader-icase-toy__range" min="0" max="5" step="0.05" value="4.5">
+        <output class="reader-icase-toy__out" for="icaseW0" id="icaseW0Val">4.50</output>
+      </div>
+      <div class="reader-icase-toy__row">
+        <span class="reader-icase-toy__name">最大迭代步数</span>
+        <input type="range" id="icaseN" class="reader-icase-toy__range" min="3" max="100" step="1" value="32">
+        <output class="reader-icase-toy__out" for="icaseN" id="icaseNVal">32</output>
+      </div>
+    </div>
+    <p class="reader-icase-toy__tip" id="icaseHint" role="status">提示会随你调节参数更新。</p>
+    <div class="reader-icase-toy__canvases">
+      <div class="reader-icase-toy__panel">
+        <p class="reader-icase-toy__plab">损失 L(w) 与参数轨迹（w 在横轴）</p>
+        <div class="reader-icase-toy__frame">
+          <canvas class="reader-icase-canvas" id="icaseCvW" width="720" height="220" role="img" aria-label="损失与参数轨迹图"></canvas>
+        </div>
+      </div>
+      <div class="reader-icase-toy__panel">
+        <p class="reader-icase-toy__plab">损失随迭代步数 t</p>
+        <div class="reader-icase-toy__frame">
+          <canvas class="reader-icase-canvas" id="icaseCvT" width="720" height="150" role="img" aria-label="损失与迭代步数图"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function readerIcaseDrawGradientToy() {
+  const elEta = document.getElementById('icaseEta');
+  const elW0 = document.getElementById('icaseW0');
+  const elN = document.getElementById('icaseN');
+  const oEta = document.getElementById('icaseEtaVal');
+  const oW0 = document.getElementById('icaseW0Val');
+  const oN = document.getElementById('icaseNVal');
+  const hint = document.getElementById('icaseHint');
+  if (!elEta || !elW0 || !elN) return;
+  const eta = +elEta.value;
+  const w0 = +elW0.value;
+  const nMax = +elN.value;
+  if (oEta) oEta.textContent = Number.isFinite(eta) ? eta.toFixed(2) : '—';
+  if (oW0) oW0.textContent = Number.isFinite(w0) ? w0.toFixed(2) : '—';
+  if (oN) oN.textContent = String(Math.round(nMax));
+  const { ws, losses, wStar } = readerIcaseRunGradient(eta, w0, nMax);
+  if (hint) {
+    if (eta <= 0) {
+      hint.textContent = '请把学习率设为略大于 0 的值。';
+    } else if (eta >= 2) {
+      hint.textContent = '在 L(w)=½(w−2)² 中，|1−η|≥1 时迭代不收敛；η=2 往往在两值间震荡，η>2 时参数会越跑越远。可对比 η=0.3 与 η=0.1。';
+    } else if (eta > 0.1 && eta < 2) {
+      hint.textContent = '0<η<2 时单调区间上通常收敛到 w*；η 小则步小但稳，η 大则快但可能在最优点附近摆动。试把起点 w₀ 与 η 联调观察。';
+    } else {
+      hint.textContent = '学习率较小，步幅细腻，可观察损失曲线更平滑。';
+    }
+  }
+  const cW = document.getElementById('icaseCvW');
+  const cT = document.getElementById('icaseCvT');
+  if (cW && cW.getContext) {
+    readerIcaseDrawLossCurve(cW, ws, losses, wStar);
+  }
+  if (cT && cT.getContext) {
+    readerIcaseDrawLossByStep(cT, losses);
+  }
+}
+
+function readerIcaseDrawLossCurve(canvas, ws, losses, wStar) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const wCss = Math.max(200, Math.floor(canvas.getBoundingClientRect().width) || 720);
+  const h = 220;
+  canvas.width = Math.floor(wCss * dpr);
+  canvas.height = Math.floor(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = wCss;
+  const pad = { l: 40, r: 16, t: 12, b: 28 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = h - pad.t - pad.b;
+  ctx.clearRect(0, 0, W, h);
+  const wMin = -0.6;
+  const wMax = 5.2;
+  const lTop = Math.max(0.1, ...losses);
+  const lMax = lTop * 1.1 + 0.05;
+  const xOf = (w) => pad.l + ((w - wMin) / (wMax - wMin)) * plotW;
+  const yOf = (loss) => pad.t + (1 - loss / lMax) * plotH;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(pad.l, pad.t, plotW, plotH);
+  ctx.strokeStyle = 'rgba(148,163,184,0.45)';
+  ctx.setLineDash([3, 4]);
+  for (let i = 0; i <= 5; i += 1) {
+    const w = wMin + ((wMax - wMin) * i) / 5;
+    const x = xOf(w);
+    ctx.beginPath();
+    ctx.moveTo(x, pad.t);
+    ctx.lineTo(x, pad.t + plotH);
+    ctx.stroke();
+  }
+  for (let i = 0; i <= 3; i += 1) {
+    const l = (lMax * (3 - i)) / 3;
+    const y = yOf(l);
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(pad.l + plotW, y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  /** _loss curve */
+  ctx.beginPath();
+  for (let px = 0; px <= 400; px += 1) {
+    const w = wMin + ((wMax - wMin) * px) / 400;
+    const l = 0.5 * (w - wStar) ** 2;
+    const x = xOf(w);
+    const y = yOf(l);
+    if (px === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = 'rgba(99,102,241,0.7)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  /**  trajectory */
+  ctx.beginPath();
+  for (let i = 0; i < losses.length; i += 1) {
+    const x = xOf(ws[i]);
+    const y = yOf(losses[i]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = '#0d9488';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  for (let i = 0; i < Math.min(60, losses.length); i += 1) {
+    const x = xOf(ws[i]);
+    const y = yOf(losses[i]);
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#b45309' : i === losses.length - 1 ? '#0f766e' : 'rgba(13,148,136,0.85)';
+    ctx.fill();
+  }
+  if (ws.length > 0) {
+    const ox = xOf(wStar);
+    const oy = yOf(0);
+    ctx.setLineDash([2, 3]);
+    ctx.strokeStyle = 'rgba(234,88,12,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(ox, yOf(lMax));
+    ctx.lineTo(ox, oy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(ox, oy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(234,88,12,0.85)';
+    ctx.fill();
+  }
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('w', pad.l + plotW * 0.5, h - 18);
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('L', pad.l - 6, pad.t + plotH * 0.5);
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.fillText('0', pad.l - 4, yOf(0) - 2);
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'top';
+  ctx.fillText('w*', xOf(wStar) - 6, yOf(0) - 2);
+  ctx.restore();
+}
+
+function readerIcaseDrawLossByStep(canvas, losses) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const wCss = Math.max(200, Math.floor(canvas.getBoundingClientRect().width) || 720);
+  const h = 150;
+  canvas.width = Math.floor(wCss * dpr);
+  canvas.height = Math.floor(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = wCss;
+  const pad = { l: 40, r: 16, t: 8, b: 22 };
+  const plotW = W - pad.l - pad.r;
+  const plotH = h - pad.t - pad.b;
+  ctx.clearRect(0, 0, W, h);
+  const tMax = Math.max(losses.length - 1, 1);
+  const lMax = Math.max(...losses) * 1.08 + 0.01;
+  const xOfT = (t) => pad.l + (t / tMax) * plotW;
+  const yL = (loss) => pad.t + (1 - loss / lMax) * plotH;
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(pad.l, pad.t, plotW, plotH);
+  ctx.strokeStyle = 'rgba(148,163,184,0.3)';
+  ctx.setLineDash([2, 4]);
+  for (let i = 0; i <= 4; i += 1) {
+    const y = pad.t + (plotH * (4 - i)) / 4;
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(pad.l + plotW, y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  /**  step plot */
+  ctx.beginPath();
+  for (let i = 0; i < losses.length; i += 1) {
+    const x = xOfT(i);
+    const y = yL(losses[i]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = '#0e7490';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  for (let i = 0; i < losses.length; i += 1) {
+    const x = xOfT(i);
+    const y = yL(losses[i]);
+    ctx.beginPath();
+    ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(14,116,144,0.9)';
+    ctx.fill();
+  }
+  ctx.fillStyle = '#64748b';
+  ctx.font = '10px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('迭代步 t', pad.l + plotW * 0.5, h - 16);
+}
+
+let readerIcaseOnResize = null;
+function readerBindGradientToyPage() {
+  if (readerIcaseOnResize) {
+    window.removeEventListener('resize', readerIcaseOnResize);
+    readerIcaseOnResize = null;
+  }
+  const redraw = () => {
+    readerIcaseDrawGradientToy();
+  };
+  ['icaseEta', 'icaseW0', 'icaseN'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', redraw);
+  });
+  readerIcaseOnResize = redraw;
+  window.addEventListener('resize', readerIcaseOnResize);
+  setTimeout(() => {
+    redraw();
+  }, 0);
+}
+
+function readerOpenICase(caseId) {
+  const u = READER_ICASE_UNITS.find((x) => x.id === caseId);
+  if (!u) return;
+  readerCloseLab();
+  readerCloseQuizModal();
+  readerClosePopovers();
+  if (document.getElementById('readerAiDrawer')?.getAttribute('aria-hidden') === 'false') {
+    readerToggleAi();
+  }
+  if (document.getElementById('readerNotesDrawer')?.getAttribute('aria-hidden') === 'false') {
+    readerToggleNotes();
+  }
+  const tEl = document.getElementById('readerIcasePageTitle');
+  if (tEl) tEl.textContent = u.title;
+  const kEl = document.getElementById('readerIcasePageKicker');
+  if (kEl) kEl.textContent = u.kicker || '交互案例';
+  const root = document.getElementById('readerIcasePageRoot');
+  if (caseId === 'gradient-toy' && root) {
+    root.innerHTML = readerBuildGradientToyBodyHtml();
+    readerBindGradientToyPage();
+  } else if (root) {
+    root.innerHTML = '<p class="reader-icase-page__empty">该案例未配置或暂不可用。</p>';
+  }
+  const page = document.getElementById('readerIcasePage');
+  if (page) {
+    page.classList.add('open');
+    page.setAttribute('aria-hidden', 'false');
+  }
+  document.getElementById('readerIcasePageRoot')?.focus({ preventScroll: true });
+}
+
+function readerCloseICase() {
+  if (readerIcaseOnResize) {
+    window.removeEventListener('resize', readerIcaseOnResize);
+    readerIcaseOnResize = null;
+  }
+  const page = document.getElementById('readerIcasePage');
+  if (page) {
+    page.classList.remove('open');
+    page.setAttribute('aria-hidden', 'true');
+  }
+  const root = document.getElementById('readerIcasePageRoot');
+  if (root) root.innerHTML = '';
+}
+
 let readerContext = { bookIdx: null, source: null, b: null, currentCid: null };
 const readerNotesStore = [];
 
@@ -2098,6 +2717,20 @@ function buildReaderArticleHtml(cid, b) {
         <p class="reader-video-cap">配套微课 · 案例导读（演示视频，支持播放/暂停与进度条）</p>
       </div>
       <div class="reader-gallery"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&q=80" alt="" loading="lazy"><img src="https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=400&q=80" alt="" loading="lazy"></div>
+      </div>`,
+    r5: `<div class="reader-block">
+        <h2>随堂实训与互动</h2>
+        <p>本课在教材正文中以<strong>板块</strong>形式提供<strong>在线实训</strong>。你可从下方「实训」卡进入全屏操作页，完成与知识点对应的动手练习。首个示范为 <strong>体验人工智能：图片识别物体</strong>，帮助你把「从图像到预测标签、置信度」的直觉与课堂概念对应起来（演示为浏览器内模拟过程，不调用外网大模型）。</p>
+      </div>
+      <div class="reader-lab-below" aria-label="本课在线实训">
+        ${READER_LAB_UNITS.map((u) => readerLabUnitHtml(u)).join('')}
+      </div>`,
+    r6: `<div class="reader-block">
+        <h2>交互案例</h2>
+        <p>下列板块为<strong>可在线体验的交互式案例</strong>：在浏览器中调参数、看曲线与数据变化。首个示例为<strong>学习率、初值、迭代与损失</strong>的直观演示，与「从误差到更新」的算法思维衔接；后续亦可扩展更多可交互算法示例。</p>
+      </div>
+      <div class="reader-icase-below" aria-label="本课交互案例">
+        ${READER_ICASE_UNITS.map((u) => readerICaseUnitHtml(u)).join('')}
       </div>`,
     r3: `<div class="reader-block"><h2>综合练习</h2><p>试比较「规则系统」与「从数据学习」的适用条件；各举一个在校园生活中可以合规收集数据的例子，并说明你会如何脱敏与存储。</p></div>`,
     r4: `<div class="reader-r4-split">
@@ -2673,18 +3306,29 @@ function readerQuizOnKeydown(ev) {
 }
 document.addEventListener('keydown', readerQuizOnKeydown);
 
-/** 阅读顶栏模式 pill 前的彩色小图标（与模式 key 对应） */
+/** 从阅读器进入非「阅读」学习模式时：关闭阅读层并提示（可对接各模式独立路由/站外页，不再在阅读页内切模式） */
+function readerShowLearningModeNavExternal(modeKey, book) {
+  const labels = { read: '阅读模式', av: '视听模式', task: '任务模式', kg: '知识图谱', teach: '教学模式' };
+  const name = labels[modeKey] || modeKey;
+  const bookLine = book && book.t ? `《${book.t} · ${book.s}》` : '';
+  showProfileToast(
+    `正在进入「${name}」` + (bookLine ? ` · ${bookLine}` : '') + '（演示：可对接各模式独立页面）'
+  );
+}
+
+/** 阅读顶栏模式 pill 前的彩色小图标（与模式 key 对应；阅读页内仅展示非 read 的入口） */
 function readerModePillIconHtml(modeKey) {
   const ic = {
     read: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill="#15803d" d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path fill="#22c55e" d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path fill="#4ade80" d="M6.5 2H18v18H6.5A2.5 2.5 0 0 1 4 17.5v-13A2.5 2.5 0 0 1 6.5 2z" opacity=".4"/></svg></span>`,
     av: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#8b5cf6"/><path fill="#fff" d="M10 8.5l5.5 3.5-5.5 3.5v-7z"/></svg></span>`,
     task: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="14" height="18" rx="2" fill="#f97316"/><path fill="#fff" fill-opacity=".9" d="M8 7h8v1.8H8V7zm0 3.2h5v1.8H8v-1.8z"/><path stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M8.3 16.2l2.2 2.2 4.2-5"/></svg></span>`,
     kg: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="5.5" cy="8" r="3" fill="#0ea5e9"/><circle cx="18.5" cy="8" r="3" fill="#6366f1"/><circle cx="12" cy="17" r="3" fill="#ec4899"/><path stroke="#94a3b8" stroke-width="1.3" stroke-linecap="round" d="M7.8 10.2l4.4 5M16.2 10.2l-4.4 5"/></svg></span>`,
+    teach: `<span class="reader-mode-pill-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="11" rx="1" fill="none" stroke="#f59e0b"/><line x1="3" y1="10" x2="21" y2="10" stroke="#f59e0b"/></svg></span>`,
   };
   return ic[modeKey] || '';
 }
 
-function openReader(bookIdx, source, initialModeKey) {
+function openReader(bookIdx, source) {
   const list = source === 'my' ? myB : books;
   const b = list[bookIdx];
   if (!b) return;
@@ -2697,23 +3341,22 @@ function openReader(bookIdx, source, initialModeKey) {
   if (tocEl) tocEl.innerHTML = renderReaderTocNodes(READER_OUTLINE, 0);
   let resolved = resolveLibReadModes(b);
   if (!resolved.length) {
-    resolved = [...BOOK_READ_MODES];
+    resolved = BOOK_READ_MODES.filter((m) => m.key !== 'teach');
   }
-  const modeList = resolved;
-  const keySet = new Set(modeList.map((m) => m.key));
-  const initial = initialModeKey && keySet.has(initialModeKey) ? initialModeKey : modeList[0].key;
+  const modeList = withTeachIfAdmin(resolved);
+  const readerModeLinks = modeList.filter((m) => m.key !== 'read');
   const listEl = document.getElementById('readerModeList');
   const toolMode = document.getElementById('readerToolMode');
   if (listEl) {
-    listEl.innerHTML = modeList
+    listEl.innerHTML = readerModeLinks
       .map(
         (m) =>
-          `<button type="button" data-mode="${m.key}" class="reader-mode-pill${initial === m.key ? ' reader-mode-pill--on' : ''}" onclick="readerQuickMode('${m.key}')">${readerModePillIconHtml(m.key)}<span class="reader-mode-pill-label">${m.label}</span></button>`
+          `<button type="button" data-mode="${m.key}" class="reader-mode-pill reader-mode-pill--link" onclick="readerQuickMode('${m.key}')">${readerModePillIconHtml(m.key)}<span class="reader-mode-pill-label">${m.label}</span></button>`
       )
       .join('');
   }
   if (toolMode) {
-    if (modeList.length > 1) {
+    if (readerModeLinks.length > 0) {
       toolMode.style.display = '';
       toolMode.removeAttribute('hidden');
     } else {
@@ -2732,12 +3375,11 @@ function openReader(bookIdx, source, initialModeKey) {
   readerSetBg('paper', true);
   readerApplyFontSize(document.getElementById('readerFontRange')?.value || '17', true);
   renderReaderNotesList();
-  if (initial !== 'read') {
-    readerQuickMode(initial);
-  }
 }
 
 function closeReader() {
+  readerCloseICase();
+  readerCloseLab();
   readerCloseQuizModal();
   const ov = document.getElementById('readerOverlay');
   if (ov) {
@@ -2755,46 +3397,39 @@ function openReaderFromDetail() {
   openReader(bookIdx, source);
 }
 
-/** 详情「学习模式」卡片：关闭详情并进入阅读器，顶栏选中对应模式 */
+/** 详情「学习模式」卡：「阅读模式」进阅读器；其他模式不打开阅读，仅作外链式跳转提示（可对接独立页） */
 function openReaderFromDetailMode(modeKey) {
   const { bookIdx, source, b } = detailViewContext;
   if (bookIdx == null || !b) return;
-  const valid = new Set(['read', 'av', 'task', 'kg']);
+  const teachOk = isCurrentUserClassGroupAdmin() ? ['teach'] : [];
+  const valid = new Set(['read', 'av', 'task', 'kg', ...teachOk]);
   const k = valid.has(modeKey) ? modeKey : 'read';
 
   if (source === 'lib' && !isLibBookPurchased(b)) {
     if (k === 'read') {
       closeDetail();
-      openReader(bookIdx, 'lib', 'read');
+      openReader(bookIdx, 'lib');
       return;
     }
     closeDetail();
-    const m = BOOK_READ_MODES.find((x) => x.key === k);
-    if (!m) return;
-    const toast = document.createElement('div');
-    toast.style.cssText =
-      'position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--deep);color:white;padding:14px 24px;border-radius:12px;font-size:13px;z-index:300;box-shadow:0 8px 30px rgba(0,0,0,0.15);animation:fadeUp 0.3s ease;max-width:min(420px,calc(100vw - 48px));text-align:center;line-height:1.5';
-    toast.innerHTML = `<span style="opacity:0.9">「${b.t} · ${b.s}」</span><br><span style="font-weight:500">正在进入「${m.label}」</span> <span style="opacity:0.75">（演示）</span>`;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transition = 'opacity 0.3s';
-      setTimeout(() => toast.remove(), 300);
-    }, 2400);
+    readerShowLearningModeNavExternal(k, b);
     return;
   }
 
   closeDetail();
-  openReader(bookIdx, source, k);
+  if (k === 'read') {
+    openReader(bookIdx, source);
+    return;
+  }
+  readerShowLearningModeNavExternal(k, b);
 }
 
 function readerQuickMode(k) {
-  document.querySelectorAll('.reader-mode-pill').forEach((p) => p.classList.remove('reader-mode-pill--on'));
-  document.querySelector(`.reader-mode-pill[data-mode="${k}"]`)?.classList.add('reader-mode-pill--on');
-  readerCloseToolSlots();
   if (k === 'read') return;
-  const labels = { av: '视听模式', task: '任务模式', kg: '知识图谱' };
-  showProfileToast(`正在进入「${labels[k] || k}」（演示）`);
+  readerCloseToolSlots();
+  const b = readerContext && readerContext.b;
+  closeReader();
+  readerShowLearningModeNavExternal(k, b);
 }
 
 function readerToggleAi() {
@@ -2956,6 +3591,7 @@ Object.assign(window, {
   bookShortcut,
   openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, readerGo, readerToggleTocGroup,
   readerOpenQuizModal, readerCloseQuizModal, readerSubmitQuizModal, readerQuizPickChoice, readerQuizPickTf,
+  readerOpenLab, readerCloseLab, readerOpenICase, readerCloseICase,
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
   readerQuickMode, readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
   readerToggleModePanel, readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,

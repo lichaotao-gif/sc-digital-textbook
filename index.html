@@ -321,7 +321,7 @@
       </main>
       <aside class="reader-toolbar" id="readerToolbar" aria-label="阅读工具栏">
         <div class="reader-tool-slot" id="readerToolMode" style="display:none" hidden>
-          <button type="button" class="reader-tool-rail-btn" id="readerModeToolBtn" onclick="readerToggleModePanel()" title="学习模式" aria-label="学习模式" aria-haspopup="dialog" aria-controls="readerModePopover" aria-expanded="false">
+          <button type="button" class="reader-tool-rail-btn" id="readerModeToolBtn" onclick="readerToggleModePanel()" title="其他学习模式（当前为阅读页，不重复列出阅读）" aria-label="其他学习模式" aria-haspopup="dialog" aria-controls="readerModePopover" aria-expanded="false">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect x="3" y="3" width="7" height="9" rx="1.2"/>
               <rect x="14" y="3" width="7" height="5" rx="1.2"/>
@@ -330,9 +330,9 @@
             </svg>
             <span class="reader-tool-rail-lab">模式</span>
           </button>
-          <div class="reader-toolbar-pop reader-toolbar-pop--mode" id="readerModePopover" role="dialog" aria-label="选择学习模式">
-            <div class="reader-popover-title">学习模式</div>
-            <nav class="reader-mode-rail" id="readerModeList" aria-label="本教材可切换的学习模式"></nav>
+          <div class="reader-toolbar-pop reader-toolbar-pop--mode" id="readerModePopover" role="dialog" aria-label="前往其他学习模式">
+            <div class="reader-popover-title">其他学习模式</div>
+            <nav class="reader-mode-rail" id="readerModeList" aria-label="本教材中前往视听、任务等学习模式的链接"></nav>
           </div>
         </div>
         <div class="reader-tool-slot" id="readerToolDisplay">
@@ -409,6 +409,34 @@
       <div class="reader-quiz-scroll" id="readerQuizBody"></div>
       <div class="reader-quiz-foot" id="readerQuizFoot"></div>
     </div>
+  </div>
+  <!-- 阅读页：在线实训全屏（独立新页体验，可返回继续阅读） -->
+  <div class="reader-lab-page" id="readerLabPage" aria-hidden="true" role="document">
+    <div class="reader-lab-page__head">
+      <button type="button" class="reader-lab-page__back" onclick="readerCloseLab()" title="返回阅读" aria-label="返回阅读">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>返回阅读</span>
+      </button>
+      <div class="reader-lab-page__titles">
+        <div class="reader-lab-page__kicker" id="readerLabPageKicker">在线实训</div>
+        <h2 class="reader-lab-page__title" id="readerLabPageTitle">实训</h2>
+      </div>
+    </div>
+    <div class="reader-lab-page__body" id="readerLabPageRoot" tabindex="-1"></div>
+  </div>
+  <!-- 阅读页：交互案例全屏（滑块、可视化等，可返回继续阅读） -->
+  <div class="reader-icase-page" id="readerIcasePage" aria-hidden="true" role="document">
+    <div class="reader-icase-page__head">
+      <button type="button" class="reader-icase-page__back" onclick="readerCloseICase()" title="返回阅读" aria-label="返回阅读">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>返回阅读</span>
+      </button>
+      <div class="reader-icase-page__titles">
+        <div class="reader-icase-page__kicker" id="readerIcasePageKicker">交互案例</div>
+        <h2 class="reader-icase-page__title" id="readerIcasePageTitle">交互案例</h2>
+      </div>
+    </div>
+    <div class="reader-icase-page__body" id="readerIcasePageRoot" tabindex="-1"></div>
   </div>
 </div>
 

@@ -184,6 +184,16 @@
     </nav>
 
     <div class="sidebar-foot">
+      <div class="sidebar-friendly" tabindex="0" aria-expanded="false" aria-haspopup="true" aria-label="友情链接">
+        <div class="sidebar-friendly-trigger">
+          <span class="sidebar-friendly-label">友情链接</span>
+          <svg class="sidebar-friendly-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="sidebar-friendly-pop" role="menu" aria-label="友情链接选项">
+          <a class="sidebar-friendly-btn" role="menuitem" href="/creator/index.html" target="_blank" rel="noopener noreferrer">创作者</a>
+          <a class="sidebar-friendly-btn" role="menuitem" href="/publisher/index.html" target="_blank" rel="noopener noreferrer">出版社</a>
+        </div>
+      </div>
       <div class="user-row">
         <div class="avatar" id="sidebarAvatar">李</div>
         <div class="user-meta">
@@ -257,7 +267,7 @@
         <input class="redeem-input" id="redeemCode" type="text" placeholder="请输入16位兑换码" maxlength="19">
         <button class="btn-redeem" onclick="doRedeem()">立即兑换</button>
       </div>
-      <div class="redeem-hint">兑换码通常印刷在纸质教材封底或由学校统一发放。每个兑换码仅限使用一次，兑换后不可转让。如有问题请联系学校管理员。</div>
+      <div class="redeem-hint">每个兑换码仅限使用一次，兑换后不可转让。</div>
     </div>
     <div class="redeem-success" id="redeemSuccess">
       <div class="redeem-success-icon">
@@ -403,7 +413,26 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
     <h2 class="feedback-modal-title" id="feedbackModalTitle">用户反馈</h2>
-    <p class="feedback-modal-desc">请描述问题或建议，可附上截图。提交后将同步至后台处理（演示将输出到控制台）。</p>
+    <p class="feedback-modal-desc">请填写身份信息（带 * 为必填），并描述问题或建议；可附上截图。提交后将同步至后台处理（演示将输出到控制台）。</p>
+    <label class="feedback-modal-label" for="feedbackIdentity">身份 <span class="feedback-required" aria-hidden="true">*</span></label>
+    <select id="feedbackIdentity" class="settings-input feedback-modal-select">
+      <option value="">请选择身份</option>
+      <option value="教师">教师</option>
+      <option value="学生">学生</option>
+      <option value="家长">家长</option>
+      <option value="学校管理员">学校管理员</option>
+      <option value="出版社编辑">出版社编辑</option>
+      <option value="教研员">教研员</option>
+      <option value="其他">其他</option>
+    </select>
+    <label class="feedback-modal-label" for="feedbackSchool">学校名称 <span class="settings-optional">（选填）</span></label>
+    <input type="text" id="feedbackSchool" class="settings-input" maxlength="120" placeholder="选填，学校或单位全称" autocomplete="organization">
+    <label class="feedback-modal-label" for="feedbackDuty">职务 <span class="settings-optional">（选填）</span></label>
+    <input type="text" id="feedbackDuty" class="settings-input" maxlength="80" placeholder="选填，如：任课教师、教务主任" autocomplete="organization-title">
+    <label class="feedback-modal-label" for="feedbackSubject">学科专业 <span class="settings-optional">（选填）</span></label>
+    <input type="text" id="feedbackSubject" class="settings-input" maxlength="80" placeholder="选填，如：计算机应用、语文" autocomplete="off">
+    <label class="feedback-modal-label" for="feedbackEmail">邮箱 <span class="settings-optional">（选填）</span></label>
+    <input type="email" id="feedbackEmail" class="settings-input" maxlength="120" placeholder="选填，便于回复您" autocomplete="email">
     <label class="feedback-modal-label" for="feedbackModalText">反馈内容</label>
     <textarea id="feedbackModalText" class="feedback-modal-textarea" rows="5" maxlength="2000" placeholder="请输入反馈内容"></textarea>
     <label class="feedback-modal-label">图片附件 <span class="settings-optional">（选填，最多 6 张）</span></label>

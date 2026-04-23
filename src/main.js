@@ -101,7 +101,7 @@ const books=[
   {t:'计算机应用基础',s:'下册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'计算机基础',cat:'计算机基础',editor:'张炜 等',readModeKeys:['read','av','task']},
   {t:'C语言程序设计',s:'上册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'程序设计',cat:'程序与开发',readModeKeys:['read','task']},
   {t:'C语言程序设计',s:'下册',g:'中职 一年级',p:'高等教育出版社',tp:'o',sub:'程序设计',cat:'程序与开发',readModeKeys:['read']},
-  {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',paperDigital:true,editor:'李可 等',readModeKeys:['read','av','task']},
+  {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',paperDigital:true,editor:'李可 等',readModeKeys:['read','av','task'],introVideoUrl:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'},
   {t:'Python程序设计',s:'项目篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',editor:'李可 等',readModeKeys:['read']},
   {t:'计算机网络技术',s:'基础与互联',g:'中职 一年级',p:'电子工业出版社',tp:'o',sub:'计算机网络',cat:'网络与运维',readModeKeys:['read','av','task','kg']},
   {t:'网页设计与制作',s:'HTML5/CSS3',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Web前端',cat:'程序与开发',readModeKeys:['read','av']},
@@ -112,7 +112,7 @@ const books=[
   {t:'Linux操作系统',s:'命令与Shell',g:'中职 二年级',p:'电子工业出版社',tp:'o',sub:'Linux',cat:'网络与运维',readModeKeys:['read','av','task']},
   {t:'数据结构与算法',s:'C语言版',g:'中职 二年级',p:'清华大学出版社',tp:'o',sub:'算法与结构',cat:'程序与开发',readModeKeys:['read','task']},
   {t:'Java程序设计',s:'面向对象',g:'中职 二年级',p:'人民邮电出版社',tp:'o',sub:'程序设计',cat:'程序与开发',readModeKeys:['read','av','task']},
-  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',paperDigital:true,editor:'赵明 等',readModeKeys:['read','av','task','kg']},
+  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',paperDigital:true,editor:'赵明 等',readModeKeys:['read','av','task','kg'],introVideoEmbed:'https://www.youtube.com/embed/jNQXAC9IVRw'},
   {t:'机器学习基础',s:'监督与评估',g:'中职 三年级',p:'人民邮电出版社',tp:'o',sub:'机器学习',cat:'人工智能',readModeKeys:['read']},
   {t:'深度学习应用',s:'视觉与语音',g:'中职 三年级',p:'电子工业出版社',tp:'o',sub:'深度学习',cat:'人工智能',readModeKeys:['read','av','task']},
   {t:'自然语言处理入门',s:'文本与对话',g:'中职 三年级',p:'人民邮电出版社',tp:'o',sub:'自然语言',cat:'人工智能',readModeKeys:['read','av','kg']},
@@ -124,8 +124,8 @@ const books=[
 ];
 
 const myB=[
-  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',pr:78,paperDigital:true,editor:'赵明 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats']},
-  {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',pr:45,editor:'李可 等'},
+  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',pr:78,paperDigital:true,editor:'赵明 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats'],introVideoEmbed:'https://www.youtube.com/embed/jNQXAC9IVRw'},
+  {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',pr:45,editor:'李可 等',introVideoUrl:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'},
   {t:'计算机网络技术',s:'基础与互联',g:'中职 一年级',p:'电子工业出版社',tp:'o',sub:'计算机网络',cat:'网络与运维',pr:92,paperDigital:true,actionKeys:['read','task','questionBank','learnStats']},
   {t:'数据结构与算法',s:'C语言版',g:'中职 二年级',p:'清华大学出版社',tp:'o',sub:'算法与结构',cat:'程序与开发',pr:30,editor:'王硕 等',actionKeys:['read','resourceLib']},
   {t:'MySQL数据库应用',s:'基础与查询',g:'中职 二年级',p:'人民邮电出版社',tp:'o',sub:'数据库',cat:'数据与平台',pr:15,editor:'刘洋 等'},
@@ -906,31 +906,61 @@ function renderFeedbackPreview() {
     .join('');
 }
 
+function _clearFeedbackMetaFields() {
+  const ids = [
+    'feedbackIdentity',
+    'feedbackSchool',
+    'feedbackDuty',
+    'feedbackSubject',
+    'feedbackEmail',
+    'feedbackModalText',
+  ];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (el.tagName === 'SELECT') el.value = '';
+    else el.value = '';
+  }
+}
+
 function openFeedbackModal() {
   if (!getUserProfile()) return;
   resetFeedbackDraft();
-  const ta = document.getElementById('feedbackModalText');
+  _clearFeedbackMetaFields();
   const fi = document.getElementById('feedbackModalFileInput');
-  if (ta) ta.value = '';
   if (fi) fi.value = '';
   renderFeedbackPreview();
   document.getElementById('feedbackModalOverlay')?.classList.add('open');
   document.body.style.overflow = 'hidden';
-  setTimeout(() => ta?.focus(), 100);
+  setTimeout(() => document.getElementById('feedbackIdentity')?.focus(), 100);
 }
 
 function closeFeedbackModal() {
   document.getElementById('feedbackModalOverlay')?.classList.remove('open');
   document.body.style.overflow = '';
   resetFeedbackDraft();
-  const ta = document.getElementById('feedbackModalText');
+  _clearFeedbackMetaFields();
   const fi = document.getElementById('feedbackModalFileInput');
-  if (ta) ta.value = '';
   if (fi) fi.value = '';
   renderFeedbackPreview();
 }
 
 function submitUserFeedback() {
+  const identity = document.getElementById('feedbackIdentity')?.value?.trim() || '';
+  if (!identity) {
+    showProfileToast('请选择身份');
+    document.getElementById('feedbackIdentity')?.focus();
+    return;
+  }
+  const school = document.getElementById('feedbackSchool')?.value?.trim() || '';
+  const duty = document.getElementById('feedbackDuty')?.value?.trim() || '';
+  const subject = document.getElementById('feedbackSubject')?.value?.trim() || '';
+  const email = document.getElementById('feedbackEmail')?.value?.trim() || '';
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showProfileToast('请填写正确的邮箱格式');
+    document.getElementById('feedbackEmail')?.focus();
+    return;
+  }
   const ta = document.getElementById('feedbackModalText');
   const text = (ta && ta.value.trim()) || '';
   if (!text && feedbackDraftFiles.length === 0) {
@@ -938,10 +968,20 @@ function submitUserFeedback() {
     return;
   }
   const fd = new FormData();
+  fd.append('identity', identity);
+  fd.append('school', school);
+  fd.append('duty', duty);
+  fd.append('subject', subject);
+  fd.append('email', email);
   fd.append('content', text);
   fd.append('client', 'web-demo');
   feedbackDraftFiles.forEach((f, i) => fd.append(`image_${i}`, f, f.name));
   console.log('[用户反馈·演示]', {
+    identity,
+    school: school || undefined,
+    duty: duty || undefined,
+    subject: subject || undefined,
+    email: email || undefined,
     content: text,
     images: feedbackDraftFiles.map((f) => ({ name: f.name, size: f.size })),
   });
@@ -1335,6 +1375,30 @@ function getClassNamesForMyBook(b) {
 }
 
 /** 教材详情弹层 — 运用于组群（仅「我的教材」） */
+/** 教材简介内可选视频：`introVideoEmbed` 为 iframe 地址；`introVideoUrl` 为直链视频（`<video>`），均须 https。后台可按书目配置。 */
+function detailIntroVideoHtml(b) {
+  const embed = b && typeof b.introVideoEmbed === 'string' ? b.introVideoEmbed.trim() : '';
+  const file = b && typeof b.introVideoUrl === 'string' ? b.introVideoUrl.trim() : '';
+  if (!embed && !file) return '';
+  if (embed && !/^https:\/\//i.test(embed)) return '';
+  if (file && !/^https:\/\//i.test(file)) return '';
+  const title = escAttr(`《${b.t || '教材'}》视频介绍`);
+  if (embed) {
+    return `<div class="intro-video-wrap">
+      <div class="intro-video-cap">视频介绍</div>
+      <div class="intro-video-frame intro-video-frame--embed">
+        <iframe src="${escAttr(embed)}" title="${title}" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+    </div>`;
+  }
+  return `<div class="intro-video-wrap">
+    <div class="intro-video-cap">视频介绍</div>
+    <div class="intro-video-frame">
+      <video controls playsinline preload="metadata" src="${escAttr(file)}">您的浏览器不支持视频播放。</video>
+    </div>
+  </div>`;
+}
+
 function mkDetailGroupUseHtml(b) {
   const names = getClassNamesForMyBook(b);
   if (!names.length) {
@@ -1419,18 +1483,8 @@ function openDetail(bookIdx, source){
     ${modeSectionHtml}
     <div class="intro-section" ${modeSectionHtml ? 'style="margin-top:28px"' : ''}>
       <div class="intro-heading"><span class="bar"></span>教材简介</div>
+      ${detailIntroVideoHtml(b)}
       <div class="intro-text">${desc}</div>
-    </div>
-    <div class="intro-section">
-      <div class="intro-heading"><span class="bar"></span>教材特色</div>
-      <div class="intro-text">本教材具有以下特色：面向中职专业岗位能力，以项目与任务组织教学；强调做中学、安全与规范；提供微课、上机指导、拓展阅读与组群学情看板等数字资源，帮助形成可迁移的计算机与人工智能应用能力。</div>
-      <div class="intro-tags">
-        <span class="intro-tag">${b.g}</span>
-        ${isPaperDigital(b)?'<span class="intro-tag intro-tag--pd">纸数融合</span>':''}
-        <span class="intro-tag">数字版</span>
-        <span class="intro-tag">配套资源</span>
-        <span class="intro-tag">中职·专业</span>
-      </div>
     </div>`;
 
   // TOC（商城未购：前 LIB_PREVIEW_LESSON_COUNT 条可试读，其余带锁；已购/我的教材：全部开放）

@@ -79,32 +79,75 @@
         <div class="login-brand__en">Sichuan Digital Textbook</div>
       </div>
     </div>
-    <div class="login-tabs" role="tablist" aria-label="登录方式">
-      <button type="button" class="login-tab is-active" id="loginTabPwd" role="tab" aria-selected="true" aria-controls="loginPanePwd" onclick="setLoginTab('pwd')">密码登录</button>
-      <button type="button" class="login-tab" id="loginTabOtp" role="tab" aria-selected="false" aria-controls="loginPaneOtp" onclick="setLoginTab('otp')">验证码登录</button>
-    </div>
-    <div class="login-panes">
-      <div class="login-pane" id="loginPanePwd" role="tabpanel" aria-labelledby="loginTabPwd">
-        <label class="login-label" for="loginPhonePwd">手机号</label>
-        <input type="tel" class="login-input" id="loginPhonePwd" inputmode="numeric" autocomplete="username" maxlength="11" placeholder="11 位手机号">
-        <label class="login-label" for="loginPassword">密码</label>
-        <input type="password" class="login-input" id="loginPassword" autocomplete="current-password" placeholder="不少于 6 位">
-        <p class="login-err" id="loginErrPwd" role="alert"></p>
-        <button type="button" class="login-submit" onclick="submitLoginPassword()">登录</button>
+    <div id="loginMainBlock" class="login-main">
+      <div class="login-tabs" role="tablist" aria-label="登录方式">
+        <button type="button" class="login-tab is-active" id="loginTabPwd" role="tab" aria-selected="true" aria-controls="loginPanePwd" onclick="setLoginTab('pwd')">密码登录</button>
+        <button type="button" class="login-tab" id="loginTabOtp" role="tab" aria-selected="false" aria-controls="loginPaneOtp" onclick="setLoginTab('otp')">验证码登录</button>
       </div>
-      <div class="login-pane login-pane--hidden" id="loginPaneOtp" role="tabpanel" aria-labelledby="loginTabOtp" aria-hidden="true">
-        <label class="login-label" for="loginPhoneOtp">手机号</label>
-        <input type="tel" class="login-input" id="loginPhoneOtp" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号">
-        <label class="login-label" for="loginSmsCode">短信验证码</label>
-        <div class="login-otp-row">
-          <input type="text" class="login-input login-input--code" id="loginSmsCode" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code">
-          <button type="button" class="login-send-code" id="loginSendCodeBtn" onclick="sendLoginSmsCode()">获取验证码</button>
+      <div class="login-panes">
+        <div class="login-pane" id="loginPanePwd" role="tabpanel" aria-labelledby="loginTabPwd">
+          <label class="login-label" for="loginPhonePwd">手机号</label>
+          <input type="tel" class="login-input" id="loginPhonePwd" inputmode="numeric" autocomplete="username" maxlength="11" placeholder="11 位手机号">
+          <label class="login-label" for="loginPassword">密码</label>
+          <input type="password" class="login-input" id="loginPassword" autocomplete="current-password" placeholder="不少于 6 位">
+          <p class="login-err" id="loginErrPwd" role="alert"></p>
+          <button type="button" class="login-submit" onclick="submitLoginPassword()">登录</button>
         </div>
-        <p class="login-err" id="loginErrOtp" role="alert"></p>
-        <button type="button" class="login-submit" onclick="submitLoginOtp()">登录</button>
+        <div class="login-pane login-pane--hidden" id="loginPaneOtp" role="tabpanel" aria-labelledby="loginTabOtp" aria-hidden="true">
+          <label class="login-label" for="loginPhoneOtp">手机号</label>
+          <input type="tel" class="login-input" id="loginPhoneOtp" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号">
+          <label class="login-label" for="loginSmsCode">短信验证码</label>
+          <div class="login-otp-row">
+            <input type="text" class="login-input login-input--code" id="loginSmsCode" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code">
+            <button type="button" class="login-send-code" id="loginSendCodeBtn" onclick="sendLoginSmsCode()">获取验证码</button>
+          </div>
+          <p class="login-err" id="loginErrOtp" role="alert"></p>
+          <button type="button" class="login-submit" onclick="submitLoginOtp()">登录</button>
+        </div>
+      </div>
+      <div class="login-row-links">
+        <button type="button" class="login-text-link" onclick="showLoginForgot()">忘记密码</button>
+        <span class="login-row-links__sep" aria-hidden="true">·</span>
+        <button type="button" class="login-text-link" onclick="showLoginRegister()">注册账号</button>
       </div>
     </div>
-    <p class="login-footnote">演示环境：密码登录为本地校验；验证码登录将弹出演示用验证码。正式环境对接统一认证与短信网关。</p>
+    <div class="login-subflow login-pane--hidden" id="loginPaneRegister" role="region" aria-label="注册账号">
+      <p class="login-subflow-title">注册账号</p>
+      <p class="login-subflow-hint">使用手机号与短信验证码完成注册，并设置登录密码。</p>
+      <label class="login-label" for="regPhone">手机号</label>
+      <input type="tel" class="login-input" id="regPhone" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号">
+      <label class="login-label" for="regSmsCode">短信验证码</label>
+      <div class="login-otp-row">
+        <input type="text" class="login-input login-input--code" id="regSmsCode" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code">
+        <button type="button" class="login-send-code" id="regSendCodeBtn" onclick="sendRegisterSmsCode()">获取验证码</button>
+      </div>
+      <label class="login-label" for="regPassword">设置密码</label>
+      <input type="password" class="login-input" id="regPassword" autocomplete="new-password" placeholder="不少于 6 位">
+      <label class="login-label" for="regPassword2">确认密码</label>
+      <input type="password" class="login-input" id="regPassword2" autocomplete="new-password" placeholder="再次输入密码">
+      <p class="login-err" id="regErr" role="alert"></p>
+      <button type="button" class="login-submit" onclick="submitRegister()">注册并登录</button>
+      <button type="button" class="login-text-link login-text-link--block" onclick="showLoginMain()">返回登录</button>
+    </div>
+    <div class="login-subflow login-pane--hidden" id="loginPaneForgot" role="region" aria-label="忘记密码">
+      <p class="login-subflow-title">重置密码</p>
+      <p class="login-subflow-hint">通过手机短信验证码验证身份后，设置新密码并登录。</p>
+      <label class="login-label" for="fgPhone">手机号</label>
+      <input type="tel" class="login-input" id="fgPhone" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号">
+      <label class="login-label" for="fgSmsCode">短信验证码</label>
+      <div class="login-otp-row">
+        <input type="text" class="login-input login-input--code" id="fgSmsCode" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code">
+        <button type="button" class="login-send-code" id="fgSendCodeBtn" onclick="sendForgotSmsCode()">获取验证码</button>
+      </div>
+      <label class="login-label" for="fgPassword">新密码</label>
+      <input type="password" class="login-input" id="fgPassword" autocomplete="new-password" placeholder="不少于 6 位">
+      <label class="login-label" for="fgPassword2">确认新密码</label>
+      <input type="password" class="login-input" id="fgPassword2" autocomplete="new-password" placeholder="再次输入新密码">
+      <p class="login-err" id="fgErr" role="alert"></p>
+      <button type="button" class="login-submit" onclick="submitForgotPassword()">重置密码并登录</button>
+      <button type="button" class="login-text-link login-text-link--block" onclick="showLoginMain()">返回登录</button>
+    </div>
+    <p class="login-footnote">演示环境：密码与验证码均为前端校验；短信验证码以 Toast 展示模拟发送。正式环境对接统一认证与短信网关。</p>
   </div>
 </div>
 

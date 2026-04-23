@@ -511,6 +511,235 @@ function initLoginForm() {
     btn.textContent = '获取验证码';
   }
   setLoginTab('pwd');
+  showLoginMain();
+  const rp = document.getElementById('regPhone');
+  const rs = document.getElementById('regSmsCode');
+  const rpw = document.getElementById('regPassword');
+  const rpw2 = document.getElementById('regPassword2');
+  const re = document.getElementById('regErr');
+  if (import.meta.env.DEV && rp) rp.value = demoPhone;
+  else if (rp) rp.value = '';
+  if (rs) rs.value = '';
+  if (rpw) rpw.value = '';
+  if (rpw2) rpw2.value = '';
+  if (re) re.textContent = '';
+  const fp = document.getElementById('fgPhone');
+  const fs = document.getElementById('fgSmsCode');
+  const fpw = document.getElementById('fgPassword');
+  const fpw2 = document.getElementById('fgPassword2');
+  const fe = document.getElementById('fgErr');
+  if (import.meta.env.DEV && fp) fp.value = demoPhone;
+  else if (fp) fp.value = '';
+  if (fs) fs.value = '';
+  if (fpw) fpw.value = '';
+  if (fpw2) fpw2.value = '';
+  if (fe) fe.textContent = '';
+  _regOtp = { code: '', target: '', cool: 0 };
+  _forgotOtp = { code: '', target: '', cool: 0 };
+  _clearRegOtpTimer();
+  _clearForgotOtpTimer();
+  const rb = document.getElementById('regSendCodeBtn');
+  if (rb) {
+    rb.disabled = false;
+    rb.textContent = '获取验证码';
+  }
+  const fb = document.getElementById('fgSendCodeBtn');
+  if (fb) {
+    fb.disabled = false;
+    fb.textContent = '获取验证码';
+  }
+}
+
+function showLoginMain() {
+  document.getElementById('loginMainBlock')?.classList.remove('login-main--hidden');
+  document.getElementById('loginPaneRegister')?.classList.add('login-pane--hidden');
+  document.getElementById('loginPaneForgot')?.classList.add('login-pane--hidden');
+}
+
+function showLoginRegister() {
+  document.getElementById('loginMainBlock')?.classList.add('login-main--hidden');
+  document.getElementById('loginPaneRegister')?.classList.remove('login-pane--hidden');
+  document.getElementById('loginPaneForgot')?.classList.add('login-pane--hidden');
+  document.getElementById('regErr') && (document.getElementById('regErr').textContent = '');
+}
+
+function showLoginForgot() {
+  document.getElementById('loginMainBlock')?.classList.add('login-main--hidden');
+  document.getElementById('loginPaneForgot')?.classList.remove('login-pane--hidden');
+  document.getElementById('loginPaneRegister')?.classList.add('login-pane--hidden');
+  document.getElementById('fgErr') && (document.getElementById('fgErr').textContent = '');
+}
+
+let _regOtp = { code: '', target: '', cool: 0 };
+let _regOtpTimer = null;
+function _clearRegOtpTimer() {
+  if (_regOtpTimer) {
+    clearInterval(_regOtpTimer);
+    _regOtpTimer = null;
+  }
+}
+
+let _forgotOtp = { code: '', target: '', cool: 0 };
+let _forgotOtpTimer = null;
+function _clearForgotOtpTimer() {
+  if (_forgotOtpTimer) {
+    clearInterval(_forgotOtpTimer);
+    _forgotOtpTimer = null;
+  }
+}
+
+function sendRegisterSmsCode() {
+  const p = document.getElementById('regPhone')?.value.trim() || '';
+  const err = document.getElementById('regErr');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(p)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (_regOtp.cool > 0) return;
+  const code = String(100000 + Math.floor(Math.random() * 900000));
+  _regOtp.code = code;
+  _regOtp.target = p;
+  const btn = document.getElementById('regSendCodeBtn');
+  _regOtp.cool = 60;
+  showProfileToast(`验证码已发送（演示：${code}）`);
+  const tick = () => {
+    _regOtp.cool = Math.max(0, _regOtp.cool - 1);
+    if (btn) {
+      btn.textContent = _regOtp.cool > 0 ? `${_regOtp.cool} s 后重发` : '获取验证码';
+      btn.disabled = _regOtp.cool > 0;
+    }
+    if (_regOtp.cool <= 0) _clearRegOtpTimer();
+  };
+  tick();
+  _regOtpTimer = setInterval(tick, 1000);
+}
+
+function sendForgotSmsCode() {
+  const p = document.getElementById('fgPhone')?.value.trim() || '';
+  const err = document.getElementById('fgErr');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(p)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (_forgotOtp.cool > 0) return;
+  const code = String(100000 + Math.floor(Math.random() * 900000));
+  _forgotOtp.code = code;
+  _forgotOtp.target = p;
+  const btn = document.getElementById('fgSendCodeBtn');
+  _forgotOtp.cool = 60;
+  showProfileToast(`验证码已发送（演示：${code}）`);
+  const tick = () => {
+    _forgotOtp.cool = Math.max(0, _forgotOtp.cool - 1);
+    if (btn) {
+      btn.textContent = _forgotOtp.cool > 0 ? `${_forgotOtp.cool} s 后重发` : '获取验证码';
+      btn.disabled = _forgotOtp.cool > 0;
+    }
+    if (_forgotOtp.cool <= 0) _clearForgotOtpTimer();
+  };
+  tick();
+  _forgotOtpTimer = setInterval(tick, 1000);
+}
+
+function submitRegister() {
+  const phone = document.getElementById('regPhone')?.value.trim() || '';
+  const code = document.getElementById('regSmsCode')?.value.trim() || '';
+  const pwd = document.getElementById('regPassword')?.value || '';
+  const pwd2 = document.getElementById('regPassword2')?.value || '';
+  const err = document.getElementById('regErr');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(phone)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (!/^\d{6}$/.test(code)) {
+    if (err) err.textContent = '请输入 6 位短信验证码';
+    return;
+  }
+  if (!_regOtp.code) {
+    if (err) err.textContent = '请先点击「获取验证码」';
+    return;
+  }
+  if (phone !== _regOtp.target) {
+    if (err) err.textContent = '手机号与接收验证码的号码不一致，请重新获取验证码';
+    return;
+  }
+  if (code !== _regOtp.code) {
+    if (err) err.textContent = '验证码错误';
+    return;
+  }
+  if (pwd.length < 6) {
+    if (err) err.textContent = '密码至少 6 位';
+    return;
+  }
+  if (pwd !== pwd2) {
+    if (err) err.textContent = '两次输入的密码不一致';
+    return;
+  }
+  _clearRegOtpTimer();
+  const btn = document.getElementById('regSendCodeBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '获取验证码';
+  }
+  const nickname =
+    phone === '13800138000' ? DEFAULT_USER_PROFILE.nickname : `用户${phone.slice(-4)}`;
+  completeLoginSession(
+    phone,
+    nickname,
+    `注册成功，欢迎使用，${nickname || '用户'}`
+  );
+}
+
+function submitForgotPassword() {
+  const phone = document.getElementById('fgPhone')?.value.trim() || '';
+  const code = document.getElementById('fgSmsCode')?.value.trim() || '';
+  const pwd = document.getElementById('fgPassword')?.value || '';
+  const pwd2 = document.getElementById('fgPassword2')?.value || '';
+  const err = document.getElementById('fgErr');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(phone)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (!/^\d{6}$/.test(code)) {
+    if (err) err.textContent = '请输入 6 位短信验证码';
+    return;
+  }
+  if (!_forgotOtp.code) {
+    if (err) err.textContent = '请先点击「获取验证码」';
+    return;
+  }
+  if (phone !== _forgotOtp.target) {
+    if (err) err.textContent = '手机号与接收验证码的号码不一致，请重新获取验证码';
+    return;
+  }
+  if (code !== _forgotOtp.code) {
+    if (err) err.textContent = '验证码错误';
+    return;
+  }
+  if (pwd.length < 6) {
+    if (err) err.textContent = '新密码至少 6 位';
+    return;
+  }
+  if (pwd !== pwd2) {
+    if (err) err.textContent = '两次输入的新密码不一致';
+    return;
+  }
+  _clearForgotOtpTimer();
+  const btn = document.getElementById('fgSendCodeBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '获取验证码';
+  }
+  const nickname =
+    phone === '13800138000' ? DEFAULT_USER_PROFILE.nickname : `用户${phone.slice(-4)}`;
+  completeLoginSession(
+    phone,
+    nickname,
+    `密码已重置（演示），已为您登录，${nickname || '用户'}`
+  );
 }
 
 function setLoginTab(which) {
@@ -558,7 +787,7 @@ function sendLoginSmsCode() {
   _loginOtpTimer = setInterval(tick, 1000);
 }
 
-function completeLoginSession(phone, nickname) {
+function completeLoginSession(phone, nickname, welcomeToast) {
   saveUserProfile({
     phone,
     nickname: nickname || DEFAULT_USER_PROFILE.nickname,
@@ -567,7 +796,9 @@ function completeLoginSession(phone, nickname) {
   applyAuthShell();
   renderLib();
   go('library');
-  showProfileToast(`欢迎回来，${nickname || '用户'}`);
+  showProfileToast(
+    welcomeToast || `欢迎回来，${nickname || '用户'}`
+  );
 }
 
 function submitLoginPassword() {
@@ -997,6 +1228,8 @@ function logoutAccount() {
   localStorage.removeItem(PROFILE_STORAGE_KEY);
   localStorage.removeItem(SCHOOL_STORAGE_KEY);
   _clearLoginOtpTimer();
+  _clearRegOtpTimer();
+  _clearForgotOtpTimer();
   initLoginForm();
   applyAuthShell();
   syncSidebarUser();
@@ -2009,6 +2242,18 @@ document.getElementById('loginSmsCode')?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
     submitLoginOtp();
+  }
+});
+document.getElementById('regPassword2')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    submitRegister();
+  }
+});
+document.getElementById('fgPassword2')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    submitForgotPassword();
   }
 });
 
@@ -4341,6 +4586,8 @@ Object.assign(window, {
   renderSettings, handleSettingsAvatar, openPhoneModal, closePhoneModal, sendPhoneChangeCode, confirmPhoneChange,
   openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,
   setLoginTab, sendLoginSmsCode, submitLoginPassword, submitLoginOtp,
+  showLoginMain, showLoginRegister, showLoginForgot,
+  sendRegisterSmsCode, sendForgotSmsCode, submitRegister, submitForgotPassword,
   onFeedbackFilesChange, removeFeedbackImage, submitUserFeedback, openFeedbackModal, closeFeedbackModal
 });
 

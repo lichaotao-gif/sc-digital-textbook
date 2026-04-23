@@ -9,6 +9,105 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
 </head>
 <body>
+<!-- 未登录时全屏展示；与侧栏同一品牌（川 + 四川省数字教材） -->
+<div class="login-overlay" id="loginOverlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="loginBrandName">
+  <div class="login-overlay__bg" aria-hidden="true">
+    <!-- 登录插画：克制扁平（低饱和、小编辑风，非童趣卡通） -->
+    <svg class="login-overlay__art" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="loginIllu-sky" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#e8edf2"/>
+          <stop offset="48%" stop-color="#eef2f0"/>
+          <stop offset="100%" stop-color="#e6f0ec"/>
+        </linearGradient>
+        <linearGradient id="loginIllu-hill1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#c5d4ce"/>
+          <stop offset="100%" stop-color="#aabfbb"/>
+        </linearGradient>
+        <linearGradient id="loginIllu-hill2" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#9db5b0"/>
+          <stop offset="100%" stop-color="#8aa39e"/>
+        </linearGradient>
+        <linearGradient id="loginIllu-building" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#8fb0a8"/>
+          <stop offset="100%" stop-color="#6d918a"/>
+        </linearGradient>
+        <linearGradient id="loginIllu-buildingBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#9eb8c9"/>
+          <stop offset="100%" stop-color="#7a9aad"/>
+        </linearGradient>
+        <linearGradient id="loginIllu-buildingDeep" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#5a8f86"/>
+          <stop offset="100%" stop-color="#4a7a72"/>
+        </linearGradient>
+      </defs>
+      <rect width="1440" height="900" fill="url(#loginIllu-sky)"/>
+      <ellipse cx="1080" cy="118" rx="220" ry="22" fill="#f8fafc" opacity="0.35"/>
+      <ellipse cx="280" cy="168" rx="280" ry="18" fill="#f1f5f4" opacity="0.28"/>
+      <path fill="#d4e3de" opacity="0.55" d="M0 900V660Q720 600 1440 640V900H0z"/>
+      <path fill="url(#loginIllu-hill1)" d="M0 900V700Q720 648 1440 688V900H0z"/>
+      <path fill="url(#loginIllu-hill2)" opacity="0.4" d="M0 900V780Q720 720 1440 752V900H0z"/>
+      <g class="login-overlay__art-illu" fill="#f8fafc" fill-opacity="0.28">
+        <rect x="52" y="528" width="184" height="384" rx="8" fill="url(#loginIllu-building)"/>
+        <rect x="76" y="560" width="34" height="20" rx="2"/><rect x="118" y="560" width="34" height="20" rx="2"/><rect x="160" y="560" width="34" height="20" rx="2"/><rect x="202" y="560" width="34" height="20" rx="2"/>
+        <rect x="76" y="596" width="34" height="20" rx="2"/><rect x="118" y="596" width="34" height="20" rx="2"/><rect x="160" y="596" width="34" height="20" rx="2"/><rect x="202" y="596" width="34" height="20" rx="2"/>
+        <rect x="76" y="632" width="34" height="20" rx="2"/><rect x="118" y="632" width="34" height="20" rx="2"/><rect x="160" y="632" width="34" height="20" rx="2"/><rect x="202" y="632" width="34" height="20" rx="2"/>
+        <rect x="252" y="612" width="104" height="300" rx="6" fill="url(#loginIllu-buildingDeep)"/>
+        <rect x="268" y="636" width="24" height="16" rx="2"/><rect x="300" y="636" width="24" height="16" rx="2"/><rect x="332" y="636" width="24" height="16" rx="2"/>
+        <rect x="268" y="664" width="24" height="16" rx="2"/><rect x="300" y="664" width="24" height="16" rx="2"/><rect x="332" y="664" width="24" height="16" rx="2"/>
+        <rect x="372" y="488" width="88" height="420" rx="8" fill="url(#loginIllu-buildingBlue)"/>
+        <rect x="386" y="512" width="22" height="16" rx="2"/><rect x="414" y="512" width="22" height="16" rx="2"/><rect x="442" y="512" width="22" height="16" rx="2"/>
+        <rect x="386" y="540" width="22" height="16" rx="2"/><rect x="414" y="540" width="22" height="16" rx="2"/><rect x="442" y="540" width="22" height="16" rx="2"/>
+        <rect x="392" y="824" width="48" height="68" rx="4" fill="#dce8ee" fill-opacity="0.55"/>
+        <rect x="996" y="552" width="376" height="356" rx="10" fill="url(#loginIllu-building)"/>
+        <rect x="1016" y="580" width="36" height="18" rx="2"/><rect x="1062" y="580" width="36" height="18" rx="2"/><rect x="1108" y="580" width="36" height="18" rx="2"/><rect x="1154" y="580" width="36" height="18" rx="2"/><rect x="1200" y="580" width="36" height="18" rx="2"/><rect x="1246" y="580" width="36" height="18" rx="2"/><rect x="1292" y="580" width="36" height="18" rx="2"/><rect x="1338" y="580" width="36" height="18" rx="2"/>
+        <rect x="1016" y="612" width="36" height="18" rx="2"/><rect x="1062" y="612" width="36" height="18" rx="2"/><rect x="1108" y="612" width="36" height="18" rx="2"/><rect x="1154" y="612" width="36" height="18" rx="2"/><rect x="1200" y="612" width="36" height="18" rx="2"/><rect x="1246" y="612" width="36" height="18" rx="2"/><rect x="1292" y="612" width="36" height="18" rx="2"/><rect x="1338" y="612" width="36" height="18" rx="2"/>
+        <rect x="1140" y="712" width="120" height="204" rx="6" fill="url(#loginIllu-buildingDeep)"/>
+        <rect x="1154" y="732" width="28" height="16" rx="2"/><rect x="1188" y="732" width="28" height="16" rx="2"/><rect x="1222" y="732" width="28" height="16" rx="2"/>
+        <rect x="1154" y="760" width="28" height="16" rx="2"/><rect x="1188" y="760" width="28" height="16" rx="2"/><rect x="1222" y="760" width="28" height="16" rx="2"/>
+        <rect x="1284" y="636" width="100" height="272" rx="6" fill="#7a9e96" fill-opacity="0.85"/>
+        <rect x="1296" y="656" width="76" height="48" rx="3" fill="#f8fafc" fill-opacity="0.22"/>
+      </g>
+      <ellipse cx="720" cy="912" rx="820" ry="96" fill="#94a3a8" opacity="0.08"/>
+    </svg>
+  </div>
+  <div class="login-panel">
+    <div class="login-brand" id="loginBrand">
+      <div class="login-brand__icon">川</div>
+      <div class="login-brand__text">
+        <div class="login-brand__name" id="loginBrandName">四川省数字教材</div>
+        <div class="login-brand__en">Sichuan Digital Textbook</div>
+      </div>
+    </div>
+    <div class="login-tabs" role="tablist" aria-label="登录方式">
+      <button type="button" class="login-tab is-active" id="loginTabPwd" role="tab" aria-selected="true" aria-controls="loginPanePwd" onclick="setLoginTab('pwd')">密码登录</button>
+      <button type="button" class="login-tab" id="loginTabOtp" role="tab" aria-selected="false" aria-controls="loginPaneOtp" onclick="setLoginTab('otp')">验证码登录</button>
+    </div>
+    <div class="login-panes">
+      <div class="login-pane" id="loginPanePwd" role="tabpanel" aria-labelledby="loginTabPwd">
+        <label class="login-label" for="loginPhonePwd">手机号</label>
+        <input type="tel" class="login-input" id="loginPhonePwd" inputmode="numeric" autocomplete="username" maxlength="11" placeholder="11 位手机号">
+        <label class="login-label" for="loginPassword">密码</label>
+        <input type="password" class="login-input" id="loginPassword" autocomplete="current-password" placeholder="不少于 6 位">
+        <p class="login-err" id="loginErrPwd" role="alert"></p>
+        <button type="button" class="login-submit" onclick="submitLoginPassword()">登录</button>
+      </div>
+      <div class="login-pane login-pane--hidden" id="loginPaneOtp" role="tabpanel" aria-labelledby="loginTabOtp" aria-hidden="true">
+        <label class="login-label" for="loginPhoneOtp">手机号</label>
+        <input type="tel" class="login-input" id="loginPhoneOtp" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号">
+        <label class="login-label" for="loginSmsCode">短信验证码</label>
+        <div class="login-otp-row">
+          <input type="text" class="login-input login-input--code" id="loginSmsCode" inputmode="numeric" maxlength="6" placeholder="6 位验证码" autocomplete="one-time-code">
+          <button type="button" class="login-send-code" id="loginSendCodeBtn" onclick="sendLoginSmsCode()">获取验证码</button>
+        </div>
+        <p class="login-err" id="loginErrOtp" role="alert"></p>
+        <button type="button" class="login-submit" onclick="submitLoginOtp()">登录</button>
+      </div>
+    </div>
+    <p class="login-footnote">演示环境：密码登录为本地校验；验证码登录将弹出演示用验证码。正式环境对接统一认证与短信网关。</p>
+  </div>
+</div>
+
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -27,7 +126,6 @@
       <div class="nav-item active" data-page="library" onclick="go('library')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         <span>数字教材</span>
-        <span class="nav-num">24</span>
       </div>
       <div class="nav-item" data-page="my" onclick="go('my')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
@@ -437,6 +535,146 @@
       </div>
     </div>
     <div class="reader-icase-page__body" id="readerIcasePageRoot" tabindex="-1"></div>
+  </div>
+</div>
+<!-- 教学模式全屏层：与 #readerOverlay 平级，避免未打开阅读时父级 display:none 导致不可见 -->
+<div class="teach-mode-page" id="teachModePage" aria-hidden="true" role="application">
+  <header class="teach-mode__head">
+    <button type="button" class="teach-mode__back" onclick="closeTeachMode()" title="退出教学模式" aria-label="退出教学模式">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>返回</span>
+    </button>
+    <div class="teach-mode__brand">
+      <div class="teach-mode__kicker" id="teachModeKicker">教学模式</div>
+      <h1 class="teach-mode__title" id="teachModeBookTitle">教材</h1>
+      <p class="teach-mode__sub" id="teachModeBookSub">课堂演示</p>
+    </div>
+    <button type="button" class="teach-mode__book-toggle" id="teachToggleBookBtn" onclick="teachToggleBookPanel()" aria-pressed="false" title="展开时与教材二分屏，再点收起" aria-label="课件与教材分屏，默认仅课件">课件 / 教材</button>
+  </header>
+  <div class="teach-mode__toolbar" role="toolbar" aria-label="换页与提示">
+    <div class="teach-mode__pager">
+      <button type="button" class="teach-mode__pbtn" id="teachBtnPrev" onclick="teachPrevSlide()" title="上一张" aria-label="上一张">上一张</button>
+      <span class="teach-mode__pmeta" id="teachSlideMeta" aria-live="polite">1 / 1</span>
+      <button type="button" class="teach-mode__pbtn" id="teachBtnNext" onclick="teachNextSlide()" title="下一张" aria-label="下一张">下一张</button>
+    </div>
+    <p class="teach-mode__hint" id="teachKeyHint">小提示：键盘 ← → 换页</p>
+  </div>
+  <div class="teach-mode__body" id="teachModeBody" data-book-open="false">
+    <section class="teach-deck" id="teachDeckFocus" tabindex="-1" aria-label="本课教学课件（演示，可接 PPT/PDF）">
+      <div class="teach-deck__inner" id="teachSlideView"></div>
+    </section>
+    <section class="teach-book" id="teachBookPanel" aria-label="与教材同屏照合" hidden>
+      <div class="teach-book__head">
+        <span>教材照合</span>
+      </div>
+      <div class="teach-book__split">
+        <aside class="teach-toc" id="teachTocWrap" aria-label="本教材章节目录">
+          <div class="teach-toc__tree reader-toc-tree" id="teachTocTree"></div>
+        </aside>
+        <div class="teach-book__main" id="teachBookMain">
+          <article class="teach-article reader-article" id="teachArticle"></article>
+        </div>
+      </div>
+    </section>
+  </div>
+  <canvas class="teach-pen-canvas" id="teachPenCanvas" width="1" height="1" hidden aria-hidden="true"></canvas>
+  <div class="teach-timer-huge" id="teachTimerHuge" hidden aria-live="off">
+    <span class="teach-timer-huge__val" id="teachTimerHugeVal">00:00</span>
+  </div>
+  <div class="teach-tool-pop teach-tool-pop--timer" id="teachToolPopTimer" role="dialog" aria-modal="true" aria-label="课堂倒计时" hidden>
+    <div class="teach-tool-pop__glow" aria-hidden="true"></div>
+    <div class="teach-tool-pop__head teach-tool-pop__head--timer">
+      <span class="teach-tool-pop__head-txt"><span class="teach-tool-pop__kicker">Focus</span>课堂倒计时</span>
+      <button type="button" class="teach-tool-pop__x" onclick="teachToolToggle('timer')" aria-label="关闭">×</button>
+    </div>
+    <div class="teach-tool-pop__body">
+      <div class="teach-timer-face" aria-hidden="true">
+        <div class="teach-timer-face__ring"></div>
+      </div>
+      <label class="teach-timer-lab">分钟 <input type="number" id="teachTimerMin" class="teach-timer-inp" min="0" max="120" value="5" step="1"></label>
+      <label class="teach-timer-lab">秒 <input type="number" id="teachTimerSec" class="teach-timer-inp" min="0" max="59" value="0" step="1"></label>
+    </div>
+    <div class="teach-tool-pop__actions">
+      <button type="button" class="teach-tool-pop__btn" onclick="teachCountdownStop()">停</button>
+      <button type="button" class="teach-tool-pop__btn teach-tool-pop__btn--pri teach-tool-pop__btn--glow" onclick="teachCountdownStart()">开始</button>
+    </div>
+  </div>
+  <div class="teach-tool-pop teach-tool-pop--pick" id="teachToolPopPick" role="dialog" aria-modal="true" aria-label="随机抽问" hidden>
+    <div class="teach-tool-pop__glow teach-tool-pop__glow--violet" aria-hidden="true"></div>
+    <div class="teach-tool-pop__head teach-tool-pop__head--pick">
+      <span class="teach-tool-pop__head-txt"><span class="teach-tool-pop__kicker">Lucky</span>随机抽问</span>
+      <button type="button" class="teach-tool-pop__x" onclick="teachToolToggle('pick')" aria-label="关闭">×</button>
+    </div>
+    <div class="teach-tool-pop__body">
+      <p class="teach-tool-hint">每行一名学生（演示有默认名）：</p>
+      <textarea id="teachPickNames" class="teach-pick-ta" rows="6" placeholder="每行一个姓名"></textarea>
+    </div>
+    <div class="teach-tool-pop__pickout" id="teachPickResult" aria-live="polite">—</div>
+    <div class="teach-tool-pop__actions">
+      <button type="button" class="teach-tool-pop__btn teach-tool-pop__btn--pri teach-tool-pop__btn--dice" onclick="teachPickRun()">抽取一位</button>
+    </div>
+  </div>
+  <div class="teach-tool-pop teach-tool-pop--ai" id="teachToolPopAi" role="dialog" aria-modal="true" aria-label="课堂 AI 助手" hidden>
+    <div class="teach-tool-pop__glow teach-tool-pop__glow--ai" aria-hidden="true"></div>
+    <div class="teach-tool-pop__head teach-tool-pop__head--ai">
+      <span class="teach-tool-pop__head-txt"><span class="teach-tool-pop__kicker">Spark</span>课堂 AI 助手</span>
+      <button type="button" class="teach-tool-pop__x" onclick="teachToolToggle('ai')" aria-label="关闭">×</button>
+    </div>
+    <div class="teach-ai-messages" id="teachAiMessages"></div>
+    <div class="teach-ai-input-row">
+      <input type="text" class="teach-ai-input" id="teachAiInput" placeholder="可问概念解释、讲题提示…" onkeydown="if(event.key==='Enter')teachAiSend()">
+      <button type="button" class="teach-ai-send" onclick="teachAiSend()">发送</button>
+    </div>
+  </div>
+  <nav class="teach-tool-float" id="teachToolFloat" aria-label="教学工具" data-tool-expanded="false" role="navigation">
+    <button type="button" class="teach-tool-float__toggle" id="teachToolFloatToggle" onclick="teachToolFloatToggle()"
+      title="展开教学工具（画笔、计时、抽问、AI）" aria-expanded="false" aria-controls="teachToolFloatList">
+      <span class="teach-tool-float__toggle-halo" aria-hidden="true"></span>
+      <span class="teach-tool-float__toggle-inner">
+        <svg class="teach-tool-float__toggle-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        <span class="teach-tool-float__toggle-txt" id="teachToolFloatToggleLabel">教学工具</span>
+        <svg class="teach-tool-float__toggle-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+    </button>
+    <div class="teach-tool-float__list" id="teachToolFloatList" role="group" aria-label="教学工具" aria-hidden="true">
+    <button type="button" class="teach-tool-fab teach-tool-fab--pen" data-act="pen" onclick="teachToolToggle('pen')" title="在课件上圈画标注" aria-pressed="false" id="teachFabPen">
+      <span class="teach-tool-fab__glow" aria-hidden="true"></span>
+      <span class="teach-tool-fab__inner">
+        <svg class="teach-tool-fab__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span class="teach-tool-fab__txt">画笔</span>
+      </span>
+    </button>
+    <button type="button" class="teach-tool-fab teach-tool-fab--timer" data-act="timer" onclick="teachToolToggle('timer')" title="课堂限时倒数" id="teachFabTimer">
+      <span class="teach-tool-fab__glow" aria-hidden="true"></span>
+      <span class="teach-tool-fab__inner">
+        <svg class="teach-tool-fab__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span class="teach-tool-fab__txt">倒计时</span>
+      </span>
+    </button>
+    <button type="button" class="teach-tool-fab teach-tool-fab--pick" data-act="pick" onclick="teachToolToggle('pick')" title="从名单中随机点人" id="teachFabPick">
+      <span class="teach-tool-fab__glow" aria-hidden="true"></span>
+      <span class="teach-tool-fab__inner">
+        <svg class="teach-tool-fab__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v4M12 4v2M16 4v4"/><path d="M9.5 12h5M9.5 15.5h3.5"/></svg>
+        <span class="teach-tool-fab__txt">抽问</span>
+      </span>
+    </button>
+    <button type="button" class="teach-tool-fab teach-tool-fab--ai" data-act="ai" onclick="teachToolToggle('ai')" title="课堂问题速答（演示版）" id="teachFabAi">
+      <span class="teach-tool-fab__glow" aria-hidden="true"></span>
+      <span class="teach-tool-fab__inner">
+        <svg class="teach-tool-fab__ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.6 3.2 3.5.4-2.6 2.5.7 3.5L12 10.7 8.8 12.6l.7-3.5-2.6-2.5 3.5-.4L12 3z"/><path d="M4 20c2.5-1.2 4.6-1.2 6 0 1.2-1.1 2.1-1.1 2.5 0 .7-1.1 1.2-1.1 1.5 0 .6-.8 1.1-.6 1.2 0"/></svg>
+        <span class="teach-tool-fab__txt">AI 助手</span>
+      </span>
+    </button>
+    </div>
+  </nav>
+  <div class="teach-pen-bar" id="teachPenBar" hidden>
+    <span class="teach-pen-bar__glow" aria-hidden="true"></span>
+    <span class="teach-pen-bar__lab">画笔</span>
+    <button type="button" class="teach-pen-bar__btn" onclick="teachPenClear()">清屏</button>
+    <button type="button" class="teach-pen-bar__btn teach-pen-bar__btn--done" onclick="teachToolToggle('pen')">完成</button>
   </div>
 </div>
 

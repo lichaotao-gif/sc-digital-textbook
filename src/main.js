@@ -69,7 +69,7 @@ function detailModeCardHtml(modeKey) {
       cls: 'mi-teach',
       icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="10" rx="1.2"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5" y1="15" x2="7" y2="19"/><line x1="19" y1="15" x2="17" y2="19"/><line x1="4" y1="19" x2="8" y2="19"/></svg>',
       name: '教学模式',
-      desc: '组群教师可用：投屏/板书同步、学情看板、课堂随练与组群学情联调（演示，仅管理员）',
+      desc: '课堂演示与本书配套教学课件，支持类 PPT 换页，并可一键二分屏与教材原文对照，便于投屏讲练结合（演示，仅组群管理员可见入口）',
     },
   };
   const m = blocks[modeKey];
@@ -357,19 +357,30 @@ const DEFAULT_USER_PROFILE = {
   avatarDataUrl: '',
 };
 
+/** 仅 `npm run dev`：登录层预填密码（演示无真实校验，满足≥6位即可） */
+const DEV_DEMO_LOGIN_PASSWORD = 'demo123456';
+
 function getUserProfile() {
   try {
     const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_USER_PROFILE };
+    if (!raw) return null;
     const o = JSON.parse(raw);
     return { ...DEFAULT_USER_PROFILE, ...o };
   } catch (_) {
-    return { ...DEFAULT_USER_PROFILE };
+    return null;
   }
 }
 
+/** 组群/演示逻辑中的「当前用户姓名」：已登录用昵称，否则回退常量 */
+function getCurrentUserDisplayName() {
+  const u = getUserProfile();
+  const n = u && u.nickname ? String(u.nickname).trim() : '';
+  return n || CURRENT_USER;
+}
+
 function saveUserProfile(partial) {
-  const next = { ...getUserProfile(), ...partial };
+  const prev = getUserProfile();
+  const next = { ...DEFAULT_USER_PROFILE, ...(prev || {}), ...partial };
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(next));
   syncSidebarUser();
 }
@@ -402,6 +413,19 @@ function _clearPhoneOtpTimer() {
 function syncSidebarUser() {
   const u = getUserProfile();
   const av = document.getElementById('sidebarAvatar') || document.querySelector('.sidebar-foot .avatar');
+  const nameEl = document.getElementById('sidebarUserName') || document.querySelector('.sidebar-foot .user-name');
+  if (!u) {
+    if (av) {
+      av.style.backgroundImage = '';
+      av.style.backgroundSize = '';
+      av.style.backgroundPosition = '';
+      av.textContent = '登';
+    }
+    if (nameEl) nameEl.textContent = '未登录';
+    const schoolEl = document.getElementById('sidebarUserSchool');
+    if (schoolEl) schoolEl.hidden = true;
+    return;
+  }
   if (av) {
     if (u.avatarDataUrl) {
       av.style.backgroundImage = `url(${JSON.stringify(u.avatarDataUrl)})`;
@@ -416,7 +440,6 @@ function syncSidebarUser() {
       av.textContent = n;
     }
   }
-  const nameEl = document.getElementById('sidebarUserName') || document.querySelector('.sidebar-foot .user-name');
   if (nameEl) nameEl.textContent = u.nickname || DEFAULT_USER_PROFILE.nickname;
   const schoolEl = document.getElementById('sidebarUserSchool');
   if (schoolEl) {
@@ -428,6 +451,177 @@ function syncSidebarUser() {
       schoolEl.hidden = false;
     }
   }
+}
+
+/** 登录页与主壳显隐：无本地会话时全屏登录 */
+function applyAuthShell() {
+  const logged = !!localStorage.getItem(PROFILE_STORAGE_KEY);
+  document.body.classList.toggle('login-overlay-active', !logged);
+  const app = document.querySelector('.app');
+  if (app) app.hidden = !logged;
+  const lo = document.getElementById('loginOverlay');
+  if (lo) {
+    lo.classList.toggle('open', !logged);
+    lo.setAttribute('aria-hidden', logged ? 'true' : 'false');
+  }
+  if (!logged) {
+    document.body.style.overflow = 'hidden';
+  } else if (
+    !document.getElementById('readerOverlay')?.classList.contains('open') &&
+    !document.getElementById('teachModePage')?.classList.contains('open')
+  ) {
+    document.body.style.overflow = '';
+  }
+}
+
+let _loginOtp = { code: '', target: '', cool: 0 };
+let _loginOtpTimer = null;
+function _clearLoginOtpTimer() {
+  if (_loginOtpTimer) {
+    clearInterval(_loginOtpTimer);
+    _loginOtpTimer = null;
+  }
+}
+
+function initLoginForm() {
+  const p1 = document.getElementById('loginPhonePwd');
+  const p2 = document.getElementById('loginPhoneOtp');
+  const pw = document.getElementById('loginPassword');
+  const c = document.getElementById('loginSmsCode');
+  const e1 = document.getElementById('loginErrPwd');
+  const e2 = document.getElementById('loginErrOtp');
+  const demoPhone = DEFAULT_USER_PROFILE.phone;
+  if (import.meta.env.DEV) {
+    if (p1) p1.value = demoPhone;
+    if (p2) p2.value = demoPhone;
+    if (pw) pw.value = DEV_DEMO_LOGIN_PASSWORD;
+  } else {
+    if (p1) p1.value = '';
+    if (p2) p2.value = '';
+    if (pw) pw.value = '';
+  }
+  if (c) c.value = '';
+  if (e1) e1.textContent = '';
+  if (e2) e2.textContent = '';
+  _loginOtp = { code: '', target: '', cool: 0 };
+  _clearLoginOtpTimer();
+  const btn = document.getElementById('loginSendCodeBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '获取验证码';
+  }
+  setLoginTab('pwd');
+}
+
+function setLoginTab(which) {
+  const pwdTab = document.getElementById('loginTabPwd');
+  const otpTab = document.getElementById('loginTabOtp');
+  const pwdPane = document.getElementById('loginPanePwd');
+  const otpPane = document.getElementById('loginPaneOtp');
+  const isPwd = which !== 'otp';
+  pwdTab?.classList.toggle('is-active', isPwd);
+  otpTab?.classList.toggle('is-active', !isPwd);
+  pwdTab?.setAttribute('aria-selected', isPwd ? 'true' : 'false');
+  otpTab?.setAttribute('aria-selected', !isPwd ? 'true' : 'false');
+  pwdPane?.classList.toggle('login-pane--hidden', !isPwd);
+  otpPane?.classList.toggle('login-pane--hidden', isPwd);
+  pwdPane?.setAttribute('aria-hidden', isPwd ? 'false' : 'true');
+  otpPane?.setAttribute('aria-hidden', isPwd ? 'true' : 'false');
+  document.getElementById('loginErrPwd') && (document.getElementById('loginErrPwd').textContent = '');
+  document.getElementById('loginErrOtp') && (document.getElementById('loginErrOtp').textContent = '');
+}
+
+function sendLoginSmsCode() {
+  const p = document.getElementById('loginPhoneOtp')?.value.trim() || '';
+  const err = document.getElementById('loginErrOtp');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(p)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (_loginOtp.cool > 0) return;
+  const code = String(100000 + Math.floor(Math.random() * 900000));
+  _loginOtp.code = code;
+  _loginOtp.target = p;
+  const btn = document.getElementById('loginSendCodeBtn');
+  _loginOtp.cool = 60;
+  showProfileToast(`验证码已发送（演示：${code}）`);
+  const tick = () => {
+    _loginOtp.cool = Math.max(0, _loginOtp.cool - 1);
+    if (btn) {
+      btn.textContent = _loginOtp.cool > 0 ? `${_loginOtp.cool} s 后重发` : '获取验证码';
+      btn.disabled = _loginOtp.cool > 0;
+    }
+    if (_loginOtp.cool <= 0) _clearLoginOtpTimer();
+  };
+  tick();
+  _loginOtpTimer = setInterval(tick, 1000);
+}
+
+function completeLoginSession(phone, nickname) {
+  saveUserProfile({
+    phone,
+    nickname: nickname || DEFAULT_USER_PROFILE.nickname,
+  });
+  initLoginForm();
+  applyAuthShell();
+  renderLib();
+  go('library');
+  showProfileToast(`欢迎回来，${nickname || '用户'}`);
+}
+
+function submitLoginPassword() {
+  const phone = document.getElementById('loginPhonePwd')?.value.trim() || '';
+  const pwd = document.getElementById('loginPassword')?.value || '';
+  const err = document.getElementById('loginErrPwd');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(phone)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (pwd.length < 6) {
+    if (err) err.textContent = '密码至少 6 位';
+    return;
+  }
+  const nickname = phone === '13800138000' ? DEFAULT_USER_PROFILE.nickname : `用户${phone.slice(-4)}`;
+  completeLoginSession(phone, nickname);
+  const pwEl = document.getElementById('loginPassword');
+  if (pwEl) pwEl.value = '';
+}
+
+function submitLoginOtp() {
+  const phone = document.getElementById('loginPhoneOtp')?.value.trim() || '';
+  const code = document.getElementById('loginSmsCode')?.value.trim() || '';
+  const err = document.getElementById('loginErrOtp');
+  if (err) err.textContent = '';
+  if (!/^1\d{10}$/.test(phone)) {
+    if (err) err.textContent = '请输入正确的 11 位手机号';
+    return;
+  }
+  if (!/^\d{6}$/.test(code)) {
+    if (err) err.textContent = '请输入 6 位短信验证码';
+    return;
+  }
+  if (!_loginOtp.code) {
+    if (err) err.textContent = '请先点击「获取验证码」';
+    return;
+  }
+  if (phone !== _loginOtp.target) {
+    if (err) err.textContent = '手机号与接收验证码的号码不一致，请重新获取验证码';
+    return;
+  }
+  if (code !== _loginOtp.code) {
+    if (err) err.textContent = '验证码错误';
+    return;
+  }
+  const nickname = phone === '13800138000' ? DEFAULT_USER_PROFILE.nickname : `用户${phone.slice(-4)}`;
+  _clearLoginOtpTimer();
+  const btn = document.getElementById('loginSendCodeBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '获取验证码';
+  }
+  completeLoginSession(phone, nickname);
 }
 
 function refreshSchoolDependentPages() {
@@ -482,6 +676,7 @@ function renderFeedbackPreview() {
 }
 
 function openFeedbackModal() {
+  if (!getUserProfile()) return;
   resetFeedbackDraft();
   const ta = document.getElementById('feedbackModalText');
   const fi = document.getElementById('feedbackModalFileInput');
@@ -538,6 +733,15 @@ function showProfileToast(msg) {
 
 function renderSettings() {
   const u = getUserProfile();
+  if (!u) {
+    document.getElementById('page-settings').innerHTML = `
+    <div class="settings-page">
+      <div class="settings-card">
+        <p class="settings-empty-login">请先登录后查看设置。</p>
+      </div>
+    </div>`;
+    return;
+  }
   const schoolBlock = FEATURE_SCHOOL_UI
     ? (() => {
         const sch = getBoundSchool();
@@ -651,6 +855,7 @@ function handleSettingsAvatar(e) {
 
 function openPhoneModal() {
   const u = getUserProfile();
+  if (!u) return;
   const cur = document.getElementById('phoneModalCurrent');
   if (cur) cur.textContent = maskPhone(u.phone);
   const inp = document.getElementById('phoneNew');
@@ -747,6 +952,7 @@ function confirmPhoneChange() {
 }
 
 function openPasswordModal() {
+  if (!getUserProfile()) return;
   const o = document.getElementById('pwdOld');
   const a = document.getElementById('pwdNew');
   const b = document.getElementById('pwdNew2');
@@ -790,9 +996,11 @@ function logoutAccount() {
   if (!confirm('确定退出当前账号？未同步的数据可能丢失。')) return;
   localStorage.removeItem(PROFILE_STORAGE_KEY);
   localStorage.removeItem(SCHOOL_STORAGE_KEY);
+  _clearLoginOtpTimer();
+  initLoginForm();
+  applyAuthShell();
   syncSidebarUser();
   showProfileToast('已退出账号');
-  go('library');
 }
 
 const classGroups=[
@@ -854,7 +1062,7 @@ const classGroups=[
 
 /** 当前用户是否担任至少一个组群的「管理员 / 创建者」 */
 function isCurrentUserClassGroupAdmin() {
-  return classGroups.some((c) => c.admin === CURRENT_USER);
+  return classGroups.some((c) => c.admin === getCurrentUserDisplayName());
 }
 
 /** 在学习模式列表中、紧跟「阅读模式」后注入「教学模式」（仅组群管理员；不由书目 readModeKeys 配置） */
@@ -874,7 +1082,8 @@ function withTeachIfAdmin(modes) {
 
 /** 当前用户可见的组群：创建者或已加入的成员 */
 function isClassVisibleForUser(cls) {
-  return cls.admin === CURRENT_USER || cls.students.some((s) => s.name === CURRENT_USER);
+  const me = getCurrentUserDisplayName();
+  return cls.admin === me || cls.students.some((s) => s.name === me);
 }
 
 /** 组群教材条目与「我的教材」是否为同一本书（与添加教材逻辑一致） */
@@ -1158,7 +1367,7 @@ function doCreateClass(){
     desc: name,
     code,
     created: new Date().toISOString().slice(0, 10),
-    admin: '李明远',
+    admin: getCurrentUserDisplayName(),
     books: [],
     students: [],
   });
@@ -1206,11 +1415,11 @@ function doJoinClass(){
     errEl.textContent='未找到该邀请码，请核对后重试';
     return;
   }
-  if(cls.admin===CURRENT_USER){
+  if(cls.admin===getCurrentUserDisplayName()){
     errEl.textContent='你已是该组群的管理员，无需通过邀请码加入';
     return;
   }
-  if(cls.students.some(s=>s.name===CURRENT_USER)){
+  if(cls.students.some(s=>s.name===getCurrentUserDisplayName())){
     errEl.textContent='你已在该组群中';
     return;
   }
@@ -1218,7 +1427,7 @@ function doJoinClass(){
   const bp=nBooks?Array.from({length:nBooks},()=>Math.floor(Math.random()*45)+35):[];
   const qp=nBooks?bp.map((p)=>Math.max(0, Math.min(100, p - Math.floor(4 + Math.random() * 15)))):[];
   cls.students.push({
-    name:CURRENT_USER,
+    name:getCurrentUserDisplayName(),
     id:'2024'+String(Math.floor(100000+Math.random()*900000)),
     bp,
     qp,
@@ -1286,7 +1495,7 @@ function openClassDetail(idx, bookIdx) {
   if (typeof bookIdx==='number' && !Number.isNaN(bookIdx) && nBooks) {
     selB=Math.max(0, Math.min(nBooks-1, Math.floor(bookIdx)));
   }
-  const isClassAdmin=cls.admin===CURRENT_USER;
+  const isClassAdmin=cls.admin===getCurrentUserDisplayName();
 
   const classBooksHtml=cls.books.map((bk,bi)=>{
     const [c1,c2]=c(bk.sub);
@@ -1461,7 +1670,7 @@ function closeClassDetail(){
 
 function dissolveClass(idx) {
   const cls = classGroups[idx];
-  if (!cls || cls.admin !== CURRENT_USER) return;
+  if (!cls || cls.admin !== getCurrentUserDisplayName()) return;
   if (!confirm('确定解散该组群？解散后所有成员将无法再从「我的组群」进入，此操作不可恢复。')) return;
   classGroups.splice(idx, 1);
   currentClassIdx = null;
@@ -1481,8 +1690,8 @@ function dissolveClass(idx) {
 
 function leaveClass(idx) {
   const cls = classGroups[idx];
-  if (!cls || cls.admin === CURRENT_USER) return;
-  const si = cls.students.findIndex((s) => s.name === CURRENT_USER);
+  if (!cls || cls.admin === getCurrentUserDisplayName()) return;
+  const si = cls.students.findIndex((s) => s.name === getCurrentUserDisplayName());
   if (si < 0) return;
   if (!confirm('确定退出该组群？退出后将不再显示在「我的组群」中。')) return;
   cls.students.splice(si, 1);
@@ -1509,7 +1718,7 @@ function copyCode(btn,code){
 
 function openBookPicker(classIdx){
   const cls=classGroups[classIdx];
-  if(!cls||cls.admin!==CURRENT_USER)return;
+  if(!cls||cls.admin!==getCurrentUserDisplayName())return;
   currentClassIdx=classIdx;
   const list=document.getElementById('bpList');
   list.innerHTML=myB.map((bk,i)=>{
@@ -1534,7 +1743,7 @@ function closeBookPicker(){
 
 function addBookToClass(classIdx,bookIdx,el){
   const cls=classGroups[classIdx];
-  if(!cls||cls.admin!==CURRENT_USER)return;
+  if(!cls||cls.admin!==getCurrentUserDisplayName())return;
   const bk=myB[bookIdx];
   cls.books.push({t:bk.t,s:bk.s,g:bk.g,p:bk.p,sub:bk.sub,cat:bk.cat,paperDigital:!!bk.paperDigital,editor:bk.editor||''});
   cls.students.forEach((st) => {
@@ -1552,7 +1761,7 @@ function addBookToClass(classIdx,bookIdx,el){
 
 function removeClassBook(classIdx,bookIdx){
   const cls=classGroups[classIdx];
-  if(!cls||cls.admin!==CURRENT_USER)return;
+  if(!cls||cls.admin!==getCurrentUserDisplayName())return;
   cls.books.splice(bookIdx,1);
   cls.students.forEach((st) => {
     st.bp.splice(bookIdx, 1);
@@ -1661,6 +1870,7 @@ function renderLib(){
 }
 
 function renderMy(){
+  if (!getUserProfile()) return;
   const schoolCardHtml = !FEATURE_SCHOOL_UI
     ? ''
     : (() => {
@@ -1702,7 +1912,7 @@ function renderMy(){
     .filter(({ cls }) => isClassVisibleForUser(cls));
   const classHtml=myClassEntries.map(({cls,i})=>{
     return `<div class="class-card" onclick="openClassDetail(${i})">
-      ${cls.admin===CURRENT_USER?'<div class="class-card-admin"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>管理员</div>':''}
+      ${cls.admin===getCurrentUserDisplayName()?'<div class="class-card-admin"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>管理员</div>':''}
       <div class="class-card-head">
         <div class="class-card-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1769,6 +1979,7 @@ function renderMy(){
 }
 
 function go(p){
+  if (!getUserProfile()) return;
   document.querySelectorAll('.nav-item[data-page]').forEach(el=>el.classList.toggle('active',el.dataset.page===p));
   document.querySelectorAll('.page').forEach(el=>el.classList.toggle('active',el.id===`page-${p}`));
   const t=document.getElementById('pTitle'),h=document.getElementById('pHint');
@@ -1779,8 +1990,27 @@ function go(p){
   else if(p==='settings'){t.textContent='设置';h.textContent='账号与个人信息';renderSettings()}
 }
 
-renderLib();
+if (import.meta.env.DEV && !localStorage.getItem(PROFILE_STORAGE_KEY)) {
+  saveUserProfile({});
+}
+applyAuthShell();
+if (getUserProfile()) {
+  renderLib();
+}
 syncSidebarUser();
+
+document.getElementById('loginPassword')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    submitLoginPassword();
+  }
+});
+document.getElementById('loginSmsCode')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    submitLoginOtp();
+  }
+});
 
 document.getElementById('joinClassCode')?.addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault();doJoinClass();}
@@ -2667,19 +2897,21 @@ function readerDefaultEntryCid() {
   return firstReaderCid(READER_OUTLINE);
 }
 
-function renderReaderTocNodes(nodes, depth) {
+/** goFnName：'readerGo' 阅读器目录；'teachGo' 教学模式教材窗 */
+function renderReaderTocNodes(nodes, depth, goFnName) {
+  const go = goFnName || 'readerGo';
   return nodes
     .map((node) => {
       if (node.cid) {
         const st = escAttr(node.title);
-        return `<div class="reader-toc-leaf" data-cid="${node.cid}" data-search="${st}" onclick="readerGo('${node.cid}')">${node.title}</div>`;
+        return `<div class="reader-toc-leaf" data-cid="${node.cid}" data-search="${st}" onclick="${go}('${node.cid}')">${node.title}</div>`;
       }
       return `<div class="reader-toc-group open" data-depth="${depth}">
       <button type="button" class="reader-toc-head" onclick="readerToggleTocGroup(this)">
         <span class="reader-toc-chev">▾</span>
         <span class="reader-toc-head-text">${node.title}</span>
       </button>
-      <div class="reader-toc-children">${renderReaderTocNodes(node.children, depth + 1)}</div>
+      <div class="reader-toc-children">${renderReaderTocNodes(node.children, depth + 1, go)}</div>
     </div>`;
     })
     .join('');
@@ -3308,6 +3540,10 @@ document.addEventListener('keydown', readerQuizOnKeydown);
 
 /** 从阅读器进入非「阅读」学习模式时：关闭阅读层并提示（可对接各模式独立路由/站外页，不再在阅读页内切模式） */
 function readerShowLearningModeNavExternal(modeKey, book) {
+  if (modeKey === 'teach' && book) {
+    openTeachMode(book);
+    return;
+  }
   const labels = { read: '阅读模式', av: '视听模式', task: '任务模式', kg: '知识图谱', teach: '教学模式' };
   const name = labels[modeKey] || modeKey;
   const bookLine = book && book.t ? `《${book.t} · ${book.s}》` : '';
@@ -3388,6 +3624,511 @@ function closeReader() {
   }
   document.body.style.overflow = '';
   readerCloseToolSlots();
+}
+
+// === 教学模式：课堂课件 + 可切换教材对照 + 悬浮工具，可接 CMS/课件包 ===
+let teachContext = { b: null, currentCid: null, slideIndex: 0, showBook: false, slides: [] };
+let _teachKeyHandler = null;
+let _teachCountdownTimer = null;
+let _teachCountdownLeft = 0;
+let _teachPenOnResize = null;
+let _teachOpenSubtool = null;
+let _teachPenDrawing = false;
+let _teachPenLast = { x: 0, y: 0 };
+const DEFAULT_PICK_NAMES = '李明远\n张悦\n王浩\n陈欣\n刘洋\n赵明\n周婷\n何俊';
+
+function buildTeachSlidesForBook(b) {
+  const bt = b && b.t ? escAttr(`${b.t} · ${b.s}`) : '本教材';
+  return [
+    {
+      k: '1',
+      title: '本课导学与目标',
+      kicker: '第 1 张',
+      html: `<p class="teach-slide__lead">面向 <strong>${bt}</strong>。默认全屏显示<strong>课件</strong>。需要与课本对照时，点击顶栏 <strong>「课件 / 教材」</strong> 展开与教材的<strong>二分屏</strong>，再点即收起、回到仅课件。</p><ul class="teach-slide__list"><li>说清本课在模块中的位置与岗位/生活关联</li><li>用 2～3 个问题带出核心概念与课堂活动</li><li>点明与教材对应章节，便于学生翻书</li></ul>`,
+    },
+    {
+      k: '2',
+      title: '关键概念串讲',
+      kicker: '第 2 张',
+      html: `<p class="teach-slide__lead">将教材中的黑体术语与图表示意投影强化。展开「课件/教材」后可打开<strong>与阅读器同源的目录与正文</strong>指读「导读」与图。</p><ol class="teach-slide__olist"><li>用情境引入定义与符号</li><li>用正反例与边界条件</li><li>小结成「能复述、能举例子」的课堂检测句</li></ol>`,
+    },
+    {
+      k: '3',
+      title: '示范与规范',
+      kicker: '第 3 张',
+      html: `<p class="teach-slide__lead">示范操作/解题步骤、书写或实验安全要点。需要对照课本步骤时展开教材；右侧悬浮条可随时调用<strong>画笔、倒计时、抽问、AI 助手</strong>。</p><p class="teach-slide__hint">提示：正式环境可接入 PPT/PDF、互动课件或 H5 演示包。</p>`,
+    },
+    {
+      k: '4',
+      title: '课堂随练与小结',
+      kicker: '第 4 张',
+      html: `<p class="teach-slide__lead">形成性练习与小结。教材窗内可切到章末练习/拓展。悬浮工具中<strong>抽问、倒计时</strong>可穿插组织课堂活动。</p><ul class="teach-slide__list"><li>公布作答时限与计分/互评方式</li><li>点出与下节课衔接</li><li>布置纸数版作业与资源链接</li></ul>`,
+    },
+  ];
+}
+
+function teachRenderSlide() {
+  const n = teachContext.slides.length;
+  const i = Math.max(0, Math.min(teachContext.slideIndex, n - 1));
+  teachContext.slideIndex = n ? i : 0;
+  const s = n ? teachContext.slides[teachContext.slideIndex] : null;
+  const el = document.getElementById('teachSlideView');
+  const meta = document.getElementById('teachSlideMeta');
+  if (meta) meta.textContent = n ? `${teachContext.slideIndex + 1} / ${n}` : '0 / 0';
+  if (!el) return;
+  if (!s) {
+    el.innerHTML = '<p class="teach-slide__empty">暂无本教材的课件包（演示：可接 CMS 或上传 PPT/PDF 解析）。</p>';
+    return;
+  }
+  const kick = s.kicker ? escAttr(s.kicker) : '';
+  const t = escAttr(s.title);
+  el.innerHTML = `<div class="teach-slide__content">
+    ${kick ? `<div class="teach-slide__kicker">${kick}</div>` : ''}
+    <h2 class="teach-slide__h2">${t}</h2>
+    <div class="teach-slide__body">${s.html}</div>
+  </div>`;
+}
+
+function teachPrevSlide() {
+  if (teachContext.slideIndex <= 0) return;
+  teachContext.slideIndex -= 1;
+  teachRenderSlide();
+}
+
+function teachNextSlide() {
+  if (teachContext.slideIndex >= teachContext.slides.length - 1) return;
+  teachContext.slideIndex += 1;
+  teachRenderSlide();
+}
+
+function teachSyncBookPanelUI() {
+  const open = !!teachContext.showBook;
+  const body = document.getElementById('teachModeBody');
+  const p = document.getElementById('teachBookPanel');
+  const btn = document.getElementById('teachToggleBookBtn');
+  if (body) body.setAttribute('data-book-open', open ? 'true' : 'false');
+  if (p) p.toggleAttribute('hidden', !open);
+  if (btn) {
+    btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+    btn.textContent = open ? '收起教材' : '课件 / 教材';
+  }
+}
+
+function teachToggleBookPanel() {
+  teachContext.showBook = !teachContext.showBook;
+  teachSyncBookPanelUI();
+}
+
+function _teachFabSetActive(name, on) {
+  const id = { pen: 'teachFabPen', timer: 'teachFabTimer', pick: 'teachFabPick', ai: 'teachFabAi' }[name];
+  const el = id && document.getElementById(id);
+  if (el) el.setAttribute('aria-pressed', on ? 'true' : 'false');
+  el?.classList.toggle('is-on', !!on);
+}
+
+function teachSubtoolClose() {
+  document.getElementById('teachToolPopTimer')?.setAttribute('hidden', '');
+  document.getElementById('teachToolPopPick')?.setAttribute('hidden', '');
+  document.getElementById('teachToolPopAi')?.setAttribute('hidden', '');
+  _teachFabSetActive('timer', false);
+  _teachFabSetActive('pick', false);
+  _teachFabSetActive('ai', false);
+  _teachOpenSubtool = null;
+}
+
+/** 右下教学工具条：默认收合，展开后显示全部子工具 */
+function teachToolFloatSetOpen(open) {
+  const nav = document.getElementById('teachToolFloat');
+  const t = document.getElementById('teachToolFloatToggle');
+  const list = document.getElementById('teachToolFloatList');
+  const label = document.getElementById('teachToolFloatToggleLabel');
+  if (!nav) return;
+  nav.classList.toggle('teach-tool-float--open', !!open);
+  if (list) {
+    list.setAttribute('aria-hidden', open ? 'false' : 'true');
+  }
+  if (label) label.textContent = open ? '收合' : '教学工具';
+  if (t) {
+    t.setAttribute('aria-expanded', open ? 'true' : 'false');
+    t.setAttribute('title', open ? '收合教学工具' : '展开教学工具（画笔、计时、抽问、AI）');
+  }
+  nav.setAttribute('data-tool-expanded', open ? 'true' : 'false');
+}
+
+function teachToolFloatToggle() {
+  const nav = document.getElementById('teachToolFloat');
+  if (!nav) return;
+  const next = !nav.classList.contains('teach-tool-float--open');
+  teachToolFloatSetOpen(next);
+}
+
+function teachToolFloatCollapse() {
+  teachToolFloatSetOpen(false);
+}
+
+function _teachPenEndResize() {
+  if (_teachPenOnResize) {
+    window.removeEventListener('resize', _teachPenOnResize);
+    _teachPenOnResize = null;
+  }
+}
+
+function _teachPenSizeCanvas() {
+  const c = document.getElementById('teachPenCanvas');
+  if (!c || c.hasAttribute('hidden')) return;
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  c.width = Math.floor(w * dpr);
+  c.height = Math.floor(h * dpr);
+  c.style.width = `${w}px`;
+  c.style.height = `${h}px`;
+  const ctx = c.getContext('2d');
+  if (ctx) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineWidth = 3.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(234, 88, 12, 0.92)';
+  }
+}
+
+function teachPenClear() {
+  const c = document.getElementById('teachPenCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  if (!ctx) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  ctx.clearRect(0, 0, w, h);
+}
+
+let _teachPenEls = null;
+function _teachPenUnbind() {
+  if (!_teachPenEls) return;
+  const { c, down, move, up } = _teachPenEls;
+  c.removeEventListener('mousedown', down);
+  c.removeEventListener('mousemove', move);
+  c.removeEventListener('mouseup', up);
+  c.removeEventListener('mouseleave', up);
+  c.removeEventListener('touchstart', down);
+  c.removeEventListener('touchmove', move);
+  c.removeEventListener('touchend', up);
+  _teachPenEls = null;
+}
+function _teachPenBind() {
+  const c = document.getElementById('teachPenCanvas');
+  if (!c || _teachPenEls) return;
+  const getCtx = () => {
+    const ctx = c.getContext('2d');
+    if (ctx) {
+      ctx.lineWidth = 3.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(234, 88, 12, 0.92)';
+    }
+    return ctx;
+  };
+  const down = (e) => {
+    if (e.type === 'touchstart') e.preventDefault();
+    const ctx = getCtx();
+    if (!ctx) return;
+    _teachPenDrawing = true;
+    const { x, y } = _teachPenGetXY(e, c);
+    _teachPenLast = { x, y };
+  };
+  const move = (e) => {
+    if (!_teachPenDrawing) return;
+    if (e.type === 'touchmove') e.preventDefault();
+    const ctx = getCtx();
+    if (!ctx) return;
+    const { x, y } = _teachPenGetXY(e, c);
+    ctx.beginPath();
+    ctx.moveTo(_teachPenLast.x, _teachPenLast.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    _teachPenLast = { x, y };
+  };
+  const up = () => {
+    _teachPenDrawing = false;
+  };
+  c.addEventListener('mousedown', down);
+  c.addEventListener('mousemove', move);
+  c.addEventListener('mouseup', up);
+  c.addEventListener('mouseleave', up);
+  c.addEventListener('touchstart', down, { passive: false });
+  c.addEventListener('touchmove', move, { passive: false });
+  c.addEventListener('touchend', up);
+  _teachPenEls = { c, down, move, up };
+}
+
+function teachToolToggle(name) {
+  if (!['pen', 'timer', 'pick', 'ai'].includes(name)) return;
+  const page = document.getElementById('teachModePage');
+  if (!page || !page.classList.contains('open')) return;
+  teachToolFloatSetOpen(true);
+  if (name === 'pen') {
+    const c = document.getElementById('teachPenCanvas');
+    const bar = document.getElementById('teachPenBar');
+    const isOn = c && !c.hasAttribute('hidden');
+    if (isOn) {
+      _teachPenUnbind();
+      c.setAttribute('hidden', '');
+      c.setAttribute('aria-hidden', 'true');
+      if (bar) bar.setAttribute('hidden', '');
+      page.classList.remove('teach-mode--pen');
+      _teachFabSetActive('pen', false);
+      if (_teachOpenSubtool === 'pen') _teachOpenSubtool = null;
+      _teachPenEndResize();
+    } else {
+      teachSubtoolClose();
+      c.removeAttribute('hidden');
+      c.setAttribute('aria-hidden', 'false');
+      if (bar) bar.removeAttribute('hidden');
+      page.classList.add('teach-mode--pen');
+      _teachFabSetActive('pen', true);
+      _teachOpenSubtool = 'pen';
+      _teachPenSizeCanvas();
+      _teachPenBind();
+      _teachPenOnResize = () => {
+        _teachPenUnbind();
+        _teachPenSizeCanvas();
+        teachPenClear();
+        _teachPenBind();
+      };
+      window.addEventListener('resize', _teachPenOnResize);
+    }
+    return;
+  }
+  if (_teachOpenSubtool === 'pen' && (name === 'timer' || name === 'pick' || name === 'ai')) {
+    _teachPenUnbind();
+    const c2 = document.getElementById('teachPenCanvas');
+    c2?.setAttribute('hidden', '');
+    c2?.setAttribute('aria-hidden', 'true');
+    document.getElementById('teachPenBar')?.setAttribute('hidden', '');
+    page.classList.remove('teach-mode--pen');
+    _teachFabSetActive('pen', false);
+    _teachPenEndResize();
+    _teachOpenSubtool = null;
+  }
+  const map = { timer: 'teachToolPopTimer', pick: 'teachToolPopPick', ai: 'teachToolPopAi' };
+  const pop = document.getElementById(map[name]);
+  if (!pop) return;
+  const isOpen = !pop.hasAttribute('hidden');
+  teachSubtoolClose();
+  if (isOpen) return;
+  pop.removeAttribute('hidden');
+  _teachOpenSubtool = name;
+  _teachFabSetActive(name, true);
+}
+
+function _teachPenGetXY(ev, canvas) {
+  const r = canvas.getBoundingClientRect();
+  const t = (ev.touches && ev.touches[0]) || (ev.changedTouches && ev.changedTouches[0]) || null;
+  const clientX = t ? t.clientX : ev.clientX;
+  const clientY = t ? t.clientY : ev.clientY;
+  return { x: clientX - r.left, y: clientY - r.top };
+}
+
+function teachCountdownStart() {
+  if (_teachCountdownTimer) {
+    clearInterval(_teachCountdownTimer);
+    _teachCountdownTimer = null;
+  }
+  const m = Math.max(0, parseInt(document.getElementById('teachTimerMin')?.value, 10) || 0);
+  const s = Math.min(59, Math.max(0, parseInt(document.getElementById('teachTimerSec')?.value, 10) || 0));
+  _teachCountdownLeft = m * 60 + s;
+  if (_teachCountdownLeft <= 0) {
+    showProfileToast('请设置正数时长');
+    return;
+  }
+  const huge = document.getElementById('teachTimerHuge');
+  const val = document.getElementById('teachTimerHugeVal');
+  const tick = () => {
+    if (_teachCountdownLeft < 0) {
+      clearInterval(_teachCountdownTimer);
+      _teachCountdownTimer = null;
+      return;
+    }
+    const mm = Math.floor(_teachCountdownLeft / 60);
+    const ss = _teachCountdownLeft % 60;
+    if (val) {
+      val.textContent = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
+    }
+    if (huge) huge.removeAttribute('hidden');
+    if (_teachCountdownLeft === 0) {
+      clearInterval(_teachCountdownTimer);
+      _teachCountdownTimer = null;
+      showProfileToast('时间到');
+      teachCountdownStop();
+      return;
+    }
+    _teachCountdownLeft -= 1;
+  };
+  tick();
+  _teachCountdownTimer = setInterval(tick, 1000);
+}
+
+function teachCountdownStop() {
+  if (_teachCountdownTimer) {
+    clearInterval(_teachCountdownTimer);
+    _teachCountdownTimer = null;
+  }
+  _teachCountdownLeft = 0;
+  const huge = document.getElementById('teachTimerHuge');
+  if (huge) huge.setAttribute('hidden', '');
+}
+
+function teachPickRun() {
+  const ta = document.getElementById('teachPickNames');
+  const out = document.getElementById('teachPickResult');
+  if (!out) return;
+  const raw = (ta && ta.value) || '';
+  const names = raw
+    .split(/\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const list = names.length ? names : DEFAULT_PICK_NAMES.split('\n');
+  if (!list.length) {
+    out.textContent = '请先填写名单';
+    return;
+  }
+  const w = list[Math.floor(Math.random() * list.length)];
+  out.textContent = w;
+  out.classList.remove('is-pick-burst', 'is-flash');
+  void out.offsetWidth;
+  out.classList.add('is-pick-burst', 'is-flash');
+  setTimeout(() => {
+    out.classList.remove('is-flash', 'is-pick-burst');
+  }, 650);
+}
+
+function teachAiSend() {
+  const inp = document.getElementById('teachAiInput');
+  const q = (inp && inp.value.trim()) || '';
+  if (!q) return;
+  const box = document.getElementById('teachAiMessages');
+  if (!box) return;
+  box.insertAdjacentHTML(
+    'beforeend',
+    `<div class="teach-ai-bubble teach-ai-bubble--user">${escAttr(q)}</div><div class="teach-ai-bubble">已记录。演示不连真实大模型，课堂正式环境可接校内 AI。</div>`
+  );
+  if (inp) inp.value = '';
+  box.scrollTop = box.scrollHeight;
+}
+
+function teachToolTeardown() {
+  _teachPenUnbind();
+  teachCountdownStop();
+  teachSubtoolClose();
+  const c = document.getElementById('teachPenCanvas');
+  c?.setAttribute('hidden', '');
+  c?.setAttribute('aria-hidden', 'true');
+  document.getElementById('teachPenBar')?.setAttribute('hidden', '');
+  document.getElementById('teachModePage')?.classList.remove('teach-mode--pen');
+  _teachPenEndResize();
+  _teachFabSetActive('pen', false);
+  const t = document.getElementById('teachAiMessages');
+  if (t) t.innerHTML = '';
+  const ta = document.getElementById('teachPickNames');
+  if (ta) ta.value = '';
+  if (document.getElementById('teachPickResult')) {
+    document.getElementById('teachPickResult').textContent = '—';
+  }
+  teachToolFloatCollapse();
+}
+
+function teachGo(cid, opts) {
+  if (!teachContext.b) return;
+  teachContext.currentCid = cid;
+  document.querySelectorAll('#teachTocTree .reader-toc-leaf').forEach((el) => {
+    el.classList.toggle('is-active', el.dataset.cid === cid);
+  });
+  const art = document.getElementById('teachArticle');
+  if (art) art.innerHTML = buildReaderArticleHtml(cid, teachContext.b);
+  const m = document.getElementById('teachBookMain');
+  if (m && (!opts || !opts.noScroll)) m.scrollTo(0, 0);
+}
+
+function _teachOnKey(ev) {
+  if (!document.getElementById('teachModePage')?.classList.contains('open')) return;
+  if (ev.key === 'ArrowLeft') {
+    ev.preventDefault();
+    teachPrevSlide();
+  } else if (ev.key === 'ArrowRight') {
+    ev.preventDefault();
+    teachNextSlide();
+  }
+}
+
+function openTeachMode(b) {
+  if (!b) return;
+  teachToolTeardown();
+  teachContext = {
+    b,
+    currentCid: null,
+    slideIndex: 0,
+    showBook: false,
+    slides: buildTeachSlidesForBook(b),
+  };
+  const titleEl = document.getElementById('teachModeBookTitle');
+  if (titleEl) titleEl.textContent = `${b.t} · ${b.s}`;
+  const sub = document.getElementById('teachModeBookSub');
+  if (sub) {
+    const pub = b.p && String(b.p).trim() ? ` · ${b.p}` : '';
+    sub.textContent = `组群/课堂演示用 · 课件与教材可对照${pub}（演示数据）`;
+  }
+  const toc = document.getElementById('teachTocTree');
+  if (toc) toc.innerHTML = renderReaderTocNodes(READER_OUTLINE, 0, 'teachGo');
+  const start = readerDefaultEntryCid();
+  if (start) teachGo(start, { noScroll: false });
+  else {
+    const art = document.getElementById('teachArticle');
+    if (art) art.innerHTML = '<p class="teach-slide__empty">无可用目录。</p>';
+  }
+  teachSyncBookPanelUI();
+  {
+    const ta = document.getElementById('teachPickNames');
+    if (ta && !String(ta.value || '').trim()) ta.value = DEFAULT_PICK_NAMES;
+  }
+  teachRenderSlide();
+  const page = document.getElementById('teachModePage');
+  if (page) {
+    page.classList.add('open');
+    page.setAttribute('aria-hidden', 'false');
+  }
+  document.body.style.overflow = 'hidden';
+  if (_teachKeyHandler) {
+    document.removeEventListener('keydown', _teachKeyHandler, true);
+  }
+  _teachKeyHandler = _teachOnKey;
+  document.addEventListener('keydown', _teachKeyHandler, true);
+  setTimeout(() => {
+    document.getElementById('teachDeckFocus')?.focus({ preventScroll: true });
+  }, 0);
+}
+
+function closeTeachMode() {
+  if (_teachKeyHandler) {
+    document.removeEventListener('keydown', _teachKeyHandler, true);
+    _teachKeyHandler = null;
+  }
+  teachToolTeardown();
+  const page = document.getElementById('teachModePage');
+  if (page) {
+    page.classList.remove('open');
+    page.setAttribute('aria-hidden', 'true');
+  }
+  const art = document.getElementById('teachArticle');
+  if (art) art.innerHTML = '';
+  const toc = document.getElementById('teachTocTree');
+  if (toc) toc.innerHTML = '';
+  teachContext = { b: null, currentCid: null, slideIndex: 0, showBook: false, slides: [] };
+  teachSyncBookPanelUI();
+  if (!document.getElementById('readerOverlay')?.classList.contains('open')) {
+    document.body.style.overflow = '';
+  }
 }
 
 function openReaderFromDetail() {
@@ -3593,10 +4334,13 @@ Object.assign(window, {
   readerOpenQuizModal, readerCloseQuizModal, readerSubmitQuizModal, readerQuizPickChoice, readerQuizPickTf,
   readerOpenLab, readerCloseLab, readerOpenICase, readerCloseICase,
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
-  readerQuickMode, readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
+  readerQuickMode, teachGo, openTeachMode, closeTeachMode, teachPrevSlide, teachNextSlide,
+  teachToggleBookPanel, teachToolFloatToggle, teachToolToggle, teachCountdownStart, teachCountdownStop, teachPenClear, teachPickRun, teachAiSend,
+  readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
   readerToggleModePanel, readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
   renderSettings, handleSettingsAvatar, openPhoneModal, closePhoneModal, sendPhoneChangeCode, confirmPhoneChange,
   openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,
+  setLoginTab, sendLoginSmsCode, submitLoginPassword, submitLoginOtp,
   onFeedbackFilesChange, removeFeedbackImage, submitUserFeedback, openFeedbackModal, closeFeedbackModal
 });
 

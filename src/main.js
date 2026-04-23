@@ -468,7 +468,8 @@ function applyAuthShell() {
     document.body.style.overflow = 'hidden';
   } else if (
     !document.getElementById('readerOverlay')?.classList.contains('open') &&
-    !document.getElementById('teachModePage')?.classList.contains('open')
+    !document.getElementById('teachModePage')?.classList.contains('open') &&
+    !document.getElementById('avModePage')?.classList.contains('open')
   ) {
     document.body.style.overflow = '';
   }
@@ -3837,10 +3838,376 @@ function readerQuizOnKeydown(ev) {
 }
 document.addEventListener('keydown', readerQuizOnKeydown);
 
+const AV_MODE_PROGRESS_PREFIX = 'sc-av-done-';
+const AV_SAMPLE_VIDEOS = [
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+];
+const AV_SAMPLE_AUDIO = 'https://www.w3schools.com/html/horse.mp3';
+
+function avProgressStorageKey(b) {
+  return `${AV_MODE_PROGRESS_PREFIX}${libBookKey(b)}`;
+}
+
+function avLoadDoneSet(b) {
+  try {
+    const raw = localStorage.getItem(avProgressStorageKey(b));
+    if (!raw) return new Set();
+    const o = JSON.parse(raw);
+    return new Set(Array.isArray(o.done) ? o.done : []);
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function avSaveDoneSet(b, set) {
+  localStorage.setItem(avProgressStorageKey(b), JSON.stringify({ done: [...set] }));
+}
+
+function avBuildPoints(lessonTitle, sub) {
+  const s = sub || '本课程';
+  return [
+    `${lessonTitle}：核心概念与关键要点梳理`,
+    `${s}：与岗位能力的衔接与应用场景`,
+    '规范操作、安全意识与拓展阅读建议',
+  ];
+}
+
+function avDefaultCurriculum(sub) {
+  const s = sub || '课程';
+  return [
+    {
+      id: 'u-d0',
+      title: '第一单元 导学',
+      lessons: [
+        {
+          id: 'avl-d-0',
+          title: '课程导读',
+          videoUrl: AV_SAMPLE_VIDEOS[0],
+          audioUrl: AV_SAMPLE_AUDIO,
+          points: avBuildPoints('课程导读', s),
+        },
+        {
+          id: 'avl-d-1',
+          title: '学习方法与资源',
+          videoUrl: AV_SAMPLE_VIDEOS[1],
+          audioUrl: AV_SAMPLE_AUDIO,
+          points: avBuildPoints('学习方法与资源', s),
+        },
+      ],
+    },
+    {
+      id: 'u-d1',
+      title: '第二单元 核心内容',
+      lessons: [
+        {
+          id: 'avl-d-2',
+          title: '关键知识点串讲',
+          videoUrl: AV_SAMPLE_VIDEOS[0],
+          audioUrl: AV_SAMPLE_AUDIO,
+          points: avBuildPoints('关键知识点串讲', s),
+        },
+      ],
+    },
+  ];
+}
+
+function buildAvCurriculumForBook(b) {
+  const sub = b && b.sub;
+  const toc = sub && TOC[sub] ? TOC[sub] : null;
+  const units = [];
+  let vidI = 0;
+  if (toc && toc.length) {
+    toc.forEach((unit, ui) => {
+      const lessons = (unit.ls || []).map((title, li) => {
+        const id = `avl-${ui}-${li}`;
+        const videoUrl = AV_SAMPLE_VIDEOS[vidI++ % AV_SAMPLE_VIDEOS.length];
+        return {
+          id,
+          title,
+          videoUrl,
+          audioUrl: AV_SAMPLE_AUDIO,
+          points: avBuildPoints(title, sub),
+        };
+      });
+      if (lessons.length) units.push({ id: `u-${ui}`, title: unit.u, lessons });
+    });
+  }
+  if (!units.length) return avDefaultCurriculum(sub);
+  return units;
+}
+
+let avModeContext = {
+  book: null,
+  tab: 'video',
+  units: [],
+  selectedLessonId: null,
+};
+
+function avFlatLessons(units) {
+  const out = [];
+  for (const u of units || []) {
+    for (const l of u.lessons || []) out.push(l);
+  }
+  return out;
+}
+
+function avFindLesson(lessonId) {
+  for (const u of avModeContext.units || []) {
+    const l = (u.lessons || []).find((x) => x.id === lessonId);
+    if (l) return l;
+  }
+  return null;
+}
+
+function openAvMode(book) {
+  if (!book) return;
+  closeReader();
+  closeDetail();
+  const units = buildAvCurriculumForBook(book);
+  const flat = avFlatLessons(units);
+  const first = flat[0] || null;
+  avModeContext = {
+    book,
+    tab: 'video',
+    units,
+    selectedLessonId: first ? first.id : null,
+  };
+  const line = document.getElementById('avModeBookLine');
+  if (line) line.textContent = `${book.t} · ${book.s}`;
+  setAvModeTab('video', true);
+  renderAvModeStats();
+  renderAvModeNav();
+  renderAvModeMain();
+  const page = document.getElementById('avModePage');
+  if (page) {
+    page.classList.add('open');
+    page.setAttribute('aria-hidden', 'false');
+  }
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAvMode() {
+  const main = document.getElementById('avModeMain');
+  const v = main?.querySelector('video');
+  const a = main?.querySelector('audio');
+  if (v) {
+    v.pause();
+    v.removeAttribute('src');
+    v.load();
+  }
+  if (a) {
+    a.pause();
+    a.removeAttribute('src');
+    a.load();
+  }
+  const page = document.getElementById('avModePage');
+  if (page) {
+    page.classList.remove('open', 'tab-blog');
+    page.setAttribute('aria-hidden', 'true');
+  }
+  if (
+    !document.getElementById('readerOverlay')?.classList.contains('open') &&
+    !document.getElementById('teachModePage')?.classList.contains('open') &&
+    !document.getElementById('avModePage')?.classList.contains('open')
+  ) {
+    document.body.style.overflow = '';
+  }
+}
+
+function setAvModeTab(tab, silent) {
+  const t = tab === 'blog' ? 'blog' : 'video';
+  avModeContext.tab = t;
+  const page = document.getElementById('avModePage');
+  if (page) page.classList.toggle('tab-blog', t === 'blog');
+  document.getElementById('avTabVideo')?.classList.toggle('is-active', t === 'video');
+  document.getElementById('avTabBlog')?.classList.toggle('is-active', t === 'blog');
+  document.getElementById('avTabVideo')?.setAttribute('aria-selected', t === 'video' ? 'true' : 'false');
+  document.getElementById('avTabBlog')?.setAttribute('aria-selected', t === 'blog' ? 'true' : 'false');
+  if (!silent) renderAvModeStats();
+  renderAvModeMain();
+}
+
+function renderAvModeStats() {
+  const box = document.getElementById('avModeStats');
+  if (!box || !avModeContext.book) return;
+  const flat = avFlatLessons(avModeContext.units);
+  const total = flat.length;
+  const done = avLoadDoneSet(avModeContext.book);
+  let n = 0;
+  for (const l of flat) {
+    if (done.has(l.id)) n += 1;
+  }
+  const pct = total ? Math.round((n / total) * 100) : 0;
+  const isBlog = avModeContext.tab === 'blog';
+  const resLabel = isBlog ? '音频' : '视频';
+  const resIcon = isBlog
+    ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3v4zM3 19a2 2 0 0 0 2 2h1v-6H3v4z"/></svg>'
+    : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+  box.innerHTML = `
+    <div class="av-mode__stat-ring" style="--p:${pct}">
+      <div class="av-mode__stat-ring-val">${pct}<small>%</small></div>
+    </div>
+    <div class="av-mode__stat-info">
+      <div class="av-mode__stat-title">学习进度</div>
+      <div class="av-mode__stat-main">已完成 <em>${n}</em> / ${total} 节</div>
+      <div class="av-mode__stat-muted">${resIcon}<span>${resLabel}资源 ${total} 个</span></div>
+    </div>`;
+}
+
+function toggleAvUnit(btn) {
+  btn.closest('.av-unit')?.classList.toggle('av-unit--open');
+}
+
+function selectAvLesson(lessonId) {
+  avModeContext.selectedLessonId = lessonId;
+  renderAvModeNav();
+  renderAvModeMain();
+}
+
+function avMarkCurrentLessonDone() {
+  const id = avModeContext.selectedLessonId;
+  if (!id || !avModeContext.book) return;
+  const set = avLoadDoneSet(avModeContext.book);
+  if (set.has(id)) {
+    showProfileToast('本节已在已完成列表中');
+    return;
+  }
+  set.add(id);
+  avSaveDoneSet(avModeContext.book, set);
+  renderAvModeStats();
+  renderAvModeNav();
+  renderAvModeMain();
+  showProfileToast('已标记本节为已完成（演示）');
+}
+
+function avOnAvMediaEnded() {
+  const id = avModeContext.selectedLessonId;
+  if (!id || !avModeContext.book) return;
+  const set = avLoadDoneSet(avModeContext.book);
+  if (set.has(id)) return;
+  set.add(id);
+  avSaveDoneSet(avModeContext.book, set);
+  renderAvModeStats();
+  renderAvModeNav();
+  renderAvModeMain();
+  showProfileToast('播放完毕，已记录为已完成');
+}
+
+function avFindUnitOfLesson(lessonId) {
+  for (const u of avModeContext.units || []) {
+    if ((u.lessons || []).some((l) => l.id === lessonId)) return u;
+  }
+  return null;
+}
+
+function renderAvModeNav() {
+  const nav = document.getElementById('avModeNav');
+  if (!nav) return;
+  const book = avModeContext.book;
+  const done = book ? avLoadDoneSet(book) : new Set();
+  const sel = avModeContext.selectedLessonId;
+  nav.innerHTML = (avModeContext.units || [])
+    .map((u) => {
+      const lessons = u.lessons || [];
+      const total = lessons.length;
+      const n = lessons.reduce((s, l) => s + (done.has(l.id) ? 1 : 0), 0);
+      const allDone = total > 0 && n === total;
+      return `
+    <div class="av-unit av-unit--open${allDone ? ' av-unit--all-done' : ''}">
+      <button type="button" class="av-unit-head" onclick="toggleAvUnit(this)">
+        <span class="av-unit-title">${escAttr(u.title)}</span>
+        <span class="av-unit-progress">${n}/${total}</span>
+        <svg class="av-unit-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="av-unit-body">
+        ${lessons
+          .map((l) => {
+            const isDone = done.has(l.id);
+            const isSel = l.id === sel;
+            return `<button type="button" class="av-lesson${isSel ? ' is-active' : ''}${isDone ? ' is-done' : ' is-todo'}" onclick="selectAvLesson('${l.id}')">
+              <span class="av-lesson-mark" aria-hidden="true">${isDone ? '✓' : ''}</span>
+              <span class="av-lesson-txt">${escAttr(l.title)}</span>
+              ${isSel ? '<span class="av-lesson-meta" aria-label="正在学习"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>' : ''}
+            </button>`;
+          })
+          .join('')}
+      </div>
+    </div>`;
+    })
+    .join('');
+}
+
+function renderAvModeMain() {
+  const main = document.getElementById('avModeMain');
+  if (!main) return;
+  const lesson = avFindLesson(avModeContext.selectedLessonId);
+  if (!lesson) {
+    main.innerHTML = '<div class="av-mode__hero"><p class="av-mode__stat-muted">暂无小节内容</p></div>';
+    return;
+  }
+  const tab = avModeContext.tab;
+  const book = avModeContext.book;
+  const unit = avFindUnitOfLesson(lesson.id);
+  const done = book ? avLoadDoneSet(book) : new Set();
+  const isDone = done.has(lesson.id);
+  const vsrc = lesson.videoUrl || AV_SAMPLE_VIDEOS[0];
+  const asrc = lesson.audioUrl || AV_SAMPLE_AUDIO;
+
+  const media =
+    tab === 'blog'
+      ? `<div class="av-mode__podcast">
+          <div class="av-mode__podcast-cover" aria-hidden="true">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3v4zM3 19a2 2 0 0 0 2 2h1v-6H3v4z"/></svg>
+          </div>
+          <div class="av-mode__podcast-body">
+            <div class="av-mode__podcast-tag">AUDIO · 博客</div>
+            <h3 class="av-mode__podcast-title">${escAttr(lesson.title)}</h3>
+            <p class="av-mode__podcast-desc">${escAttr(unit ? unit.title : '本节内容')} · 适合碎片时间收听</p>
+            <audio controls preload="metadata" src="${asrc}" onended="avOnAvMediaEnded()">不支持音频</audio>
+          </div>
+        </div>`
+      : `<div class="av-mode__media"><video controls playsinline preload="metadata" src="${vsrc}" onended="avOnAvMediaEnded()">不支持视频</video></div>`;
+
+  const badge = isDone
+    ? '<span class="av-mode__lesson-badge is-done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>已完成</span>'
+    : '<span class="av-mode__lesson-badge is-todo">未学</span>';
+
+  const pointsHtml = (lesson.points || [])
+    .map((p) => {
+      const text =
+        typeof p === 'string'
+          ? p
+          : p && typeof p === 'object'
+            ? [p.title, p.body].filter(Boolean).join('：') || ''
+            : String(p ?? '');
+      return `<li class="av-mode__kpoints-li">${escAttr(text)}</li>`;
+    })
+    .join('');
+
+  main.innerHTML = `
+    <div class="av-mode__hero">
+      <div class="av-mode__crumbs"><strong>${escAttr(unit ? unit.title : '')}</strong><span>·</span><span>${escAttr(lesson.title)}</span></div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 class="av-mode__lesson-title">${escAttr(lesson.title)}</h2>
+        ${badge}
+      </div>
+      ${media}
+      <div class="av-mode__kpoints">
+        <div class="av-mode__kpoints-label" id="avKpointsHeading">本课知识点</div>
+        <ul class="av-mode__kpoints-list" aria-labelledby="avKpointsHeading">${pointsHtml}</ul>
+      </div>
+    </div>`;
+}
+
 /** 从阅读器进入非「阅读」学习模式时：关闭阅读层并提示（可对接各模式独立路由/站外页，不再在阅读页内切模式） */
 function readerShowLearningModeNavExternal(modeKey, book) {
   if (modeKey === 'teach' && book) {
     openTeachMode(book);
+    return;
+  }
+  if (modeKey === 'av' && book) {
+    openAvMode(book);
     return;
   }
   const labels = { read: '阅读模式', av: '视听模式', task: '任务模式', kg: '知识图谱', teach: '教学模式' };
@@ -4425,7 +4792,10 @@ function closeTeachMode() {
   if (toc) toc.innerHTML = '';
   teachContext = { b: null, currentCid: null, slideIndex: 0, showBook: false, slides: [] };
   teachSyncBookPanelUI();
-  if (!document.getElementById('readerOverlay')?.classList.contains('open')) {
+  if (
+    !document.getElementById('readerOverlay')?.classList.contains('open') &&
+    !document.getElementById('avModePage')?.classList.contains('open')
+  ) {
     document.body.style.overflow = '';
   }
 }
@@ -4437,7 +4807,7 @@ function openReaderFromDetail() {
   openReader(bookIdx, source);
 }
 
-/** 详情「学习模式」卡：「阅读模式」进阅读器；其他模式不打开阅读，仅作外链式跳转提示（可对接独立页） */
+/** 详情「学习模式」卡：阅读进阅读器；教学 / 视听为独立全屏页；其余模式仍为演示提示（可对接独立页） */
 function openReaderFromDetailMode(modeKey) {
   const { bookIdx, source, b } = detailViewContext;
   if (bookIdx == null || !b) return;
@@ -4634,6 +5004,7 @@ Object.assign(window, {
   readerOpenLab, readerCloseLab, readerOpenICase, readerCloseICase,
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
   readerQuickMode, teachGo, openTeachMode, closeTeachMode, teachPrevSlide, teachNextSlide,
+  closeAvMode, setAvModeTab, selectAvLesson, toggleAvUnit, avOnAvMediaEnded,
   teachToggleBookPanel, teachToolFloatToggle, teachToolToggle, teachCountdownStart, teachCountdownStop, teachPenClear, teachPickRun, teachAiSend,
   readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
   readerToggleModePanel, readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,

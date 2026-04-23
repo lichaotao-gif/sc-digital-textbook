@@ -190,7 +190,7 @@
           <svg class="sidebar-friendly-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="sidebar-friendly-pop" role="menu" aria-label="友情链接选项">
-          <a class="sidebar-friendly-btn" role="menuitem" href="/creator/index.html" target="_blank" rel="noopener noreferrer">创作者</a>
+          <a class="sidebar-friendly-btn" role="menuitem" href="/creator/index.html" target="_blank" rel="noopener noreferrer">创作者平台</a>
           <a class="sidebar-friendly-btn" role="menuitem" href="/publisher/index.html" target="_blank" rel="noopener noreferrer">出版社</a>
         </div>
       </div>
@@ -747,6 +747,39 @@
     <span class="teach-pen-bar__lab">画笔</span>
     <button type="button" class="teach-pen-bar__btn" onclick="teachPenClear()">清屏</button>
     <button type="button" class="teach-pen-bar__btn teach-pen-bar__btn--done" onclick="teachToolToggle('pen')">完成</button>
+  </div>
+</div>
+
+<!-- 视听模式全屏：视频 / 博客（音频）双 Tab，章节目录 + 进度 -->
+<div class="av-mode-page" id="avModePage" aria-hidden="true">
+  <header class="av-mode__head">
+    <button type="button" class="av-mode__back" onclick="closeAvMode()" title="退出视听模式" aria-label="退出视听模式">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>返回</span>
+    </button>
+    <div class="av-mode__brand">
+      <div class="av-mode__kicker"><span class="av-mode__kicker-dot"></span>视听模式</div>
+      <h1 class="av-mode__title" id="avModeBookLine">教材</h1>
+    </div>
+    <div class="av-mode__tabs" role="tablist" aria-label="视听内容类型">
+      <button type="button" class="av-mode__tab is-active" id="avTabVideo" role="tab" aria-selected="true" data-av-tab="video" onclick="setAvModeTab('video')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        视频模式
+      </button>
+      <button type="button" class="av-mode__tab" id="avTabBlog" role="tab" aria-selected="false" data-av-tab="blog" onclick="setAvModeTab('blog')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3v4zM3 19a2 2 0 0 0 2 2h1v-6H3v4z"/></svg>
+        博客模式
+      </button>
+    </div>
+  </header>
+  <div class="av-mode__body">
+    <aside class="av-mode__side" aria-label="目录与进度">
+      <div class="av-mode__stats" id="avModeStats"></div>
+      <div class="av-mode__navscroll">
+        <nav id="avModeNav"></nav>
+      </div>
+    </aside>
+    <main class="av-mode__main" id="avModeMain" tabindex="-1"></main>
   </div>
 </div>
 

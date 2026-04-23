@@ -3,19 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>创作者端 · 四川省数字教材</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;background:#f9fafb;color:#374151;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
-    h1{font-size:1.25rem;font-weight:600;color:#1f2937;margin-bottom:8px}
-    p{font-size:14px;color:#6b7280;line-height:1.6;max-width:360px}
-    a{margin-top:24px;font-size:14px;color:#3a9e78;text-decoration:none}
-    a:hover{text-decoration:underline}
-  </style>
+  <title>四川数字教材平台创作者平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./creator.css">
 </head>
 <body>
-  <h1>创作者端</h1>
-  <p>此页面为独立入口占位，后续可替换为创作者工作台或单独部署的应用。</p>
-  <a href="/">返回数字教材首页</a>
+  <div class="app">
+    <aside class="sidebar" aria-label="创作者主导航">
+      <div class="sidebar-head">
+        <div class="logo-row">
+          <div class="logo-icon" aria-hidden="true">川</div>
+          <div class="logo-col">
+            <div class="logo-name">四川省数字教材</div>
+            <div class="logo-en">创作者平台 · Creator</div>
+          </div>
+        </div>
+      </div>
+      <nav class="sidebar-nav" role="navigation">
+        <div class="nav-label">工作台</div>
+        <button type="button" class="nav-item active" data-panel="tutorials" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>我的教程</span>
+        </button>
+        <button type="button" class="nav-item" data-panel="stats">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          <span>使用统计</span>
+        </button>
+      </nav>
+      <div class="sidebar-foot">
+        <a class="login-text-link login-text-link--block" href="/">返回数字教材首页</a>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 class="topbar-title" id="creatorPageTitle">我的教程</h1>
+          <div class="topbar-sep" aria-hidden="true"></div>
+          <span class="topbar-hint" id="creatorTopHint">管理教材与多端内容配置</span>
+        </div>
+        <div class="topbar-right">
+          <div class="cr-user" title="演示环境：默认视为已登录">
+            <div class="cr-user-av" aria-hidden="true">李</div>
+            <div>
+              <div class="cr-user-name">李明远</div>
+              <div class="cr-user-sub">已登录 · 创作者</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="scroll">
+        <div class="page active" id="panel-tutorials" aria-label="我的教程">
+          <div class="sec-head">
+            <div class="sec-title"><span class="dot" aria-hidden="true"></span>我的教材</div>
+            <button type="button" class="cr-btn-primary" id="btnNewBook">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              创建图书
+            </button>
+          </div>
+          <p class="sec-hint" style="margin-top:-12px;margin-bottom:24px">四川数字教材平台创作者平台 · 以下为演示入口，正式环境可对接 CMS 与权限服务。</p>
+          <div class="cr-book-list" id="creatorBookList"></div>
+        </div>
+
+        <div class="page" id="panel-stats" aria-label="使用统计">
+          <div class="sec-head">
+            <div class="sec-title"><span class="dot" aria-hidden="true"></span>数据概览</div>
+          </div>
+          <p class="sec-hint" style="margin-top:-12px;margin-bottom:24px">近 30 天汇总（演示数据）</p>
+          <div class="cr-stats-grid">
+            <div class="cr-stat">
+              <div class="cr-stat-val">12.4k</div>
+              <div class="cr-stat-lab">教材总浏览</div>
+            </div>
+            <div class="cr-stat">
+              <div class="cr-stat-val">86%</div>
+              <div class="cr-stat-lab">任务完成率</div>
+            </div>
+            <div class="cr-stat">
+              <div class="cr-stat-val">3.2k</div>
+              <div class="cr-stat-lab">视听播放次数</div>
+            </div>
+            <div class="cr-stat">
+              <div class="cr-stat-val">214</div>
+              <div class="cr-stat-lab">教学模式开课次数</div>
+            </div>
+          </div>
+          <p class="cr-stats-foot">统计为演示占位；上线后可对接埋点、CDN 与业务库。</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 创建 / 编辑图书 -->
+  <div class="login-overlay" id="modalBook" role="dialog" aria-modal="true" aria-labelledby="modalBookTitle">
+    <div class="login-overlay__bg" aria-hidden="true"></div>
+    <div class="login-panel cr-book-form-panel">
+      <p class="login-subflow-title" id="modalBookTitle">创建图书</p>
+      <label class="login-label" for="formBookTitle">教材名称（必填）</label>
+      <input type="text" class="login-input" id="formBookTitle" maxlength="80" placeholder="例如：数字媒体技术导论" autocomplete="off" required>
+      <label class="login-label" for="formBookEditor">主编</label>
+      <input type="text" class="login-input" id="formBookEditor" maxlength="40" placeholder="例如：张炜、李可（多人用顿号或逗号分隔）" autocomplete="off">
+
+      <div class="login-label">封面</div>
+      <div class="cr-cover-field">
+        <div class="cr-cover-stack">
+          <button type="button" class="cr-cover-hit" id="btnPickCover" aria-label="添加或更换封面（上传图片）">
+            <span class="cr-cover-preview" aria-live="polite">
+              <img id="formCoverPreview" class="cr-cover-preview__img" alt="" width="120" height="160" hidden>
+              <span id="formCoverPreviewPh" class="cr-cover-preview__ph">
+                <span class="cr-cover-preview__ph-main">添加封面</span>
+                <span class="cr-cover-preview__ph-sub">点击上传图片</span>
+              </span>
+            </span>
+          </button>
+          <div class="cr-cover-toolbar">
+            <button type="button" class="cr-ai-chip" id="btnToggleAiCover" aria-expanded="false" aria-controls="crCoverAiPanel">
+              <span class="cr-ai-chip__spark" aria-hidden="true"></span>
+              <span class="cr-ai-chip__txt">AI 生成</span>
+            </button>
+            <button type="button" class="cr-cover-clear" id="btnClearCover">清除封面</button>
+          </div>
+        </div>
+        <input type="file" id="formCoverFile" class="cr-visually-hidden" accept="image/jpeg,image/png,image/webp,image/gif" tabindex="-1" aria-hidden="true">
+        <div id="crCoverAiPanel" class="cr-cover-ai-panel" hidden>
+          <label class="login-label cr-cover-ai-label" for="formCoverAiPrompt">提示词</label>
+          <textarea class="login-input cr-cover-ai-ta" id="formCoverAiPrompt" maxlength="300" rows="3" placeholder="描述风格、主色、画面元素等"></textarea>
+          <button type="button" class="login-submit cr-cover-ai-btn" id="btnAiCover">生成封面</button>
+          <p class="cr-cover-ai-note">演示：根据提示词在前端生成预览图；正式环境可对接图像生成 API。</p>
+        </div>
+      </div>
+
+      <label class="login-label" for="formBookIntro">教材简介</label>
+      <textarea class="login-input cr-book-intro" id="formBookIntro" maxlength="2000" rows="5" placeholder="简要介绍教材定位、适用对象、内容结构等"></textarea>
+      <label class="login-label" for="btnPickIntroVideo">视频介绍</label>
+      <div class="cr-video-field">
+        <button type="button" class="cr-video-hit" id="btnPickIntroVideo" aria-label="上传视频介绍文件">
+          <span id="formIntroVideoPh" class="cr-video-hit__ph">点击上传视频介绍</span>
+          <span id="formIntroVideoName" class="cr-video-hit__name" hidden></span>
+        </button>
+        <button type="button" class="cr-video-clear" id="btnClearIntroVideo">清除</button>
+      </div>
+      <input type="file" id="formIntroVideoFile" class="cr-visually-hidden" accept="video/mp4,video/webm,video/quicktime,video/*" tabindex="-1" aria-hidden="true">
+
+      <div class="cr-modal-actions">
+        <button type="button" class="login-text-link login-text-link--inline" id="modalBookCancel">取消</button>
+        <button type="button" class="login-submit" id="modalBookSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 创作团队：成员 + 邀请链接 / 二维码 -->
+  <div class="login-overlay" id="modalInvite" role="dialog" aria-modal="true" aria-labelledby="modalInviteTitle">
+    <div class="login-overlay__bg" aria-hidden="true"></div>
+    <div class="login-panel cr-invite-panel">
+      <p class="login-subflow-title" id="modalInviteTitle">创作团队</p>
+      <p class="login-subflow-hint cr-invite-perm-hint">
+        <strong>权限说明：</strong>管理员（创建者）可删除教材、移除成员并发起邀请。
+        <span class="cr-invite-perm-muted">组员仅可参与内容协作，不可删除教材，也不可移除其他成员。</span>
+      </p>
+      <input type="hidden" id="inviteBookId" value="">
+
+      <div class="login-label" id="inviteTeamListLabel">当前成员</div>
+      <div id="inviteTeamList" class="cr-team-list" role="list"></div>
+
+      <div class="cr-invite-box">
+        <label class="login-label">邀请加入创作团队</label>
+        <p class="cr-invite-subhint">复制邀请链接或让对方扫描下方二维码，即可加入本书协作（演示链接）。</p>
+        <div class="cr-invite-link-row">
+          <input type="text" readonly class="login-input cr-invite-input" id="inviteLinkInput" value="" aria-label="邀请链接">
+          <button type="button" class="login-submit cr-invite-copy" id="btnCopyInviteLink">复制链接</button>
+        </div>
+        <div class="cr-qr-wrap">
+          <img id="inviteQrImg" class="cr-qr-img" width="144" height="144" alt="邀请二维码">
+          <p class="cr-qr-caption">扫码加入创作团队</p>
+        </div>
+        <button type="button" class="login-submit cr-invite-cta" id="btnInviteEntry">邀请</button>
+      </div>
+
+      <div class="cr-modal-actions cr-modal-actions--single">
+        <button type="button" class="login-text-link login-text-link--inline" id="modalInviteDone">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认 -->
+  <div class="login-overlay" id="modalDelete" role="dialog" aria-modal="true" aria-labelledby="modalDeleteTitle">
+    <div class="login-overlay__bg" aria-hidden="true"></div>
+    <div class="login-panel">
+      <p class="login-subflow-title" id="modalDeleteTitle">删除教材</p>
+      <p class="login-subflow-hint">删除后将从当前列表移除（演示）。正式环境需权限与二次确认。</p>
+      <div class="cr-modal-actions">
+        <button type="button" class="login-text-link login-text-link--inline" id="modalDeleteCancel">取消</button>
+        <button type="button" class="cr-btn-danger" id="modalDeleteConfirm">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cr-toast" id="creatorToast" role="status" aria-live="polite"></div>
+  <script src="./creator.js"></script>
 </body>
 </html>

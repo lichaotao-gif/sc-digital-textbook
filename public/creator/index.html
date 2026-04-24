@@ -25,7 +25,7 @@
         <div class="nav-label">工作台</div>
         <button type="button" class="nav-item active" data-panel="tutorials" aria-current="page">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          <span>我的教程</span>
+          <span>我的图书</span>
         </button>
         <button type="button" class="nav-item" data-panel="stats">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
@@ -40,7 +40,7 @@
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <h1 class="topbar-title" id="creatorPageTitle">我的教程</h1>
+          <h1 class="topbar-title" id="creatorPageTitle">我的图书</h1>
           <div class="topbar-sep" aria-hidden="true"></div>
           <span class="topbar-hint" id="creatorTopHint">管理教材与多端内容配置</span>
         </div>
@@ -56,15 +56,14 @@
       </header>
 
       <div class="scroll">
-        <div class="page active" id="panel-tutorials" aria-label="我的教程">
+        <div class="page active" id="panel-tutorials" aria-label="我的图书">
           <div class="sec-head">
-            <div class="sec-title"><span class="dot" aria-hidden="true"></span>我的教材</div>
+            <div class="sec-title"><span class="dot" aria-hidden="true"></span>我的图书</div>
             <button type="button" class="cr-btn-primary" id="btnNewBook">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               创建图书
             </button>
           </div>
-          <p class="sec-hint" style="margin-top:-12px;margin-bottom:24px">四川数字教材平台创作者平台 · 以下为演示入口，正式环境可对接 CMS 与权限服务。</p>
           <div class="cr-book-list" id="creatorBookList"></div>
         </div>
 

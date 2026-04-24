@@ -564,21 +564,21 @@
       <button type="button" class="reader-notes-save" onclick="readerSaveNote()">保存笔记</button>
     </div>
   </aside>
-  <!-- 阅读页：综合测试弹层（选择题 / 填空 / 判断 / 简答 + 报告） -->
-  <div class="reader-quiz-overlay" id="readerQuizOverlay" aria-hidden="true">
-    <div class="reader-quiz-backdrop" onclick="readerCloseQuizModal()"></div>
-    <div class="reader-quiz-panel" role="dialog" aria-modal="true" aria-labelledby="readerQuizTitle">
-      <div class="reader-quiz-head">
-        <div>
-          <div class="reader-quiz-kicker" id="readerQuizKicker">测试 · 练习</div>
-          <h2 class="reader-quiz-title" id="readerQuizTitle">本节综合测评</h2>
-          <p class="reader-quiz-sub" id="readerQuizSub"></p>
-        </div>
-        <button type="button" class="reader-quiz-x" onclick="readerCloseQuizModal()" aria-label="关闭">×</button>
+  <!-- 阅读页：综合测评全屏页（选择题 / 填空 / 判断 / 简答 + 报告，与在线实训同为独立页） -->
+  <div class="reader-quiz-page" id="readerQuizPage" aria-hidden="true" role="document">
+    <header class="reader-quiz-page__head">
+      <button type="button" class="reader-quiz-page__back" onclick="readerCloseQuizModal()" title="返回阅读" aria-label="返回阅读">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span>返回阅读</span>
+      </button>
+      <div class="reader-quiz-page__titles">
+        <div class="reader-quiz-kicker" id="readerQuizKicker">测试 · 练习</div>
+        <h2 class="reader-quiz-title" id="readerQuizTitle">本节综合测评</h2>
+        <p class="reader-quiz-sub" id="readerQuizSub"></p>
       </div>
-      <div class="reader-quiz-scroll" id="readerQuizBody"></div>
-      <div class="reader-quiz-foot" id="readerQuizFoot"></div>
-    </div>
+    </header>
+    <div class="reader-quiz-page__body" id="readerQuizBody" tabindex="-1"></div>
+    <footer class="reader-quiz-foot" id="readerQuizFoot"></footer>
   </div>
   <!-- 阅读页：在线实训全屏（独立新页体验，可返回继续阅读） -->
   <div class="reader-lab-page" id="readerLabPage" aria-hidden="true" role="document">

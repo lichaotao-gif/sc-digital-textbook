@@ -41,6 +41,18 @@ body{
 }
 
 .app{display:flex;height:100vh}
+/* 教材编写占位页：无侧栏，主区通栏 */
+.app.cr-write-app{min-height:100vh}
+.cr-write-main{flex:1;min-width:0;width:100%}
+.cr-write-back-link{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:10px;border:1px solid var(--mist);
+  background:var(--white);color:var(--mint-deep);font-size:14px;font-weight:600;
+  text-decoration:none;font-family:inherit;transition:var(--transition);
+}
+.cr-write-back-link:hover{background:var(--mint);border-color:var(--mint-mid);color:var(--mint-deep)}
+.cr-write-h1{margin-top:4px;margin-bottom:8px}
+.cr-write-lede{margin-bottom:16px;max-width:640px}
 
 /* ===== 侧栏（与阅读端 .sidebar 一致） ===== */
 .sidebar{
@@ -147,6 +159,7 @@ body{
 
 /* 区块标题（与 .sec-head / .sec-title 一致） */
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+
 .sec-title{
   font-size:15px;font-weight:500;color:var(--deep);
   display:flex;align-items:center;gap:10px;
@@ -190,8 +203,8 @@ body{
 }
 .pill--danger:hover{border-color:var(--rose-mid);color:var(--rose-deep)}
 
-/* ===== 教材卡片列表（单列、对齐主站留白） ===== */
-.cr-book-list{display:flex;flex-direction:column;gap:16px;max-width:1100px}
+/* ===== 教材卡片列表（单列，与 .scroll 通栏同宽） ===== */
+.cr-book-list{display:flex;flex-direction:column;gap:16px;width:100%}
 .cr-card{
   background:var(--white);
   border:1px solid var(--cloud);
@@ -332,7 +345,7 @@ body{
 
 .cr-card-body{padding:14px 20px 18px}
 
-/* 教材操作：默认收起，避免按钮铺满 */
+/* 图书操作：默认收起，避免按钮铺满 */
 .cr-actions-details{
   border:1px solid var(--cloud);
   border-radius:10px;
@@ -419,7 +432,6 @@ body{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
   gap:16px;
-  max-width:1100px;
   margin-bottom:20px;
 }
 .cr-stat{
@@ -437,7 +449,7 @@ body{
 .cr-stat-lab{font-size:12px;color:var(--slate);font-weight:300;margin-top:6px;line-height:1.45}
 .cr-stats-foot{
   font-size:12.5px;color:var(--stone);font-weight:300;line-height:1.65;
-  max-width:1100px;padding:16px 18px;
+  padding:16px 18px;
   background:var(--white);border:1px dashed var(--mist);border-radius:var(--radius);
 }
 

@@ -3,19 +3,21 @@
     '<svg class="cr-foot-btn__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
   const ICON_INVITE =
     '<svg class="cr-foot-btn__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
-  const ICON_DELETE =
-    '<svg class="cr-foot-btn__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-
   const BOOK_ACTIONS = [
     { key: 'content', label: '内容编写' },
     { key: 'smartLecture', label: '智能云讲义' },
-    { key: 'meta', label: '教材信息编辑' },
     { key: 'task', label: '任务模式创建' },
     { key: 'av', label: '视听内容' },
     { key: 'teach', label: '教材讲义（教学）' },
     { key: 'res', label: '资源库' },
     { key: 'lab', label: '教学实训' },
     { key: 'publish', label: '出版详情查看' },
+    {
+      key: 'meta',
+      label: '图书信息编辑',
+      hint: '封面、名称、主编、简介与视频介绍等',
+    },
+    { key: 'delete', label: '删除教材', danger: true, hint: '删除该图书，操作不可恢复' },
   ];
 
   /** 与阅读端 src/main.js 一致的封面 pastel 色板与科目映射 */
@@ -393,7 +395,7 @@
       if (titleEl) titleEl.textContent = '使用统计';
       if (hintEl) hintEl.textContent = '访问与教学行为数据总览';
     } else {
-      if (titleEl) titleEl.textContent = '我的教程';
+      if (titleEl) titleEl.textContent = '我的图书';
       if (hintEl) hintEl.textContent = '管理教材与多端内容配置';
     }
   }
@@ -521,6 +523,18 @@
     openModal('#modalInvite');
   }
 
+  /** 进入教材编写占位页（正式环境可替换为 CMS 编辑器路由） */
+  function goBookWritePage(book) {
+    if (!book) return;
+    try {
+      sessionStorage.setItem(
+        'cr_write_book',
+        JSON.stringify({ id: book.id, title: book.title || '' })
+      );
+    } catch (e) {}
+    window.location.href = 'write/index.html?book=' + encodeURIComponent(book.id);
+  }
+
   function renderBooks() {
     var root = document.getElementById('creatorBookList');
     if (!root) return;
@@ -531,13 +545,18 @@
     root.innerHTML = books
       .map(function (b) {
         var pills = BOOK_ACTIONS.map(function (a) {
+          var pillCls = 'pill' + (a.danger ? ' pill--danger' : '');
+          var isDel = a.key === 'delete';
+          var dataAttr = isDel
+            ? 'data-del="' + escapeAttr(b.id) + '"'
+            : 'data-act="' + a.key + '" data-id="' + escapeAttr(b.id) + '"';
           return (
-            '<button type="button" class="pill" data-act="' +
-            a.key +
-            '" data-id="' +
-            b.id +
-            '" title="' +
-            escapeAttr(a.label) +
+            '<button type="button" class="' +
+            pillCls +
+            '" ' +
+            dataAttr +
+            ' title="' +
+            escapeAttr(a.hint || a.label) +
             '">' +
             escapeHtml(a.label) +
             '</button>'
@@ -566,7 +585,7 @@
           '<div class="cr-card-body">' +
           '<details class="cr-actions-details">' +
           '<summary>' +
-          '<span class="cr-actions-summary-txt">教材操作</span>' +
+          '<span class="cr-actions-summary-txt">图书操作</span>' +
           '<div class="cr-actions-summary-right">' +
           '<span class="cr-actions-summary-hint cr-actions-summary-hint--closed">点击展开</span>' +
           '<span class="cr-actions-summary-hint cr-actions-summary-hint--open">点击收起</span>' +
@@ -587,11 +606,6 @@
           '">' +
           ICON_INVITE +
           '<span class="cr-foot-btn__txt">邀请作者</span></button>' +
-          '<button type="button" class="cr-foot-btn cr-foot-btn--danger" data-del="' +
-          b.id +
-          '">' +
-          ICON_DELETE +
-          '<span class="cr-foot-btn__txt">删除教材</span></button>' +
           '</div></div></article>'
         );
       })
@@ -600,10 +614,16 @@
     root.querySelectorAll('[data-act]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var id = btn.dataset.id;
+        var act = btn.dataset.act;
         var book = books.find(function (x) {
           return x.id === id;
         });
-        showToast('「' + (book && book.title) + '」· ' + btn.textContent.trim() + '（演示，可对接 CMS）');
+        if (!book) return;
+        if (act === 'meta') {
+          openBookModal(book);
+          return;
+        }
+        showToast('「' + book.title + '」· ' + btn.textContent.trim() + '（演示，可对接 CMS）');
       });
     });
     root.querySelectorAll('[data-invite]').forEach(function (btn) {
@@ -624,7 +644,7 @@
           return x.id === id;
         });
         if (!book) return;
-        openBookModal(book);
+        goBookWritePage(book);
       });
     });
   }

@@ -3518,7 +3518,7 @@ function readerQuizUpdateFoot() {
   const prevDis = isFirst ? ' disabled' : '';
   const primaryLabel = isLast ? '提交并生成报告' : '下一题';
   const primaryFn = isLast ? 'readerSubmitQuizModal()' : 'readerQuizGoNext()';
-  foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">取消</button>
+  foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">返回阅读</button>
     <button type="button" class="reader-quiz-btn" onclick="readerQuizGoPrev()"${prevDis}>上一题</button>
     <button type="button" class="reader-quiz-btn reader-quiz-btn--primary" onclick="${primaryFn}">${primaryLabel}</button>`;
 }
@@ -3705,12 +3705,12 @@ function readerOpenQuizModal(slotId) {
     readerActiveQuizSlot = 'a';
   }
   const qz = readerGetCurrentQuiz();
-  const ov = document.getElementById('readerQuizOverlay');
+  const page = document.getElementById('readerQuizPage');
   const body = document.getElementById('readerQuizBody');
   const foot = document.getElementById('readerQuizFoot');
   const sub = document.getElementById('readerQuizSub');
   const title = document.getElementById('readerQuizTitle');
-  if (!qz || !ov || !body || !foot) return;
+  if (!qz || !page || !body || !foot) return;
   if (title) title.textContent = qz.title;
   if (sub) sub.textContent = qz.subtitle;
   readerQuizPhase = 'questions';
@@ -3718,15 +3718,16 @@ function readerOpenQuizModal(slotId) {
   readerQuizDraftAnswers = {};
   body.innerHTML = readerQuizLayoutHtml();
   readerQuizRenderCurrentStep();
-  ov.classList.add('open');
-  ov.setAttribute('aria-hidden', 'false');
+  page.classList.add('open');
+  page.setAttribute('aria-hidden', 'false');
+  body.focus({ preventScroll: true });
 }
 
 function readerCloseQuizModal() {
-  const ov = document.getElementById('readerQuizOverlay');
-  if (!ov) return;
-  ov.classList.remove('open');
-  ov.setAttribute('aria-hidden', 'true');
+  const page = document.getElementById('readerQuizPage');
+  if (!page) return;
+  page.classList.remove('open');
+  page.setAttribute('aria-hidden', 'true');
   readerQuizPhase = 'idle';
   readerQuizStepIndex = 0;
   readerQuizDraftAnswers = {};
@@ -3754,12 +3755,12 @@ function readerOpenSavedReport(slotId) {
     result = readerBuildDemoReportResult(slotId);
   }
   const qz = readerGetQuizBySlot(readerActiveQuizSlot);
-  const ov = document.getElementById('readerQuizOverlay');
+  const page = document.getElementById('readerQuizPage');
   const body = document.getElementById('readerQuizBody');
   const foot = document.getElementById('readerQuizFoot');
   const title = document.getElementById('readerQuizTitle');
   const sub = document.getElementById('readerQuizSub');
-  if (!qz || !ov || !body || !foot) return;
+  if (!qz || !page || !body || !foot) return;
   if (title) title.textContent = qz.title;
   if (sub) sub.textContent = qz.subtitle;
   readerQuizPhase = 'report';
@@ -3792,10 +3793,11 @@ function readerOpenSavedReport(slotId) {
       </div>
     </div>`;
   }
-  foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">关闭</button>
+  foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">返回阅读</button>
     <button type="button" class="reader-quiz-btn reader-quiz-btn--primary" onclick="readerOpenQuizModal('${sid}')">再测一次</button>`;
-  ov.classList.add('open');
-  ov.setAttribute('aria-hidden', 'false');
+  page.classList.add('open');
+  page.setAttribute('aria-hidden', 'false');
+  body.focus({ preventScroll: true });
 }
 
 function readerSubmitQuizModal() {
@@ -3821,7 +3823,7 @@ function readerSubmitQuizModal() {
   const slot = readerActiveQuizSlot;
   if (body) body.innerHTML = readerRenderQuizReport(result);
   if (foot) {
-    foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">关闭</button>
+    foot.innerHTML = `<button type="button" class="reader-quiz-btn" onclick="readerCloseQuizModal()">返回阅读</button>
       <button type="button" class="reader-quiz-btn reader-quiz-btn--primary" onclick="readerOpenQuizModal('${slot}')">再测一次</button>`;
   }
   readerQuizPhase = 'report';
@@ -3832,7 +3834,7 @@ function readerSubmitQuizModal() {
 
 function readerQuizOnKeydown(ev) {
   if (ev.key !== 'Escape') return;
-  if (document.getElementById('readerQuizOverlay')?.classList.contains('open')) {
+  if (document.getElementById('readerQuizPage')?.classList.contains('open')) {
     readerCloseQuizModal();
   }
 }

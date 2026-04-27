@@ -135,14 +135,110 @@ body{
   padding:6px 14px 6px 6px;border-radius:999px;
   background:var(--white);border:1px solid var(--mist);
 }
+.cr-user-btn{
+  border:1px solid var(--mist);
+  cursor:pointer;
+  transition:var(--transition);
+  font-family:inherit;
+  text-align:left;
+}
+.cr-user-btn:hover{border-color:var(--mint-mid)}
 .cr-user-av{
   width:34px;height:34px;border-radius:50%;
-  background:linear-gradient(135deg,var(--mint-mid),var(--mint-deep));
-  color:var(--white);font-size:13px;font-weight:600;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  object-fit:cover;
+  background:var(--cloud);
+  border:1px solid var(--mist);
+  flex-shrink:0;
 }
 .cr-user-name{font-size:13px;font-weight:600;color:var(--deep)}
 .cr-user-sub{font-size:11px;color:var(--stone);font-weight:300;margin-top:1px}
+
+/* ===== 个人设置抽屉（创作者端） ===== */
+.cr-settings-mask{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(15,23,42,0.25);
+  opacity:0;visibility:hidden;transition:var(--transition);
+}
+.cr-settings-mask.open{opacity:1;visibility:visible}
+.cr-settings-drawer{
+  position:fixed;top:0;right:0;height:100%;width:min(420px,100vw);
+  background:var(--white);border-left:1px solid var(--mist);
+  box-shadow:-18px 0 32px rgba(15,23,42,0.14);
+  transform:translateX(100%);
+  transition:transform var(--transition);
+  z-index:320;
+  display:flex;flex-direction:column;gap:12px;padding:18px;
+}
+.cr-settings-drawer.open{transform:translateX(0)}
+.cr-settings-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cr-settings-head h2{font-size:18px;color:var(--deep)}
+.cr-settings-close{
+  border:none;background:var(--cloud);
+  width:30px;height:30px;border-radius:999px;cursor:pointer;color:var(--slate);
+}
+.cr-settings-preview{
+  border:1px solid var(--mist);border-radius:var(--radius);background:var(--snow);
+  padding:18px 12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:8px;
+}
+.cr-settings-preview-avatar{
+  width:64px;height:64px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--mist);background:var(--cloud);
+}
+.cr-settings-preview-name{font-size:18px;color:var(--deep);font-weight:600}
+.cr-settings-preview-sub{font-size:13px;color:var(--slate)}
+.cr-settings-card{
+  border:1px solid var(--mist);border-radius:var(--radius);padding:12px;
+  display:grid;gap:10px;
+}
+.cr-settings-card h3{font-size:14px;color:var(--deep)}
+.cr-settings-txt{font-size:12px;color:var(--slate)}
+.cr-entry-link{
+  width:100%;border:1px solid var(--mist);background:var(--white);color:var(--ink);
+  border-radius:10px;padding:9px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);font-family:inherit;
+}
+.cr-entry-link:hover{border-color:var(--mint-mid);background:var(--snow)}
+.cr-entry-link-arrow{color:var(--stone);font-size:15px;line-height:1}
+.cr-settings-foot{
+  margin-top:auto;padding-top:10px;
+  display:flex;justify-content:center;
+}
+.cr-settings-logout{min-width:160px}
+
+/* 个人设置弹窗 */
+.login-panel.cr-setting-modal-panel{
+  max-width:460px;
+  max-height:min(90vh,760px);
+  overflow-y:auto;
+}
+.cr-profile-preview-inline{
+  border:1px solid var(--mist);border-radius:12px;background:var(--snow);
+  padding:10px;display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.cr-profile-preview-inline__avatar{
+  width:42px;height:42px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--mist);background:var(--cloud);
+}
+.cr-profile-preview-inline__name{font-size:14px;color:var(--deep);font-weight:600}
+.cr-profile-preview-inline__sub{font-size:12px;color:var(--slate)}
+.cr-setting-helper{font-size:11.5px;color:var(--stone);margin-top:8px;margin-bottom:6px}
+.cr-avatar-pick-list{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:8px;
+}
+.cr-avatar-pick{
+  width:100%;border:2px solid transparent;border-radius:999px;
+  background:transparent;padding:1px;cursor:pointer;
+}
+.cr-avatar-pick.active{border-color:var(--mint-mid)}
+.cr-avatar-pick img{
+  width:100%;aspect-ratio:1;border-radius:999px;display:block;object-fit:cover;
+  border:1px solid var(--mist);
+}
 
 .scroll{
   flex:1;
@@ -770,6 +866,7 @@ textarea.login-input{min-height:96px;resize:vertical;line-height:1.5}
   .cr-pill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cr-card-head{align-items:flex-start}
   .cr-creator-cover.cover{width:96px}
+  .cr-avatar-pick-list{grid-template-columns:repeat(4,1fr)}
 }
 @media (max-width:420px){
   .cr-creator-cover.cover{width:84px}

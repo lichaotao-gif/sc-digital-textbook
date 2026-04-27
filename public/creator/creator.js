@@ -137,6 +137,26 @@
   var COVER_FILE_MAX = 2.5 * 1024 * 1024;
   var introVideoDraft = { dataUrl: null, name: null };
   var VIDEO_FILE_MAX = 28 * 1024 * 1024;
+  var PROFILE_AVATAR_FILE_MAX = 2 * 1024 * 1024;
+  var CREATOR_PROFILE_KEY = 'creator-profile';
+  var CREATOR_PASSWORD_KEY = 'creator-password';
+  var CREATOR_DEFAULT_NAME = '李明远';
+  var CREATOR_DEFAULT_AVATAR =
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Wang&backgroundColor=b6e3f4';
+  var CREATOR_AVATAR_PRESETS = [
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Lin&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Chen&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Wang&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Liu&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Zhao&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Yang&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Xu&backgroundColor=b6e3f4',
+    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Sun&backgroundColor=b6e3f4',
+  ];
+  var creatorProfileDraft = {
+    name: CREATOR_DEFAULT_NAME,
+    avatar: CREATOR_DEFAULT_AVATAR,
+  };
 
   function simpleHash(str) {
     var h = 5381;
@@ -410,6 +430,117 @@
     if (m) m.classList.remove('open');
   }
 
+  function readCreatorProfile() {
+    try {
+      var raw = localStorage.getItem(CREATOR_PROFILE_KEY);
+      if (!raw) return { name: CREATOR_DEFAULT_NAME, avatar: CREATOR_DEFAULT_AVATAR };
+      var parsed = JSON.parse(raw);
+      return {
+        name: parsed && parsed.name ? parsed.name : CREATOR_DEFAULT_NAME,
+        avatar: parsed && parsed.avatar ? parsed.avatar : CREATOR_DEFAULT_AVATAR,
+      };
+    } catch (e) {
+      return { name: CREATOR_DEFAULT_NAME, avatar: CREATOR_DEFAULT_AVATAR };
+    }
+  }
+
+  function writeCreatorProfile(profile) {
+    localStorage.setItem(CREATOR_PROFILE_KEY, JSON.stringify(profile));
+  }
+
+  function applyCreatorProfile(profile) {
+    var name = String((profile && profile.name) || CREATOR_DEFAULT_NAME).trim() || CREATOR_DEFAULT_NAME;
+    var avatar = String((profile && profile.avatar) || CREATOR_DEFAULT_AVATAR).trim() || CREATOR_DEFAULT_AVATAR;
+    var topName = document.getElementById('creatorUserName');
+    var topAvatar = document.getElementById('creatorUserAvatar');
+    var previewName = document.getElementById('creatorSettingsPreviewName');
+    var previewAvatar = document.getElementById('creatorSettingsPreviewAvatar');
+    if (topName) topName.textContent = name;
+    if (topAvatar) topAvatar.src = avatar;
+    if (previewName) previewName.textContent = name;
+    if (previewAvatar) previewAvatar.src = avatar;
+  }
+
+  function hasCreatorPassword() {
+    return !!localStorage.getItem(CREATOR_PASSWORD_KEY);
+  }
+
+  function refreshCreatorPasswordState() {
+    var has = hasCreatorPassword();
+    var statusEl = document.getElementById('creatorPasswordStatusText');
+    var entryText = document.getElementById('creatorPasswordEntryText');
+    if (statusEl) statusEl.textContent = has ? '已设置密码，可修改' : '未设置密码';
+    if (entryText) entryText.textContent = has ? '修改密码' : '设置密码';
+  }
+
+  function highlightCreatorPresetAvatar() {
+    document.querySelectorAll('#creatorAvatarPickList .cr-avatar-pick').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-avatar') === creatorProfileDraft.avatar);
+    });
+  }
+
+  function syncCreatorProfileDraft(profile) {
+    creatorProfileDraft.name = String((profile && profile.name) || CREATOR_DEFAULT_NAME).trim() || CREATOR_DEFAULT_NAME;
+    creatorProfileDraft.avatar =
+      String((profile && profile.avatar) || CREATOR_DEFAULT_AVATAR).trim() || CREATOR_DEFAULT_AVATAR;
+    var nameInput = document.getElementById('creatorProfileNameInput');
+    var namePreview = document.getElementById('creatorProfileNamePreview');
+    var avatarPreview = document.getElementById('creatorProfileAvatarPreview');
+    var fileInput = document.getElementById('creatorProfileAvatarFile');
+    if (nameInput) nameInput.value = creatorProfileDraft.name;
+    if (namePreview) namePreview.textContent = creatorProfileDraft.name;
+    if (avatarPreview) avatarPreview.src = creatorProfileDraft.avatar;
+    if (fileInput) fileInput.value = '';
+    highlightCreatorPresetAvatar();
+  }
+
+  function renderCreatorAvatarPresets() {
+    var root = document.getElementById('creatorAvatarPickList');
+    if (!root) return;
+    root.innerHTML = CREATOR_AVATAR_PRESETS.map(function (avatar) {
+      return (
+        '<button type="button" class="cr-avatar-pick" data-avatar="' +
+        escapeAttr(avatar) +
+        '">' +
+        '<img src="' +
+        escapeAttr(avatar) +
+        '" alt="默认头像">' +
+        '</button>'
+      );
+    }).join('');
+    root.querySelectorAll('.cr-avatar-pick').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var avatar = btn.getAttribute('data-avatar');
+        if (!avatar) return;
+        creatorProfileDraft.avatar = avatar;
+        var avatarPreview = document.getElementById('creatorProfileAvatarPreview');
+        if (avatarPreview) avatarPreview.src = avatar;
+        highlightCreatorPresetAvatar();
+      });
+    });
+    highlightCreatorPresetAvatar();
+  }
+
+  function openCreatorSettingsDrawer() {
+    var drawer = document.getElementById('creatorSettingsDrawer');
+    var mask = document.getElementById('creatorSettingsMask');
+    if (drawer) {
+      drawer.classList.add('open');
+      drawer.setAttribute('aria-hidden', 'false');
+    }
+    if (mask) mask.classList.add('open');
+  }
+
+  function closeCreatorSettingsDrawer() {
+    var drawer = document.getElementById('creatorSettingsDrawer');
+    var mask = document.getElementById('creatorSettingsMask');
+    if (drawer) {
+      drawer.classList.remove('open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+    if (mask) mask.classList.remove('open');
+  }
+
   function getBookById(id) {
     return books.find(function (x) {
       return x.id === id;
@@ -666,6 +797,167 @@
       setPanel(el.dataset.panel);
     });
   });
+
+  var creatorSettingsTrigger = document.getElementById('creatorSettingsTrigger');
+  if (creatorSettingsTrigger) {
+    creatorSettingsTrigger.addEventListener('click', function () {
+      openCreatorSettingsDrawer();
+    });
+  }
+  var creatorSettingsCloseBtn = document.getElementById('creatorSettingsCloseBtn');
+  if (creatorSettingsCloseBtn) {
+    creatorSettingsCloseBtn.addEventListener('click', function () {
+      closeCreatorSettingsDrawer();
+    });
+  }
+  var creatorSettingsMask = document.getElementById('creatorSettingsMask');
+  if (creatorSettingsMask) {
+    creatorSettingsMask.addEventListener('click', function () {
+      closeCreatorSettingsDrawer();
+    });
+  }
+
+  var openCreatorProfileModalBtn = document.getElementById('openCreatorProfileModalBtn');
+  if (openCreatorProfileModalBtn) {
+    openCreatorProfileModalBtn.addEventListener('click', function () {
+      syncCreatorProfileDraft(readCreatorProfile());
+      openModal('#modalCreatorProfile');
+    });
+  }
+  var creatorProfileCancel = document.getElementById('creatorProfileCancel');
+  if (creatorProfileCancel) {
+    creatorProfileCancel.addEventListener('click', function () {
+      closeModal('#modalCreatorProfile');
+    });
+  }
+  var creatorProfileNameInput = document.getElementById('creatorProfileNameInput');
+  if (creatorProfileNameInput) {
+    creatorProfileNameInput.addEventListener('input', function () {
+      var nextName = String(creatorProfileNameInput.value || '').trim();
+      creatorProfileDraft.name = nextName || CREATOR_DEFAULT_NAME;
+      var namePreview = document.getElementById('creatorProfileNamePreview');
+      if (namePreview) namePreview.textContent = creatorProfileDraft.name;
+    });
+  }
+  var creatorProfileAvatarFile = document.getElementById('creatorProfileAvatarFile');
+  if (creatorProfileAvatarFile) {
+    creatorProfileAvatarFile.addEventListener('change', function () {
+      var f = creatorProfileAvatarFile.files && creatorProfileAvatarFile.files[0];
+      if (!f) return;
+      if (!/^image\//.test(f.type)) {
+        showToast('请选择图片文件');
+        creatorProfileAvatarFile.value = '';
+        return;
+      }
+      if (f.size > PROFILE_AVATAR_FILE_MAX) {
+        showToast('头像图片请小于约 2MB');
+        creatorProfileAvatarFile.value = '';
+        return;
+      }
+      var r = new FileReader();
+      r.onload = function () {
+        creatorProfileDraft.avatar = typeof r.result === 'string' ? r.result : CREATOR_DEFAULT_AVATAR;
+        var avatarPreview = document.getElementById('creatorProfileAvatarPreview');
+        if (avatarPreview) avatarPreview.src = creatorProfileDraft.avatar;
+        highlightCreatorPresetAvatar();
+      };
+      r.onerror = function () {
+        showToast('读取头像失败，请重试');
+      };
+      r.readAsDataURL(f);
+    });
+  }
+  var creatorProfileReset = document.getElementById('creatorProfileReset');
+  if (creatorProfileReset) {
+    creatorProfileReset.addEventListener('click', function () {
+      var reset = { name: CREATOR_DEFAULT_NAME, avatar: CREATOR_DEFAULT_AVATAR };
+      writeCreatorProfile(reset);
+      applyCreatorProfile(reset);
+      syncCreatorProfileDraft(reset);
+      showToast('已恢复默认资料');
+    });
+  }
+  var creatorProfileSave = document.getElementById('creatorProfileSave');
+  if (creatorProfileSave) {
+    creatorProfileSave.addEventListener('click', function () {
+      var nameInput = document.getElementById('creatorProfileNameInput');
+      var name = String((nameInput && nameInput.value) || '').trim();
+      if (!name) {
+        showToast('用户名不能为空');
+        return;
+      }
+      var next = { name: name, avatar: creatorProfileDraft.avatar || CREATOR_DEFAULT_AVATAR };
+      writeCreatorProfile(next);
+      applyCreatorProfile(next);
+      closeModal('#modalCreatorProfile');
+      showToast('资料已更新');
+    });
+  }
+
+  var openCreatorPasswordModalBtn = document.getElementById('openCreatorPasswordModalBtn');
+  if (openCreatorPasswordModalBtn) {
+    openCreatorPasswordModalBtn.addEventListener('click', function () {
+      var has = hasCreatorPassword();
+      var titleEl = document.getElementById('modalCreatorPasswordTitle');
+      var oldRow = document.getElementById('creatorOldPasswordRow');
+      var oldInp = document.getElementById('creatorOldPasswordInput');
+      var newInp = document.getElementById('creatorNewPasswordInput');
+      var confInp = document.getElementById('creatorConfirmPasswordInput');
+      if (titleEl) titleEl.textContent = has ? '修改密码' : '设置密码';
+      if (oldRow) oldRow.style.display = has ? 'block' : 'none';
+      if (oldInp) oldInp.value = '';
+      if (newInp) newInp.value = '';
+      if (confInp) confInp.value = '';
+      openModal('#modalCreatorPassword');
+    });
+  }
+  var creatorPasswordCancel = document.getElementById('creatorPasswordCancel');
+  if (creatorPasswordCancel) {
+    creatorPasswordCancel.addEventListener('click', function () {
+      closeModal('#modalCreatorPassword');
+    });
+  }
+  var creatorPasswordSave = document.getElementById('creatorPasswordSave');
+  if (creatorPasswordSave) {
+    creatorPasswordSave.addEventListener('click', function () {
+      var has = hasCreatorPassword();
+      var oldPwd = String((document.getElementById('creatorOldPasswordInput') || {}).value || '').trim();
+      var newPwd = String((document.getElementById('creatorNewPasswordInput') || {}).value || '').trim();
+      var confPwd = String((document.getElementById('creatorConfirmPasswordInput') || {}).value || '').trim();
+      if (has) {
+        var saved = localStorage.getItem(CREATOR_PASSWORD_KEY) || '';
+        if (!oldPwd || oldPwd !== saved) {
+          showToast('当前密码不正确');
+          return;
+        }
+      }
+      if (newPwd.length < 6) {
+        showToast('密码至少 6 位');
+        return;
+      }
+      if (newPwd !== confPwd) {
+        showToast('两次密码不一致');
+        return;
+      }
+      localStorage.setItem(CREATOR_PASSWORD_KEY, newPwd);
+      refreshCreatorPasswordState();
+      closeModal('#modalCreatorPassword');
+      showToast(has ? '密码已修改' : '密码已设置');
+    });
+  }
+
+  var creatorLogoutBtn = document.getElementById('creatorLogoutBtn');
+  if (creatorLogoutBtn) {
+    creatorLogoutBtn.addEventListener('click', function () {
+      localStorage.removeItem(CREATOR_PROFILE_KEY);
+      localStorage.removeItem(CREATOR_PASSWORD_KEY);
+      closeCreatorSettingsDrawer();
+      showToast('已退出账号');
+      setTimeout(function () {
+        window.location.href = '/';
+      }, 800);
+    });
+  }
 
   var btnNew = document.getElementById('btnNewBook');
   if (btnNew) {
@@ -937,4 +1229,7 @@
 
   setPanel('tutorials');
   renderBooks();
+  applyCreatorProfile(readCreatorProfile());
+  refreshCreatorPasswordState();
+  renderCreatorAvatarPresets();
 })();

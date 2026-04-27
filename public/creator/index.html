@@ -10,6 +10,79 @@
   <link rel="stylesheet" href="./creator.css">
 </head>
 <body>
+  <div class="cr-login-overlay" id="creatorLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="creatorLoginTitle">
+    <div class="cr-login-bg" aria-hidden="true">
+      <svg class="cr-login-art" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="crLoginSky" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ebf7f2"/>
+            <stop offset="50%" stop-color="#f5faf8"/>
+            <stop offset="100%" stop-color="#edf6ff"/>
+          </linearGradient>
+          <radialGradient id="crLoginGlowA" cx="0%" cy="0%" r="100%">
+            <stop offset="0%" stop-color="#8dc8b1" stop-opacity="0.22"/>
+            <stop offset="100%" stop-color="#8dc8b1" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="crLoginGlowB" cx="0%" cy="0%" r="100%">
+            <stop offset="0%" stop-color="#95bfe0" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#95bfe0" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="crLoginBlur" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="8"/>
+          </filter>
+        </defs>
+        <rect width="1440" height="900" fill="url(#crLoginSky)"/>
+        <circle cx="1210" cy="130" r="190" fill="url(#crLoginGlowA)"/>
+        <circle cx="180" cy="720" r="240" fill="url(#crLoginGlowB)"/>
+        <g fill="none" stroke="#8fb8ca" stroke-width="2.2" opacity="0.3">
+          <path d="M86 684c160-96 318-124 476-86" />
+          <path d="M868 618c168-106 332-112 486-44" />
+        </g>
+        <g fill="none" stroke="#7aa792" stroke-width="1.6" opacity="0.36">
+          <path d="M96 742h226l34-22h112" />
+          <path d="M974 694h112l26-16h226" />
+        </g>
+        <g opacity="0.38" filter="url(#crLoginBlur)">
+          <ellipse cx="320" cy="612" rx="130" ry="16" fill="#7db39d"/>
+          <ellipse cx="1150" cy="562" rx="158" ry="20" fill="#87abc9"/>
+        </g>
+        <g fill="none" stroke="#6f9db8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.46">
+          <path d="M324 544l32-18 16 24-32 18z"/>
+          <path d="M356 526l8-26"/>
+          <path d="M352 554l-10 18"/>
+        </g>
+        <g fill="none" stroke="#89adc9" stroke-width="2" opacity="0.32">
+          <rect x="1028" y="520" width="212" height="132" rx="14"/>
+          <path d="M1058 560h142M1058 590h108M1058 620h72"/>
+        </g>
+      </svg>
+    </div>
+    <div class="cr-login-end-title">四川数字教程创作者</div>
+    <div class="cr-login-panel">
+      <div class="cr-login-brand">
+        <div class="logo-icon" aria-hidden="true">创</div>
+        <div class="logo-col">
+          <div class="logo-name" id="creatorLoginTitle">四川数字教材</div>
+          <div class="logo-en">创作者端登录</div>
+        </div>
+      </div>
+      <label class="login-label" for="creatorLoginPhone">手机号</label>
+      <input type="tel" class="login-input" id="creatorLoginPhone" maxlength="11" inputmode="numeric" placeholder="11 位手机号">
+      <label class="login-label" for="creatorLoginPassword">密码</label>
+      <div class="cr-login-pwd-row">
+        <input type="password" class="login-input" id="creatorLoginPassword" minlength="6" placeholder="不少于 6 位" value="123456">
+        <button type="button" class="cr-login-eye-btn" id="creatorLoginTogglePwd" aria-label="显示密码" title="显示密码">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+      <p class="cr-login-err" id="creatorLoginErr"></p>
+      <button type="button" class="login-submit cr-login-submit" id="creatorLoginSubmit">登录创作者端</button>
+    </div>
+  </div>
+
   <div class="app">
     <aside class="sidebar" aria-label="创作者主导航">
       <div class="sidebar-head">

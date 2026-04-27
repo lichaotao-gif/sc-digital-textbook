@@ -140,6 +140,7 @@
   var PROFILE_AVATAR_FILE_MAX = 2 * 1024 * 1024;
   var CREATOR_PROFILE_KEY = 'creator-profile';
   var CREATOR_PASSWORD_KEY = 'creator-password';
+  var CREATOR_LOGIN_KEY = 'creator-login-session';
   var CREATOR_DEFAULT_NAME = '李明远';
   var CREATOR_DEFAULT_AVATAR =
     'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=Wang&backgroundColor=b6e3f4';
@@ -539,6 +540,74 @@
       drawer.setAttribute('aria-hidden', 'true');
     }
     if (mask) mask.classList.remove('open');
+  }
+
+  function isValidPhone(v) {
+    return /^1\d{10}$/.test(String(v || '').trim());
+  }
+
+  function openCreatorLogin() {
+    var overlay = document.getElementById('creatorLoginOverlay');
+    if (overlay) overlay.classList.add('open');
+  }
+
+  function closeCreatorLogin() {
+    var overlay = document.getElementById('creatorLoginOverlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+
+  function initCreatorLogin() {
+    var overlay = document.getElementById('creatorLoginOverlay');
+    var phoneEl = document.getElementById('creatorLoginPhone');
+    var pwdEl = document.getElementById('creatorLoginPassword');
+    var togglePwdEl = document.getElementById('creatorLoginTogglePwd');
+    var errEl = document.getElementById('creatorLoginErr');
+    var submitEl = document.getElementById('creatorLoginSubmit');
+    if (!overlay || !phoneEl || !pwdEl || !submitEl) return;
+    function setErr(msg) {
+      if (errEl) errEl.textContent = msg || '';
+    }
+    function submit() {
+      var phone = String(phoneEl.value || '').trim();
+      var pwd = String(pwdEl.value || '').trim();
+      if (!isValidPhone(phone)) {
+        setErr('请输入正确的 11 位手机号');
+        return;
+      }
+      if (pwd.length < 6) {
+        setErr('密码不少于 6 位');
+        return;
+      }
+      localStorage.setItem(
+        CREATOR_LOGIN_KEY,
+        JSON.stringify({ phone: phone, ts: Date.now() })
+      );
+      setErr('');
+      closeCreatorLogin();
+      showToast('已登录创作者端');
+    }
+    submitEl.addEventListener('click', submit);
+    if (togglePwdEl) {
+      togglePwdEl.addEventListener('click', function () {
+        var isPwd = pwdEl.type === 'password';
+        pwdEl.type = isPwd ? 'text' : 'password';
+        togglePwdEl.setAttribute('aria-label', isPwd ? '隐藏密码' : '显示密码');
+        togglePwdEl.setAttribute('title', isPwd ? '隐藏密码' : '显示密码');
+      });
+    }
+    phoneEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submit();
+    });
+    pwdEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submit();
+    });
+    if (!localStorage.getItem(CREATOR_LOGIN_KEY)) {
+      localStorage.setItem(
+        CREATOR_LOGIN_KEY,
+        JSON.stringify({ phone: '13800000000', ts: Date.now() })
+      );
+    }
+    closeCreatorLogin();
   }
 
   function getBookById(id) {
@@ -951,11 +1020,10 @@
     creatorLogoutBtn.addEventListener('click', function () {
       localStorage.removeItem(CREATOR_PROFILE_KEY);
       localStorage.removeItem(CREATOR_PASSWORD_KEY);
+      localStorage.removeItem(CREATOR_LOGIN_KEY);
       closeCreatorSettingsDrawer();
+      openCreatorLogin();
       showToast('已退出账号');
-      setTimeout(function () {
-        window.location.href = '/';
-      }, 800);
     });
   }
 
@@ -1232,4 +1300,5 @@
   applyCreatorProfile(readCreatorProfile());
   refreshCreatorPasswordState();
   renderCreatorAvatarPresets();
+  initCreatorLogin();
 })();

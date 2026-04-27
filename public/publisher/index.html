@@ -36,6 +36,94 @@
       color: var(--ink);
       line-height: 1.5;
     }
+    .pub-login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 520;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      padding: 22px 14px;
+    }
+    .pub-login-overlay.open { display: flex; }
+    .pub-login-end-title {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 14px;
+      font-family: 'ZCOOL XiaoWei', serif;
+      font-size: 32px;
+      letter-spacing: 3px;
+      color: #2f6f95;
+      text-shadow: 0 4px 18px rgba(86, 130, 168, 0.2);
+    }
+    .pub-login-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 44%, #ecfeff 100%);
+    }
+    .pub-login-art {
+      width: 100%;
+      height: 100%;
+      display: block;
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 10%, #000 92%, transparent 100%);
+    }
+    .pub-login-panel {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 396px;
+      border-radius: 20px;
+      border: 1px solid rgba(226, 232, 240, 0.95);
+      background: var(--white);
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+      padding: 30px 26px 24px;
+    }
+    .pub-login-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .pub-login-pwd-row {
+      position: relative;
+    }
+    .pub-login-pwd-row input {
+      padding-right: 44px;
+    }
+    .pub-login-eye-btn {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--stone);
+      cursor: pointer;
+    }
+    .pub-login-eye-btn:hover { color: var(--sky-deep); background: var(--snow); }
+    .pub-login-eye-btn svg { width: 16px; height: 16px; display: block; margin: auto; }
+    .pub-login-err {
+      min-height: 22px;
+      font-size: 12px;
+      color: var(--rose-deep);
+      margin-top: 10px;
+    }
+    .pub-login-submit {
+      width: 100%;
+      margin-top: 4px;
+    }
+    .pub-login-note {
+      margin-top: 14px;
+      font-size: 11.5px;
+      color: var(--stone);
+      line-height: 1.6;
+    }
     .page {
       min-height: 100%;
       display: flex;
@@ -175,10 +263,42 @@
       border: 1px solid var(--mist);
       border-radius: var(--radius-sm);
       background: var(--white);
-      padding: 10px 11px;
-      display: grid;
-      gap: 5px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
       transition: var(--transition);
+    }
+    .book-cover {
+      width: 72px;
+      aspect-ratio: 3/4;
+      border-radius: 8px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.2;
+      padding: 6px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.16);
+    }
+    .book-cover.published {
+      background: linear-gradient(145deg, #4aaa85, #78c8a8);
+    }
+    .book-cover.pending {
+      background: linear-gradient(145deg, #4a8ec8, #7ab4de);
+    }
+    .book-cover.rework {
+      background: linear-gradient(145deg, #c85a72, #e08898);
+    }
+    .item-main {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+      flex: 1;
     }
     .panel.status-published .item:hover {
       border-color: rgba(58, 158, 120, 0.52);
@@ -196,13 +316,43 @@
       background: rgba(249, 218, 226, 0.28);
     }
     .item-title {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--deep);
       font-weight: 600;
+      line-height: 1.35;
     }
-    .item-meta {
-      font-size: 12px;
+    .item-line {
+      font-size: 13px;
       color: var(--slate);
+      line-height: 1.45;
+    }
+    .item-line strong {
+      color: #667085;
+      font-weight: 500;
+      margin-right: 6px;
+    }
+    .item-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 6px;
+    }
+    .item-action {
+      border: none;
+      background: transparent;
+      color: #6b7280;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+    }
+    .item-action:hover {
+      color: var(--deep);
+    }
+    .item-action.primary {
+      color: var(--mint-deep);
     }
     .item-tag {
       justify-self: start;
@@ -492,6 +642,82 @@
   </style>
 </head>
 <body>
+  <div class="pub-login-overlay" id="publisherLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="publisherLoginTitle">
+    <div class="pub-login-bg" aria-hidden="true">
+      <svg class="pub-login-art" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="pubLoginSky" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#eaf3ff"/>
+            <stop offset="52%" stop-color="#f4f8ff"/>
+            <stop offset="100%" stop-color="#edf6ff"/>
+          </linearGradient>
+          <radialGradient id="pubLoginGlowA" cx="0%" cy="0%" r="100%">
+            <stop offset="0%" stop-color="#8fb4df" stop-opacity="0.24"/>
+            <stop offset="100%" stop-color="#8fb4df" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="pubLoginGlowB" cx="0%" cy="0%" r="100%">
+            <stop offset="0%" stop-color="#9ac7ec" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#9ac7ec" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="pubLoginBlur" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="9"/>
+          </filter>
+        </defs>
+        <rect width="1440" height="900" fill="url(#pubLoginSky)"/>
+        <circle cx="1140" cy="130" r="210" fill="url(#pubLoginGlowA)"/>
+        <circle cx="260" cy="740" r="250" fill="url(#pubLoginGlowB)"/>
+        <g fill="none" stroke="#86acd4" stroke-width="2.2" opacity="0.3">
+          <path d="M88 712c146-84 310-116 458-84" />
+          <path d="M896 646c170-96 334-102 468-46" />
+        </g>
+        <g fill="none" stroke="#8fb4db" stroke-width="1.6" opacity="0.34">
+          <path d="M110 770h222l28-16h130" />
+          <path d="M950 718h148l24-14h206" />
+        </g>
+        <g opacity="0.34" filter="url(#pubLoginBlur)">
+          <ellipse cx="300" cy="638" rx="146" ry="18" fill="#86acd4"/>
+          <ellipse cx="1130" cy="582" rx="170" ry="22" fill="#8cb2dd"/>
+        </g>
+        <g fill="none" stroke="#6f95c2" stroke-width="2.2" opacity="0.42">
+          <rect x="136" y="548" width="244" height="148" rx="16"/>
+          <path d="M170 586h176M170 614h144M170 642h106"/>
+        </g>
+        <g fill="none" stroke="#7f9fc7" stroke-width="2.2" stroke-linecap="round" opacity="0.45">
+          <rect x="1010" y="528" width="250" height="154" rx="16"/>
+          <path d="M1042 568h182M1042 598h136M1042 628h82"/>
+          <circle cx="1218" cy="618" r="20"/>
+          <path d="M1206 618h24M1218 606v24"/>
+        </g>
+      </svg>
+    </div>
+    <div class="pub-login-end-title">四川数字教材出版社</div>
+    <div class="pub-login-panel">
+      <div class="pub-login-brand">
+        <div class="logo">版</div>
+        <div class="brand-text">
+          <strong id="publisherLoginTitle">四川数字教材</strong>
+          <span>出版社端登录</span>
+        </div>
+      </div>
+      <label>手机号
+        <input type="tel" id="publisherLoginPhone" maxlength="11" inputmode="numeric" placeholder="11 位手机号">
+      </label>
+      <label>密码
+        <div class="pub-login-pwd-row">
+          <input type="password" id="publisherLoginPassword" minlength="6" placeholder="不少于 6 位" value="123456">
+          <button class="pub-login-eye-btn" type="button" id="publisherLoginTogglePwd" aria-label="显示密码" title="显示密码">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
+      </label>
+      <p class="pub-login-err" id="publisherLoginErr"></p>
+      <button class="btn-primary pub-login-submit" type="button" id="publisherLoginSubmit">登录出版社端</button>
+    </div>
+  </div>
+
   <div class="page">
     <header class="topbar">
       <div class="brand">
@@ -515,19 +741,46 @@
         </header>
         <ul class="list">
           <li class="item">
-            <div class="item-title">人工智能导论（中职）</div>
-            <div class="item-meta">高等教育出版社 · 2026-03-20</div>
-            <span class="item-tag tag-published">上架中</span>
+            <div class="book-cover published">人工智能</div>
+            <div class="item-main">
+              <div class="item-title">人工智能导论（中职）</div>
+              <div class="item-line"><strong>主编</strong>赵明 等</div>
+              <div class="item-line"><strong>版次</strong>2026 第一版</div>
+              <div class="item-line"><strong>ISBN</strong>978-7-04-061001-2</div>
+              <div class="item-actions">
+                <button class="item-action" type="button">阅读</button>
+                <button class="item-action" type="button">出版信息</button>
+                <button class="item-action" type="button">导出审核记录</button>
+              </div>
+            </div>
           </li>
           <li class="item">
-            <div class="item-title">Python 程序设计（项目篇）</div>
-            <div class="item-meta">人民邮电出版社 · 2026-02-28</div>
-            <span class="item-tag tag-published">上架中</span>
+            <div class="book-cover published">Python</div>
+            <div class="item-main">
+              <div class="item-title">Python 程序设计（项目篇）</div>
+              <div class="item-line"><strong>主编</strong>李可 等</div>
+              <div class="item-line"><strong>版次</strong>2025 第二版</div>
+              <div class="item-line"><strong>ISBN</strong>978-7-115-69432-6</div>
+              <div class="item-actions">
+                <button class="item-action" type="button">阅读</button>
+                <button class="item-action" type="button">出版信息</button>
+                <button class="item-action" type="button">导出审核记录</button>
+              </div>
+            </div>
           </li>
           <li class="item">
-            <div class="item-title">数据库应用基础</div>
-            <div class="item-meta">电子工业出版社 · 2026-01-16</div>
-            <span class="item-tag tag-published">已发布</span>
+            <div class="book-cover published">数据库</div>
+            <div class="item-main">
+              <div class="item-title">数据库应用基础</div>
+              <div class="item-line"><strong>主编</strong>刘洋</div>
+              <div class="item-line"><strong>版次</strong>2025 第三版</div>
+              <div class="item-line"><strong>ISBN</strong>978-7-121-44321-5</div>
+              <div class="item-actions">
+                <button class="item-action" type="button">阅读</button>
+                <button class="item-action" type="button">出版信息</button>
+                <button class="item-action" type="button">导出审核记录</button>
+              </div>
+            </div>
           </li>
         </ul>
       </section>
@@ -539,14 +792,34 @@
         </header>
         <ul class="list">
           <li class="item">
-            <div class="item-title">网络安全与合规实践</div>
-            <div class="item-meta">送审时间：2026-04-22</div>
-            <span class="item-tag tag-pending">审核中</span>
+            <div class="book-cover pending">网络安全</div>
+            <div class="item-main">
+              <div class="item-title">网络安全与合规实践</div>
+              <div class="item-line"><strong>主编</strong>邹凯冰</div>
+              <div class="item-line"><strong>版次</strong>2025 第三版</div>
+              <div class="item-line"><strong>ISBN</strong>978-7-122-55116-3</div>
+              <div class="item-actions">
+                <button class="item-action" type="button">阅读</button>
+                <button class="item-action primary" type="button">开始审核</button>
+                <button class="item-action" type="button">审核记录</button>
+                <button class="item-action" type="button">导出记录</button>
+              </div>
+            </div>
           </li>
           <li class="item">
-            <div class="item-title">移动应用开发（第二版）</div>
-            <div class="item-meta">送审时间：2026-04-25</div>
-            <span class="item-tag tag-pending">审核中</span>
+            <div class="book-cover pending">移动开发</div>
+            <div class="item-main">
+              <div class="item-title">移动应用开发（第二版）</div>
+              <div class="item-line"><strong>主编</strong>周佳妮</div>
+              <div class="item-line"><strong>版次</strong>2026 第一版</div>
+              <div class="item-line"><strong>ISBN</strong>978-7-302-64387-7</div>
+              <div class="item-actions">
+                <button class="item-action" type="button">阅读</button>
+                <button class="item-action primary" type="button">开始审核</button>
+                <button class="item-action" type="button">审核记录</button>
+                <button class="item-action" type="button">导出记录</button>
+              </div>
+            </div>
           </li>
         </ul>
       </section>
@@ -558,9 +831,18 @@
         </header>
         <ul class="list">
           <li class="item">
-            <div class="item-title">计算机网络技术（上册）</div>
-            <div class="item-meta">返修原因：资源链接失效，需更新附录</div>
-            <span class="item-tag tag-rework">待处理</span>
+            <div class="book-cover rework">计算机网络</div>
+            <div class="item-main">
+              <div class="item-title">计算机网络技术（上册）</div>
+              <div class="item-line"><strong>主编</strong>唐立新</div>
+              <div class="item-line"><strong>版次</strong>2025 第二版</div>
+              <div class="item-line"><strong>ISBN</strong>978-7-111-69883-0</div>
+              <div class="item-actions">
+                <button class="item-action" type="button">阅读</button>
+                <button class="item-action primary" type="button">返修详情</button>
+                <button class="item-action" type="button">导出记录</button>
+              </div>
+            </div>
           </li>
           <li class="empty">暂无更多返修教材</li>
         </ul>
@@ -672,6 +954,7 @@
     ];
     const STORAGE_KEY = "publisher-profile";
     const PASSWORD_STORAGE_KEY = "publisher-password";
+    const LOGIN_STORAGE_KEY = "publisher-login-session";
 
     const els = {
       profileTrigger: document.getElementById("profileTrigger"),
@@ -705,7 +988,13 @@
       confirmPasswordInput: document.getElementById("confirmPasswordInput"),
       savePasswordModalBtn: document.getElementById("savePasswordModalBtn"),
       logoutBtn: document.getElementById("logoutBtn"),
-      toast: document.getElementById("toast")
+      toast: document.getElementById("toast"),
+      loginOverlay: document.getElementById("publisherLoginOverlay"),
+      loginPhoneInput: document.getElementById("publisherLoginPhone"),
+      loginPasswordInput: document.getElementById("publisherLoginPassword"),
+      loginTogglePwdBtn: document.getElementById("publisherLoginTogglePwd"),
+      loginErr: document.getElementById("publisherLoginErr"),
+      loginSubmitBtn: document.getElementById("publisherLoginSubmit")
     };
     const draft = { name: DEFAULT_NAME, avatar: DEFAULT_AVATAR };
     let currentModal = null;
@@ -808,6 +1097,57 @@
       }, 1800);
     }
 
+    function isValidPhone(phone) {
+      return /^1\d{10}$/.test(String(phone || "").trim());
+    }
+
+    function openLoginOverlay() {
+      els.loginOverlay.classList.add("open");
+    }
+
+    function closeLoginOverlay() {
+      els.loginOverlay.classList.remove("open");
+    }
+
+    function initPublisherLogin() {
+      function setLoginErr(msg) {
+        els.loginErr.textContent = msg || "";
+      }
+      function submitLogin() {
+        const phone = (els.loginPhoneInput.value || "").trim();
+        const password = (els.loginPasswordInput.value || "").trim();
+        if (!isValidPhone(phone)) {
+          setLoginErr("请输入正确的 11 位手机号");
+          return;
+        }
+        if (password.length < 6) {
+          setLoginErr("密码不少于 6 位");
+          return;
+        }
+        localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ phone, ts: Date.now() }));
+        setLoginErr("");
+        closeLoginOverlay();
+        showToast("已登录出版社端");
+      }
+      els.loginSubmitBtn.addEventListener("click", submitLogin);
+      els.loginTogglePwdBtn.addEventListener("click", () => {
+        const isPwd = els.loginPasswordInput.type === "password";
+        els.loginPasswordInput.type = isPwd ? "text" : "password";
+        els.loginTogglePwdBtn.setAttribute("aria-label", isPwd ? "隐藏密码" : "显示密码");
+        els.loginTogglePwdBtn.setAttribute("title", isPwd ? "隐藏密码" : "显示密码");
+      });
+      els.loginPhoneInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") submitLogin();
+      });
+      els.loginPasswordInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") submitLogin();
+      });
+      if (!localStorage.getItem(LOGIN_STORAGE_KEY)) {
+        localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify({ phone: "13800000000", ts: Date.now() }));
+      }
+      closeLoginOverlay();
+    }
+
     els.profileTrigger.addEventListener("click", openDrawer);
     els.closeDrawerBtn.addEventListener("click", closeDrawer);
     els.drawerMask.addEventListener("click", closeDrawer);
@@ -907,18 +1247,18 @@
     els.logoutBtn.addEventListener("click", () => {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(PASSWORD_STORAGE_KEY);
+      localStorage.removeItem(LOGIN_STORAGE_KEY);
       closeDrawer();
       closeModal();
+      openLoginOverlay();
       showToast("已退出账号");
-      window.setTimeout(() => {
-        window.location.href = "/";
-      }, 800);
     });
 
     const initProfile = readProfile();
     applyProfile(initProfile);
     renderAvatarPresets();
     refreshPasswordState();
+    initPublisherLogin();
   </script>
 </body>
 </html>

@@ -4011,7 +4011,8 @@ function closeAvMode() {
   if (
     !document.getElementById('readerOverlay')?.classList.contains('open') &&
     !document.getElementById('teachModePage')?.classList.contains('open') &&
-    !document.getElementById('avModePage')?.classList.contains('open')
+    !document.getElementById('avModePage')?.classList.contains('open') &&
+    !document.getElementById('taskModePage')?.classList.contains('open')
   ) {
     document.body.style.overflow = '';
   }
@@ -4127,10 +4128,14 @@ function renderAvModeNav() {
           .map((l) => {
             const isDone = done.has(l.id);
             const isSel = l.id === sel;
+            const stateHtml = isDone
+              ? '<span class="av-lesson-state is-done">已完成</span>'
+              : isSel
+                ? '<span class="av-lesson-state is-learning">学习中</span>'
+                : '<span class="av-lesson-state is-placeholder">占位</span>';
             return `<button type="button" class="av-lesson${isSel ? ' is-active' : ''}${isDone ? ' is-done' : ' is-todo'}" onclick="selectAvLesson('${l.id}')">
-              <span class="av-lesson-mark" aria-hidden="true">${isDone ? '✓' : ''}</span>
               <span class="av-lesson-txt">${escAttr(l.title)}</span>
-              ${isSel ? '<span class="av-lesson-meta" aria-label="正在学习"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>' : ''}
+              ${stateHtml}
             </button>`;
           })
           .join('')}
@@ -4202,6 +4207,242 @@ function renderAvModeMain() {
     </div>`;
 }
 
+const TASK_MODE_STORAGE_PREFIX = 'sc_task_done:';
+let taskModeContext = {
+  book: null,
+  projects: [],
+  selectedProjectId: null,
+  selectedTaskId: null,
+};
+
+function taskStorageKey(book) {
+  if (!book) return '';
+  return TASK_MODE_STORAGE_PREFIX + encodeURIComponent(`${book.t || ''}|${book.s || ''}`);
+}
+
+function taskLoadDoneSet(book) {
+  const key = taskStorageKey(book);
+  if (!key) return new Set();
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (_err) {
+    return new Set();
+  }
+}
+
+function taskSaveDoneSet(book, set) {
+  const key = taskStorageKey(book);
+  if (!key) return;
+  localStorage.setItem(key, JSON.stringify(Array.from(set)));
+}
+
+function taskBuildProjectsForBook(book) {
+  const sub = book && book.sub;
+  const toc = sub && TOC[sub] ? TOC[sub] : null;
+  if (toc && toc.length) {
+    return toc.map((u, ui) => ({
+      id: `tp-${ui}`,
+      title: `项目 ${ui + 1} ${u.u}`,
+      tasks: (u.ls || []).map((title, li) => ({
+        id: `tsk-${ui}-${li}`,
+        title,
+        type: li % 2 === 0 ? '习题' : '实训',
+      })),
+    }));
+  }
+  const fallback = avDefaultCurriculum(sub).map((u, ui) => ({
+    id: `tp-f-${ui}`,
+    title: `项目 ${ui + 1} ${u.title}`,
+    tasks: (u.lessons || []).map((l, li) => ({
+      id: `tsk-f-${ui}-${li}`,
+      title: l.title,
+      type: li % 2 === 0 ? '习题' : '实训',
+    })),
+  }));
+  return fallback;
+}
+
+function taskFlatTasks(projects) {
+  const out = [];
+  (projects || []).forEach((p, pi) => {
+    (p.tasks || []).forEach((t, ti) => out.push({ project: p, task: t, pi, ti }));
+  });
+  return out;
+}
+
+function taskFindByTaskId(taskId) {
+  const flat = taskFlatTasks(taskModeContext.projects);
+  return flat.find((x) => x.task.id === taskId) || null;
+}
+
+function taskFindNextTaskId(taskId) {
+  const flat = taskFlatTasks(taskModeContext.projects);
+  const idx = flat.findIndex((x) => x.task.id === taskId);
+  if (idx < 0 || idx >= flat.length - 1) return null;
+  return flat[idx + 1].task.id;
+}
+
+function taskRenderSummary() {
+  const box = document.getElementById('taskModeProgressStats');
+  const currentEl = document.getElementById('taskModeCurrentTask');
+  if (!box || !currentEl) return;
+  const flat = taskFlatTasks(taskModeContext.projects);
+  const total = flat.length;
+  const done = taskLoadDoneSet(taskModeContext.book);
+  const doneCount = flat.reduce((n, x) => n + (done.has(x.task.id) ? 1 : 0), 0);
+  const current = taskFindByTaskId(taskModeContext.selectedTaskId) || flat[0] || null;
+  if (current) {
+    currentEl.textContent = `任务${current.pi + 1}.${current.ti + 1} ${current.task.title}（${current.task.type}）`;
+  } else {
+    currentEl.textContent = '暂无任务';
+  }
+  box.innerHTML = `
+    <div class="task-mode__metric">
+      <small>已完成</small>
+      <strong>${doneCount}</strong>
+    </div>
+    <div class="task-mode__metric">
+      <small>总任务</small>
+      <strong>${total}</strong>
+    </div>`;
+}
+
+function taskRenderProjects() {
+  const root = document.getElementById('taskModeProjects');
+  if (!root) return;
+  root.innerHTML = (taskModeContext.projects || [])
+    .map(
+      (p) => `<button type="button" class="task-mode__project${p.id === taskModeContext.selectedProjectId ? ' is-active' : ''}" onclick="taskSelectProject('${p.id}')">${escAttr(p.title)}</button>`
+    )
+    .join('');
+}
+
+function taskRenderTimeline() {
+  const root = document.getElementById('taskModeTimeline');
+  if (!root) return;
+  const proj =
+    (taskModeContext.projects || []).find((p) => p.id === taskModeContext.selectedProjectId) ||
+    taskModeContext.projects[0];
+  if (!proj) {
+    root.innerHTML = '';
+    return;
+  }
+  const done = taskLoadDoneSet(taskModeContext.book);
+  const pIdx = Math.max(0, taskModeContext.projects.findIndex((p) => p.id === proj.id));
+  root.innerHTML = (proj.tasks || [])
+    .map((t, ti) => {
+      const isDone = done.has(t.id);
+      const isActive = t.id === taskModeContext.selectedTaskId;
+      return `
+      <div class="task-mode__timeline-item${isDone ? ' is-done' : ''}${isActive ? ' is-active' : ''}" onclick="taskSelectItem('${t.id}')">
+        <div class="task-mode__timeline-dot">${ti + 1}</div>
+        <div class="task-mode__timeline-main">
+          <div class="task-mode__timeline-title-row">
+            <div class="task-mode__timeline-title">任务${pIdx + 1}.${ti + 1} ${escAttr(t.title)}</div>
+            <span class="task-mode__timeline-type">${t.type}</span>
+          </div>
+          <div class="task-mode__timeline-sub">${escAttr(proj.title)}</div>
+        </div>
+      </div>`;
+    })
+    .join('');
+}
+
+function taskSelectProject(projectId) {
+  const p = (taskModeContext.projects || []).find((x) => x.id === projectId);
+  if (!p) return;
+  taskModeContext.selectedProjectId = p.id;
+  if (!(p.tasks || []).some((t) => t.id === taskModeContext.selectedTaskId)) {
+    taskModeContext.selectedTaskId = p.tasks && p.tasks[0] ? p.tasks[0].id : null;
+  }
+  taskRenderProjects();
+  taskRenderTimeline();
+  taskRenderSummary();
+}
+
+function taskSelectItem(taskId) {
+  const hit = taskFindByTaskId(taskId);
+  if (!hit) return;
+  taskModeContext.selectedProjectId = hit.project.id;
+  taskModeContext.selectedTaskId = taskId;
+  taskRenderProjects();
+  taskRenderTimeline();
+  taskRenderSummary();
+}
+
+function taskStartTask(taskId) {
+  const hit = taskFindByTaskId(taskId);
+  if (!hit || !taskModeContext.book) return;
+  const done = taskLoadDoneSet(taskModeContext.book);
+  if (!done.has(taskId)) {
+    done.add(taskId);
+    taskSaveDoneSet(taskModeContext.book, done);
+    showProfileToast(`已完成：任务${hit.pi + 1}.${hit.ti + 1}（演示）`);
+  }
+  const nextId = taskFindNextTaskId(taskId);
+  if (nextId) {
+    const next = taskFindByTaskId(nextId);
+    taskModeContext.selectedTaskId = nextId;
+    taskModeContext.selectedProjectId = next ? next.project.id : taskModeContext.selectedProjectId;
+  } else {
+    taskModeContext.selectedTaskId = taskId;
+    taskModeContext.selectedProjectId = hit.project.id;
+  }
+  taskRenderProjects();
+  taskRenderTimeline();
+  taskRenderSummary();
+}
+
+function taskStartCurrent() {
+  if (!taskModeContext.selectedTaskId) return;
+  taskStartTask(taskModeContext.selectedTaskId);
+}
+
+function openTaskMode(book) {
+  if (!book) return;
+  closeReader();
+  closeDetail();
+  const projects = taskBuildProjectsForBook(book);
+  const flat = taskFlatTasks(projects);
+  const done = taskLoadDoneSet(book);
+  const firstTodo = flat.find((x) => !done.has(x.task.id)) || flat[0] || null;
+  taskModeContext = {
+    book,
+    projects,
+    selectedProjectId: firstTodo ? firstTodo.project.id : projects[0]?.id || null,
+    selectedTaskId: firstTodo ? firstTodo.task.id : projects[0]?.tasks?.[0]?.id || null,
+  };
+  const line = document.getElementById('taskModeBookLine');
+  if (line) line.textContent = `${book.t} · ${book.s}`;
+  taskRenderProjects();
+  taskRenderTimeline();
+  taskRenderSummary();
+  const page = document.getElementById('taskModePage');
+  if (page) {
+    page.classList.add('open');
+    page.setAttribute('aria-hidden', 'false');
+  }
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTaskMode() {
+  const page = document.getElementById('taskModePage');
+  if (page) {
+    page.classList.remove('open');
+    page.setAttribute('aria-hidden', 'true');
+  }
+  if (
+    !document.getElementById('readerOverlay')?.classList.contains('open') &&
+    !document.getElementById('teachModePage')?.classList.contains('open') &&
+    !document.getElementById('avModePage')?.classList.contains('open')
+  ) {
+    document.body.style.overflow = '';
+  }
+}
+
 /** 从阅读器进入非「阅读」学习模式时：关闭阅读层并提示（可对接各模式独立路由/站外页，不再在阅读页内切模式） */
 function readerShowLearningModeNavExternal(modeKey, book) {
   if (modeKey === 'teach' && book) {
@@ -4210,6 +4451,10 @@ function readerShowLearningModeNavExternal(modeKey, book) {
   }
   if (modeKey === 'av' && book) {
     openAvMode(book);
+    return;
+  }
+  if (modeKey === 'task' && book) {
+    openTaskMode(book);
     return;
   }
   const labels = { read: '阅读模式', av: '视听模式', task: '任务模式', kg: '知识图谱', teach: '教学模式' };
@@ -4796,7 +5041,8 @@ function closeTeachMode() {
   teachSyncBookPanelUI();
   if (
     !document.getElementById('readerOverlay')?.classList.contains('open') &&
-    !document.getElementById('avModePage')?.classList.contains('open')
+    !document.getElementById('avModePage')?.classList.contains('open') &&
+    !document.getElementById('taskModePage')?.classList.contains('open')
   ) {
     document.body.style.overflow = '';
   }
@@ -5007,6 +5253,7 @@ Object.assign(window, {
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,
   readerQuickMode, teachGo, openTeachMode, closeTeachMode, teachPrevSlide, teachNextSlide,
   closeAvMode, setAvModeTab, selectAvLesson, toggleAvUnit, avOnAvMediaEnded,
+  openTaskMode, closeTaskMode, taskSelectProject, taskSelectItem, taskStartTask, taskStartCurrent,
   teachToggleBookPanel, teachToolFloatToggle, teachToolToggle, teachCountdownStart, teachCountdownStop, teachPenClear, teachPickRun, teachAiSend,
   readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
   readerToggleModePanel, readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,

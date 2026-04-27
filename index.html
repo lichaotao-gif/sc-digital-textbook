@@ -783,6 +783,43 @@
   </div>
 </div>
 
+<!-- 任务模式全屏：左侧项目导航 + 中间时间线任务 -->
+<div class="task-mode-page" id="taskModePage" aria-hidden="true">
+  <header class="task-mode__head">
+    <button type="button" class="task-mode__back" onclick="closeTaskMode()" title="退出任务模式" aria-label="退出任务模式">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      <span>返回</span>
+    </button>
+    <div class="task-mode__brand">
+      <div class="task-mode__kicker"><span class="task-mode__kicker-dot"></span>任务阅读模式</div>
+      <h1 class="task-mode__title" id="taskModeBookLine">教材</h1>
+    </div>
+  </header>
+  <div class="task-mode__body">
+    <div class="task-mode__summary">
+      <div class="task-mode__summary-card task-mode__summary-card--current">
+        <div class="task-mode__summary-title">当前任务</div>
+        <div class="task-mode__summary-main" id="taskModeCurrentTask">—</div>
+        <button type="button" class="task-mode__summary-btn" onclick="taskStartCurrent()">继续学习</button>
+      </div>
+      <div class="task-mode__summary-card task-mode__summary-card--progress">
+        <div class="task-mode__summary-progress" id="taskModeProgressStats">
+          <span>已完成：0</span>
+          <span>总任务：0</span>
+        </div>
+      </div>
+    </div>
+    <div class="task-mode__layout">
+      <aside class="task-mode__projects" aria-label="项目导航">
+        <div class="task-mode__projects-scroll" id="taskModeProjects"></div>
+      </aside>
+      <main class="task-mode__timeline-wrap" aria-label="任务时间线">
+        <div class="task-mode__timeline" id="taskModeTimeline"></div>
+      </main>
+    </div>
+  </div>
+</div>
+
 <!-- Book Picker for Class -->
 <div class="book-picker-overlay" id="bookPickerOverlay">
   <div class="book-picker-bg" onclick="closeBookPicker()"></div>

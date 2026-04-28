@@ -488,6 +488,47 @@
       </aside>
       <main class="reader-main" id="readerMain">
         <article class="reader-article" id="readerArticle"></article>
+        <div class="reader-selection-bar" id="readerSelectionBar" role="menu" aria-label="选中文本操作" hidden>
+          <button type="button" class="reader-selection-bar__btn reader-selection-bar__btn--ai" role="menuitem" onmousedown="event.preventDefault()" onclick="readerSelectionActionAi()">
+            <span class="reader-selection-bar__ico reader-selection-bar__ico--ai" aria-hidden="true">
+              <svg class="reader-selection-bar__ai-svg" width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="readerSelBarAiGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#a855f7"/>
+                    <stop offset="0.45" stop-color="#ec4899"/>
+                    <stop offset="1" stop-color="#f97316"/>
+                  </linearGradient>
+                  <filter id="readerSelBarAiGlow" x="-40%" y="-40%" width="180%" height="180%">
+                    <feGaussianBlur stdDeviation="1.2" result="b"/>
+                    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                </defs>
+                <path fill="url(#readerSelBarAiGrad)" filter="url(#readerSelBarAiGlow)" d="M12 2l1.15 4.05h4.25l-3.45 2.5 1.25 4.05L12 11.85 8.8 12.6l1.25-4.05L6.6 6.05h4.25L12 2z"/>
+                <path fill="url(#readerSelBarAiGrad)" opacity="0.9" d="M19 13.5l.65 2.1h2.15l-1.75 1.25.65 2.1-1.65-1.2-1.65 1.2.65-2.1-1.75-1.25h2.15l.65-2.1z"/>
+                <path fill="url(#readerSelBarAiGrad)" opacity="0.75" d="M4.5 15.5l.45 1.45h1.5l-1.2.85.45 1.45-1.1-.8-1.1.8.45-1.45-1.2-.85h1.5l.45-1.45z"/>
+              </svg>
+            </span>
+            <span class="reader-selection-bar__ai-label">AI 解读</span>
+          </button>
+          <button type="button" class="reader-selection-bar__btn" role="menuitem" onmousedown="event.preventDefault()" onclick="readerSelectionActionHighlight()">
+            <span class="reader-selection-bar__ico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l-6 6v3h3l6-6"/><path d="M15 5l4 4"/><path d="M12 8l5-5a2 2 0 0 1 3 3l-5 5"/><path d="M9 11l3 3"/></svg>
+            </span>
+            <span>高亮</span>
+          </button>
+          <button type="button" class="reader-selection-bar__btn" role="menuitem" onmousedown="event.preventDefault()" onclick="readerSelectionActionNote()">
+            <span class="reader-selection-bar__ico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20l-3.5-3.5H6.5A2.5 2.5 0 0 1 4 16v-12A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </span>
+            <span>笔记</span>
+          </button>
+          <button type="button" class="reader-selection-bar__btn" role="menuitem" onmousedown="event.preventDefault()" onclick="readerSelectionActionCopy()">
+            <span class="reader-selection-bar__ico" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </span>
+            <span>复制</span>
+          </button>
+        </div>
       </main>
       <aside class="reader-toolbar" id="readerToolbar" aria-label="阅读工具栏">
         <div class="reader-tool-slot" id="readerToolMode" style="display:none" hidden>

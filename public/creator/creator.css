@@ -376,6 +376,14 @@ body{
   overflow:hidden;
   transition:var(--transition);
 }
+/* 我的图书：底部「更多操作」下拉需伸出卡片，压过默认 .cr-card 的 overflow:hidden */
+.cr-card.cr-card--book{
+  overflow:visible;
+}
+.cr-book-list .cr-card.cr-card--book:has(.cr-book-more-dropdown:not([hidden])){
+  position:relative;
+  z-index:36;
+}
 .cr-card:hover{
   border-color:var(--silver);
   box-shadow:0 8px 30px rgba(0,0,0,0.06);
@@ -509,51 +517,75 @@ body{
 
 .cr-card-body{padding:14px 20px 18px}
 
-/* 图书操作：默认收起，避免按钮铺满 */
-.cr-actions-details{
-  border:1px solid var(--cloud);
-  border-radius:10px;
-  background:var(--snow);
-  overflow:hidden;
+/* 「更多操作」锚点与下拉（样式对齐阅读端 reader-toolbar-pop / reader-toolbar-pop--mode） */
+.cr-book-more-anchor{
+  position:relative;
+  flex:0 0 auto;
 }
-.cr-actions-details summary{
-  list-style:none;
-  cursor:pointer;
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:12px 14px;
-  font-size:13px;color:var(--ink);
-  user-select:none;
-  transition:background var(--transition);
+.cr-foot-btn--more{
+  border-style:dashed;
+  border-color:var(--mint-mid);
+  color:var(--mint-deep);
 }
-.cr-actions-details summary::-webkit-details-marker{display:none}
-.cr-actions-details summary:hover{background:var(--cloud)}
-.cr-actions-summary-txt{font-weight:600;color:var(--deep)}
-.cr-actions-summary-right{
-  margin-left:auto;display:flex;align-items:center;gap:6px;
+.cr-foot-btn--more[aria-expanded="true"]{
+  background:var(--mint);
+  border-style:solid;
+  border-color:var(--mint-mid);
+  color:var(--mint-deep);
 }
-.cr-actions-summary-hint{font-size:12px;color:var(--stone);font-weight:300}
-.cr-actions-details[open] .cr-actions-summary-hint--closed{display:none}
-.cr-actions-details:not([open]) .cr-actions-summary-hint--open{display:none}
-.cr-actions-chev{
-  width:18px;height:18px;color:var(--stone);flex-shrink:0;
-  transition:transform 0.2s ease;
+.cr-book-more-dropdown{
+  position:absolute;
+  left:50%;
+  top:calc(100% + 8px);
+  transform:translateX(-50%);
+  z-index:40;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:max-content;
+  max-width:min(calc(100vw - 48px),360px);
+  min-width:0;
+  padding:14px 16px 16px;
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbfb 100%);
+  border:1px solid rgba(148,163,184,0.35);
+  border-radius:12px;
+  box-shadow:0 18px 40px rgba(15,23,42,0.2);
+  max-height:min(70vh,420px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
 }
-.cr-actions-details[open] .cr-actions-chev{transform:rotate(180deg)}
-.cr-pill-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(7.5rem,1fr));
+.cr-book-more-dropdown[hidden]{
+  display:none !important;
+}
+/* 列宽=最宽一条标签的自然宽度（inline-flex 收缩包围），子按钮同宽并正文居中 */
+.cr-more-pill-stack{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:stretch;
   gap:8px;
-  padding:12px 14px 14px;
-  border-top:1px solid var(--cloud);
-  background:var(--white);
+  max-width:100%;
+  vertical-align:top;
 }
-@media (min-width:900px){
-  .cr-pill-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.cr-more-pill-stack .pill{
+  align-self:stretch;
+  box-sizing:border-box;
+  justify-content:center;
+  text-align:center;
+  align-items:center;
 }
 .cr-card-foot{
-  display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;
   margin-top:12px;padding-top:14px;
   border-top:1px solid var(--cloud);
+}
+/* 去掉「图书操作」折叠区后，底部按钮区成为 body 唯一子元素：勿再顶一条横线（否则与 .cr-card-head 底边重复） */
+.cr-card-body > .cr-card-foot:first-child{
+  margin-top:0;
+  padding-top:0;
+  border-top:none;
 }
 .cr-foot-btn{
   display:inline-flex;align-items:center;gap:8px;
@@ -931,7 +963,6 @@ textarea.login-input{min-height:96px;resize:vertical;line-height:1.5}
   .topbar-left{flex-wrap:wrap}
   .topbar-sep{display:none}
   .scroll{padding:20px 18px 32px}
-  .cr-pill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cr-card-head{align-items:flex-start}
   .cr-creator-cover.cover{width:96px}
   .cr-avatar-pick-list{grid-template-columns:repeat(4,1fr)}

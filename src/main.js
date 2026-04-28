@@ -124,7 +124,7 @@ const books=[
 ];
 
 const myB=[
-  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',pr:78,paperDigital:true,editor:'赵明 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats'],introVideoEmbed:'https://www.youtube.com/embed/jNQXAC9IVRw'},
+  {t:'人工智能导论',s:'通识与伦理',g:'中职 二年级',p:'高等教育出版社',tp:'o',sub:'人工智能',cat:'人工智能',pr:78,paperDigital:true,editor:'赵明 等',actionKeys:['read','cloudHandout','teach','task','questionBank','internship','resourceLib','learnStats','myDemo1','myDemo2','myDemo3','myDemo4','myDemo5','myDemo6'],introVideoEmbed:'https://www.youtube.com/embed/jNQXAC9IVRw'},
   {t:'Python程序设计',s:'入门篇',g:'中职 一年级',p:'人民邮电出版社',tp:'o',sub:'Python',cat:'程序与开发',pr:45,editor:'李可 等',introVideoUrl:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'},
   {t:'计算机网络技术',s:'基础与互联',g:'中职 一年级',p:'电子工业出版社',tp:'o',sub:'计算机网络',cat:'网络与运维',pr:92,paperDigital:true,actionKeys:['read','task','questionBank','learnStats']},
   {t:'数据结构与算法',s:'C语言版',g:'中职 二年级',p:'清华大学出版社',tp:'o',sub:'算法与结构',cat:'程序与开发',pr:30,editor:'王硕 等',actionKeys:['read','resourceLib']},
@@ -2069,6 +2069,13 @@ const BOOK_MY_ACTIONS = [
   { key: 'internship', label: '岗位实习' },
   { key: 'resourceLib', label: '资源库' },
   { key: 'learnStats', label: '学习统计' },
+  /* 书架「更多」溢出演示用（仅示例数据） */
+  { key: 'myDemo1', label: '测试①' },
+  { key: 'myDemo2', label: '测试②' },
+  { key: 'myDemo3', label: '测试③' },
+  { key: 'myDemo4', label: '测试④' },
+  { key: 'myDemo5', label: '测试⑤' },
+  { key: 'myDemo6', label: '测试⑥' },
 ];
 
 function resolveBookActionEntries(b) {
@@ -2107,6 +2114,145 @@ function mkMyActionRow(b, i) {
       (a) =>
         `<button type="button" class="card-action" onclick="event.stopPropagation();bookShortcut(${i},'${a.key}')">${a.label}</button>`
     ).join('')}
+    </div>
+  </div>`;
+}
+
+/** 我的书架专用操作区：支持两行高度超出时收入「更多」下拉 */
+function mkMyShelfActionsRow(b, i) {
+  const entries = resolveBookActionEntries(b);
+  if (!entries.length) return '';
+  const btns = entries
+    .map(
+      (a) =>
+        `<button type="button" class="card-action" onclick="event.stopPropagation();bookShortcut(${i},'${a.key}');closeAllMineShelfMore()">${a.label}</button>`
+    )
+    .join('');
+  return `<div class="card-actions mine-shelf-actions" data-book-idx="${i}" onclick="event.stopPropagation()">
+    <div class="mine-shelf-actions-inner card-actions-scroll" role="toolbar" aria-label="教材功能">
+      ${btns}
+      <div class="mine-shelf-more-anchor">
+        <button type="button" class="card-action mine-shelf-more-btn" hidden aria-expanded="false" aria-haspopup="true" onclick="event.stopPropagation();toggleMineShelfMore(${i})">更多操作...</button>
+        <div class="mine-shelf-more-dropdown" id="mineShelfMore_${i}" hidden role="menu" onclick="event.stopPropagation()"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function closeAllMineShelfMore() {
+  document.querySelectorAll('.mine-shelf-more-dropdown').forEach((dd) => {
+    dd.hidden = true;
+  });
+  document.querySelectorAll('.mine-shelf-more-btn').forEach((btn) => {
+    btn.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function toggleMineShelfMore(bookIdx) {
+  const idx = Number(bookIdx);
+  const wrap = document.querySelector(`.mine-shelf-actions[data-book-idx="${idx}"]`);
+  if (!wrap) return;
+  mineShelfReflowOne(wrap);
+  const dd = document.getElementById(`mineShelfMore_${idx}`);
+  const btn = wrap.querySelector('.mine-shelf-more-btn');
+  if (!dd || !btn || !dd.children.length) return;
+  const willOpen = dd.hidden;
+  closeAllMineShelfMore();
+  if (willOpen) {
+    dd.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+/** 单卡：最多两行按钮高度，超出移入下拉，「更多」占位 */
+function mineShelfReflowOne(container) {
+  const inner = container.querySelector('.mine-shelf-actions-inner');
+  const anchor = container.querySelector('.mine-shelf-more-anchor');
+  const moreBtn = container.querySelector('.mine-shelf-more-btn');
+  const dropdown = container.querySelector('.mine-shelf-more-dropdown');
+  if (!inner || !anchor || !moreBtn || !dropdown) return;
+
+  while (dropdown.firstChild) {
+    inner.insertBefore(dropdown.firstChild, anchor);
+  }
+  moreBtn.hidden = true;
+  moreBtn.setAttribute('aria-expanded', 'false');
+  dropdown.hidden = true;
+
+  /** 仅统计工具条直接子级里的功能按钮（「更多」在 anchor 内，不会命中） */
+  const regular = () => [...inner.querySelectorAll(':scope > .card-action')];
+  if (!regular().length) return;
+
+  const maxScroll = () => {
+    const r = regular();
+    if (!r.length) return 9999;
+    const h = r[0].offsetHeight || 28;
+    return 2 * h + 6;
+  };
+
+  const trimToTwoRows = () => {
+    let guard = 48;
+    while (guard-- > 0 && inner.scrollHeight > maxScroll() + 1 && regular().length > 1) {
+      const vis = regular();
+      dropdown.insertBefore(vis[vis.length - 1], dropdown.firstChild);
+    }
+  };
+
+  trimToTwoRows();
+
+  if (dropdown.children.length) {
+    moreBtn.hidden = false;
+    trimToTwoRows();
+  }
+}
+
+function mineShelfReflowAll() {
+  document.querySelectorAll('.mine-shelf-actions').forEach((el) => mineShelfReflowOne(el));
+}
+
+let _mineShelfUiBound = false;
+function bindMineShelfUiEvents() {
+  if (_mineShelfUiBound) return;
+  _mineShelfUiBound = true;
+  let t;
+  window.addEventListener('resize', () => {
+    clearTimeout(t);
+    t = setTimeout(() => mineShelfReflowAll(), 120);
+  });
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.mine-shelf-actions')) return;
+    closeAllMineShelfMore();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllMineShelfMore();
+  });
+}
+
+/** 我的书架：左封面 + 右信息与操作（每行两本栅格由 CSS grid--my-books 控制） */
+function mkMyShelfCard(b, i) {
+  const [c1, c2] = c(b.sub);
+  const pc =
+    (b.pr || 0) >= 80 ? 'var(--mint-deep)' : (b.pr || 0) >= 40 ? 'var(--peach-deep)' : 'var(--rose-deep)';
+  const st = `<div class="card-st st-ok mine-shelf-badge" title="已在书架"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+  const pg = `<div class="prog mine-shelf-prog"><div class="prog-track"><div class="prog-fill" style="width:${b.pr}%;background:${pc}"></div></div><span class="prog-pct">${b.pr}%</span></div>`;
+  const pdTag = isPaperDigital(b) ? `<span class="tag tag-pd">纸数融合</span>` : '';
+  const actions = mkMyShelfActionsRow(b, i);
+  const coverInner = `<div class="mine-shelf-cover-inner cover-inner" style="background:linear-gradient(145deg,${c1},${c2})"><span class="cover-grade">${b.g}</span><div class="cover-name">${b.t}</div><div class="cover-sub">${b.s}</div></div>`;
+  const open = `onclick="openDetail(${i},'my')"`;
+  return `<div class="card card--mine card--mine-shelf" style="animation-delay:${i * 0.04}s">
+    ${st}
+    <div class="mine-shelf-row">
+      <div class="mine-shelf-cover-wrap">
+        <div class="mine-shelf-cover cover cover--open" ${open} title="打开教材详情">${coverInner}</div>
+      </div>
+      <div class="mine-shelf-body">
+        <div class="mine-shelf-main" ${open}>
+          <div class="mine-shelf-title">${b.t} · ${b.s}</div>
+          <div class="mine-shelf-meta"><span class="detail-pub">${b.p}</span>${pdTag}</div>
+          ${pg}
+        </div>
+        ${actions}
+      </div>
     </div>
   </div>`;
 }
@@ -2245,7 +2391,7 @@ function renderMy(){
       </div>
     </div>
     <div class="sec-head"><div class="sec-title"><span class="dot"></span>我的书架</div><div class="sec-extra">管理教材 →</div></div>
-    <div class="grid grid--my-books">${myB.map((b,i)=>mkCard(b,i,true)).join('')}</div>
+    <div class="grid grid--my-books">${myB.map((b, i) => mkMyShelfCard(b, i)).join('')}</div>
     <div class="class-section">
       <div class="sec-head">
         <div class="sec-title"><span class="dot"></span>我的组群</div>
@@ -2264,6 +2410,11 @@ function renderMy(){
         </div>
       </div>
     </div>`;
+  bindMineShelfUiEvents();
+  requestAnimationFrame(() => {
+    mineShelfReflowAll();
+    requestAnimationFrame(() => mineShelfReflowAll());
+  });
 }
 
 function go(p){
@@ -2359,6 +2510,22 @@ const READER_OUTLINE = [
     ],
   },
 ];
+
+/** 目录角标：须与 buildReaderArticleHtml 各 cid 是否含实训 / 交互案例保持一致 */
+const READER_CID_FEATURES = {
+  r5: { lab: true },
+  r6: { icase: true },
+};
+
+function readerTocFeatureBadgesHtml(cid) {
+  const f = READER_CID_FEATURES[cid];
+  if (!f) return '';
+  const chips = [];
+  if (f.lab) chips.push('<span class="reader-toc-badge reader-toc-badge--lab" title="本页含在线实训">实训</span>');
+  if (f.icase) chips.push('<span class="reader-toc-badge reader-toc-badge--icase" title="本页含交互案例">案例</span>');
+  if (!chips.length) return '';
+  return `<span class="reader-toc-badges" aria-hidden="true">${chips.join('')}</span>`;
+}
 
 /** 阅读页嵌入「测试/练习」演示题库（可对接 CMS） */
 const READER_DEMO_QUIZ = {
@@ -3204,7 +3371,9 @@ function renderReaderTocNodes(nodes, depth, goFnName) {
     .map((node) => {
       if (node.cid) {
         const st = escAttr(node.title);
-        return `<div class="reader-toc-leaf" data-cid="${node.cid}" data-search="${st}" onclick="${go}('${node.cid}')">${node.title}</div>`;
+        const label = escAttr(node.title);
+        const badges = readerTocFeatureBadgesHtml(node.cid);
+        return `<div class="reader-toc-leaf" data-cid="${node.cid}" data-search="${st}" onclick="${go}('${node.cid}')"><span class="reader-toc-leaf-label">${label}</span>${badges}</div>`;
       }
       return `<div class="reader-toc-group open" data-depth="${depth}">
       <button type="button" class="reader-toc-head" onclick="readerToggleTocGroup(this)">
@@ -3222,7 +3391,225 @@ function readerToggleTocGroup(btn) {
   if (g) g.classList.toggle('open');
 }
 
+let _readerSelectionUiBound = false;
+let _readerSelectionHideTimer = null;
+
+function readerSelectionNodeInToolbar(node) {
+  return !!(node && node.nodeType === 1 && (node.id === 'readerSelectionBar' || node.closest('#readerSelectionBar')));
+}
+
+function readerSelectionIsEditableNode(node) {
+  let n = node;
+  while (n) {
+    if (n.nodeType === 1) {
+      const el = n;
+      const tag = el.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || tag === 'BUTTON') return true;
+      if (el.isContentEditable) return true;
+    }
+    n = n.parentNode;
+  }
+  return false;
+}
+
+function readerHideSelectionToolbar(clearSel) {
+  const bar = document.getElementById('readerSelectionBar');
+  if (bar) {
+    bar.hidden = true;
+    bar.removeAttribute('aria-hidden');
+  }
+  if (_readerSelectionHideTimer) {
+    clearTimeout(_readerSelectionHideTimer);
+    _readerSelectionHideTimer = null;
+  }
+  if (clearSel) {
+    const sel = window.getSelection && window.getSelection();
+    if (sel && sel.rangeCount) sel.removeAllRanges();
+  }
+}
+
+function readerPositionSelectionBar(sel, main, bar) {
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0).cloneRange();
+  const rects = range.getClientRects();
+  let r = rects.length ? rects[rects.length - 1] : range.getBoundingClientRect();
+  if (!r || (r.width === 0 && r.height === 0)) {
+    r = range.getBoundingClientRect();
+  }
+  const mw = main.clientWidth;
+  const mh = main.clientHeight;
+  const bw = bar.offsetWidth || 140;
+  const bh = bar.offsetHeight || 120;
+  const pad = 8;
+  let left = r.right - main.getBoundingClientRect().left + 6;
+  let top = r.top - main.getBoundingClientRect().top - 4;
+  if (left + bw + pad > mw) left = Math.max(pad, r.left - main.getBoundingClientRect().left - bw - 6);
+  if (top + bh + pad > mh) top = Math.max(pad, mh - bh - pad);
+  if (top < pad) top = pad;
+  bar.style.left = `${Math.round(left)}px`;
+  bar.style.top = `${Math.round(top)}px`;
+}
+
+function readerSyncSelectionBar() {
+  const ov = document.getElementById('readerOverlay');
+  if (!ov || !ov.classList.contains('open')) {
+    readerHideSelectionToolbar(false);
+    return;
+  }
+  const main = document.getElementById('readerMain');
+  const article = document.getElementById('readerArticle');
+  const bar = document.getElementById('readerSelectionBar');
+  if (!main || !article || !bar) return;
+  const sel = window.getSelection && window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) {
+    readerHideSelectionToolbar(false);
+    return;
+  }
+  const range = sel.getRangeAt(0);
+  if (!article.contains(range.commonAncestorContainer)) {
+    readerHideSelectionToolbar(false);
+    return;
+  }
+  if (readerSelectionIsEditableNode(range.commonAncestorContainer)) {
+    readerHideSelectionToolbar(false);
+    return;
+  }
+  const t = (sel.toString() || '').trim();
+  if (!t) {
+    readerHideSelectionToolbar(false);
+    return;
+  }
+  bar.hidden = false;
+  bar.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => readerPositionSelectionBar(sel, main, bar));
+}
+
+function readerBindSelectionToolbarOnce() {
+  if (_readerSelectionUiBound) return;
+  _readerSelectionUiBound = true;
+  document.addEventListener(
+    'mouseup',
+    (e) => {
+      const ov = document.getElementById('readerOverlay');
+      if (!ov || !ov.classList.contains('open')) return;
+      if (readerSelectionNodeInToolbar(e.target)) return;
+      const main = document.getElementById('readerMain');
+      if (!main || !main.contains(e.target)) return;
+      window.setTimeout(readerSyncSelectionBar, 0);
+    },
+    true
+  );
+  document.addEventListener('selectionchange', () => {
+    const ov = document.getElementById('readerOverlay');
+    if (!ov || !ov.classList.contains('open')) return;
+    if (_readerSelectionHideTimer) clearTimeout(_readerSelectionHideTimer);
+    _readerSelectionHideTimer = window.setTimeout(readerSyncSelectionBar, 40);
+  });
+  document.addEventListener(
+    'mousedown',
+    (e) => {
+      const bar = document.getElementById('readerSelectionBar');
+      if (!bar || bar.hidden) return;
+      if (readerSelectionNodeInToolbar(e.target)) return;
+      readerHideSelectionToolbar(false);
+    },
+    true
+  );
+  document.getElementById('readerMain')?.addEventListener(
+    'scroll',
+    () => {
+      const bar = document.getElementById('readerSelectionBar');
+      if (bar && !bar.hidden) readerHideSelectionToolbar(false);
+    },
+    { passive: true }
+  );
+}
+
+function readerWrapRangeHighlight(range) {
+  const span = document.createElement('span');
+  span.className = 'reader-text-hl';
+  try {
+    range.surroundContents(span);
+  } catch (_) {
+    const contents = range.extractContents();
+    if (!contents.textContent || !String(contents.textContent).trim()) {
+      return false;
+    }
+    span.appendChild(contents);
+    range.insertNode(span);
+  }
+  return true;
+}
+
+function readerSelectionActionHighlight() {
+  const article = document.getElementById('readerArticle');
+  if (!article) return;
+  const sel = window.getSelection && window.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  if (!article.contains(range.commonAncestorContainer)) return;
+  const t = (sel.toString() || '').trim();
+  if (!t) return;
+  if (range.commonAncestorContainer.nodeType === 1 && range.commonAncestorContainer.closest('.reader-text-hl')) {
+    showProfileToast('已在高亮内');
+    readerHideSelectionToolbar(true);
+    return;
+  }
+  const ok = readerWrapRangeHighlight(range);
+  readerHideSelectionToolbar(true);
+  showProfileToast(ok ? '已高亮选中文本（演示）' : '无法高亮该选区');
+}
+
+function readerSelectionActionCopy() {
+  const sel = window.getSelection && window.getSelection();
+  const t = sel ? String(sel.toString() || '').trim() : '';
+  readerHideSelectionToolbar(true);
+  if (!t) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(
+      () => showProfileToast('复制成功'),
+      () => showProfileToast('复制失败，请手动复制')
+    );
+  } else {
+    showProfileToast('浏览器不支持自动复制');
+  }
+}
+
+function readerSelectionActionNote() {
+  const sel = window.getSelection && window.getSelection();
+  const t = sel ? String(sel.toString() || '').trim() : '';
+  readerHideSelectionToolbar(true);
+  if (!t) return;
+  readerCloseToolSlots();
+  const ov = document.getElementById('readerOverlay');
+  if (ov && !ov.classList.contains('notes-open')) readerToggleNotes();
+  const ta = document.getElementById('readerNotesTextarea');
+  if (ta) {
+    const prefix = `「${t.slice(0, 400)}${t.length > 400 ? '…' : ''}」\n\n`;
+    ta.value = prefix + (ta.value || '');
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }
+}
+
+function readerSelectionActionAi() {
+  const sel = window.getSelection && window.getSelection();
+  const t = sel ? String(sel.toString() || '').trim() : '';
+  readerHideSelectionToolbar(true);
+  if (!t) return;
+  readerCloseToolSlots();
+  const ov = document.getElementById('readerOverlay');
+  if (ov && !ov.classList.contains('ai-open')) readerToggleAi();
+  const inp = document.getElementById('readerAiInput');
+  if (inp) {
+    const q = `请结合本课上下文解读：${t.slice(0, 600)}${t.length > 600 ? '…' : ''}`;
+    inp.value = q;
+    inp.focus();
+  }
+}
+
 function readerGo(cid, opts) {
+  readerHideSelectionToolbar(false);
   readerContext.currentCid = cid;
   document.querySelectorAll('#readerTocTree .reader-toc-leaf').forEach((el) => {
     el.classList.toggle('is-active', el.dataset.cid === cid);
@@ -4481,6 +4868,8 @@ function openReader(bookIdx, source) {
   const list = source === 'my' ? myB : books;
   const b = list[bookIdx];
   if (!b) return;
+  readerBindSelectionToolbarOnce();
+  readerHideSelectionToolbar(false);
   readerCloseQuizModal();
   readerActiveQuizSlot = 'a';
   readerContext = { bookIdx, source, b, currentCid: null };
@@ -4527,6 +4916,7 @@ function openReader(bookIdx, source) {
 }
 
 function closeReader() {
+  readerHideSelectionToolbar(true);
   readerCloseICase();
   readerCloseLab();
   readerCloseQuizModal();
@@ -5092,6 +5482,7 @@ function readerQuickMode(k) {
 
 function readerToggleAi() {
   readerCloseToolSlots();
+  readerHideSelectionToolbar(false);
   const ov = document.getElementById('readerOverlay');
   if (!ov) return;
   ov.classList.toggle('ai-open');
@@ -5121,6 +5512,7 @@ function readerSendAi() {
 
 function readerToggleNotes() {
   readerCloseToolSlots();
+  readerHideSelectionToolbar(false);
   const ov = document.getElementById('readerOverlay');
   if (!ov) return;
   ov.classList.toggle('notes-open');
@@ -5211,6 +5603,7 @@ function readerCloseToolSlots() {
 
 function readerClosePopovers() {
   readerCloseToolSlots();
+  readerHideSelectionToolbar(false);
 }
 
 function readerApplyFontSize(px, silent) {
@@ -5247,6 +5640,7 @@ Object.assign(window, {
   addBookToClass, removeClassBook, setGradeFilter, setSubjectFilter,
   openSchoolModal, closeSchoolModal, confirmSchoolBind, clearSchoolBind,
   bookShortcut,
+  toggleMineShelfMore, closeAllMineShelfMore,
   openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, readerGo, readerToggleTocGroup,
   readerOpenQuizModal, readerCloseQuizModal, readerSubmitQuizModal, readerQuizPickChoice, readerQuizPickTf,
   readerOpenLab, readerCloseLab, readerOpenICase, readerCloseICase,
@@ -5256,6 +5650,7 @@ Object.assign(window, {
   openTaskMode, closeTaskMode, taskSelectProject, taskSelectItem, taskStartTask, taskStartCurrent,
   teachToggleBookPanel, teachToolFloatToggle, teachToolToggle, teachCountdownStart, teachCountdownStop, teachPenClear, teachPickRun, teachAiSend,
   readerToggleAi, readerSendAi, readerToggleNotes, readerSaveNote, readerToggleSearch, readerOnSearchInput,
+  readerSelectionActionAi, readerSelectionActionHighlight, readerSelectionActionNote, readerSelectionActionCopy,
   readerToggleModePanel, readerToggleDisplayPanel, readerClosePopovers, readerCloseToolSlots, readerApplyFontSize, readerSetBg, readerToggleTocCollapse,
   renderSettings, handleSettingsAvatar, openPhoneModal, closePhoneModal, sendPhoneChangeCode, confirmPhoneChange,
   openPasswordModal, closePasswordModal, confirmPasswordChange, logoutAccount,

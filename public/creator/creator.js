@@ -4,7 +4,6 @@
   const ICON_INVITE =
     '<svg class="cr-foot-btn__ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>';
   const BOOK_ACTIONS = [
-    { key: 'content', label: '内容编写' },
     { key: 'smartLecture', label: '智能云讲义' },
     { key: 'task', label: '任务模式创建' },
     { key: 'av', label: '视听内容' },
@@ -735,12 +734,48 @@
     window.location.href = 'write/index.html?book=' + encodeURIComponent(book.id);
   }
 
+  function closeAllCreatorBookMore() {
+    document.querySelectorAll('.cr-book-more-dropdown').forEach(function (dd) {
+      dd.hidden = true;
+    });
+    document.querySelectorAll('[data-cr-more-toggle]').forEach(function (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function toggleCreatorBookMore(bookId) {
+    var sid = String(bookId || '');
+    var dd = document.getElementById('crBookMore_' + sid);
+    if (!dd) return;
+    var anchor = dd.parentElement;
+    var btn = anchor && anchor.querySelector('[data-cr-more-toggle]');
+    if (!btn) return;
+    var willOpen = dd.hidden;
+    closeAllCreatorBookMore();
+    if (willOpen) {
+      dd.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  var creatorBookMoreUiBound = false;
+  function bindCreatorBookMoreUiOnce() {
+    if (creatorBookMoreUiBound) return;
+    creatorBookMoreUiBound = true;
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.cr-book-more-anchor')) return;
+      closeAllCreatorBookMore();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeAllCreatorBookMore();
+    });
+  }
+
   function renderBooks() {
     var root = document.getElementById('creatorBookList');
     if (!root) return;
 
-    var chevSvg =
-      '<svg class="cr-actions-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+    bindCreatorBookMoreUiOnce();
 
     root.innerHTML = books
       .map(function (b) {
@@ -764,7 +799,7 @@
         }).join('');
 
         return (
-          '<article class="cr-card" data-book-id="' +
+          '<article class="cr-card cr-card--book" data-book-id="' +
           b.id +
           '">' +
           '<div class="cr-card-head">' +
@@ -783,33 +818,51 @@
           '</div>' +
           '</div></div>' +
           '<div class="cr-card-body">' +
-          '<details class="cr-actions-details">' +
-          '<summary>' +
-          '<span class="cr-actions-summary-txt">图书操作</span>' +
-          '<div class="cr-actions-summary-right">' +
-          '<span class="cr-actions-summary-hint cr-actions-summary-hint--closed">点击展开</span>' +
-          '<span class="cr-actions-summary-hint cr-actions-summary-hint--open">点击收起</span>' +
-          chevSvg +
-          '</div></summary>' +
-          '<div class="cr-pill-grid">' +
-          pills +
-          '</div>' +
-          '</details>' +
           '<div class="cr-card-foot">' +
           '<button type="button" class="cr-foot-btn" data-edit="' +
           b.id +
           '">' +
           ICON_EDIT +
-          '<span class="cr-foot-btn__txt">编辑图书</span></button>' +
+          '<span class="cr-foot-btn__txt">撰写图书</span></button>' +
           '<button type="button" class="cr-foot-btn" data-invite="' +
           b.id +
           '">' +
           ICON_INVITE +
           '<span class="cr-foot-btn__txt">邀请作者</span></button>' +
+          '<div class="cr-book-more-anchor">' +
+          '<button type="button" class="cr-foot-btn cr-foot-btn--more" data-cr-more-toggle data-book-id="' +
+          escapeAttr(b.id) +
+          '" aria-expanded="false" aria-haspopup="true">' +
+          '<span class="cr-foot-btn__txt">更多操作...</span></button>' +
+          '<div class="cr-book-more-dropdown" id="crBookMore_' +
+          b.id +
+          '" hidden role="menu">' +
+          '<div class="cr-more-pill-stack">' +
+          pills +
+          '</div>' +
+          '</div>' +
+          '</div>' +
           '</div></div></article>'
         );
       })
       .join('');
+
+    root.querySelectorAll('[data-cr-more-toggle]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleCreatorBookMore(btn.getAttribute('data-book-id'));
+      });
+    });
+    root.querySelectorAll('.cr-book-more-dropdown').forEach(function (dd) {
+      dd.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    });
+    root.querySelectorAll('.cr-book-more-dropdown .pill').forEach(function (p) {
+      p.addEventListener('click', function () {
+        closeAllCreatorBookMore();
+      });
+    });
 
     root.querySelectorAll('[data-act]').forEach(function (btn) {
       btn.addEventListener('click', function () {

@@ -797,6 +797,8 @@ function completeLoginSession(phone, nickname, welcomeToast) {
   applyAuthShell();
   renderLib();
   go('library');
+  tryOpenPendingBookDetail();
+  tryOpenPendingReader();
   showProfileToast(
     welcomeToast || `欢迎回来，${nickname || '用户'}`
   );
@@ -2429,12 +2431,15 @@ function go(p){
   else if(p==='settings'){t.textContent='设置';h.textContent='账号与个人信息';renderSettings()}
 }
 
+consumeExternalBookQuery();
 if (import.meta.env.DEV && !localStorage.getItem(PROFILE_STORAGE_KEY)) {
   saveUserProfile({});
 }
 applyAuthShell();
 if (getUserProfile()) {
   renderLib();
+  tryOpenPendingBookDetail();
+  tryOpenPendingReader();
 }
 syncSidebarUser();
 
@@ -4864,6 +4869,82 @@ function readerModePillIconHtml(modeKey) {
   return ic[modeKey] || '';
 }
 
+/** 外链：?bookDetail= / ?bookDetailMy= → 教材详情页（与用户端点击书目卡片一致）；?readerLib= → 直达阅读器（可选） */
+function consumeExternalBookQuery() {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    const lib = q.get('readerLib');
+    const my = q.get('readerMy');
+    const bdLib = q.get('bookDetail');
+    const bdMy = q.get('bookDetailMy');
+    let any = false;
+    if (lib !== null && lib !== '') {
+      sessionStorage.setItem('pendingReaderLib', lib);
+      any = true;
+    }
+    if (my !== null && my !== '') {
+      sessionStorage.setItem('pendingReaderMy', my);
+      any = true;
+    }
+    if (bdLib !== null && bdLib !== '') {
+      sessionStorage.setItem('pendingBookDetailLib', bdLib);
+      any = true;
+    }
+    if (bdMy !== null && bdMy !== '') {
+      sessionStorage.setItem('pendingBookDetailMy', bdMy);
+      any = true;
+    }
+    if (any) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('readerLib');
+      url.searchParams.delete('readerMy');
+      url.searchParams.delete('bookDetail');
+      url.searchParams.delete('bookDetailMy');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    }
+  } catch (_) {}
+}
+
+function tryOpenPendingBookDetail() {
+  if (!getUserProfile()) return;
+  const dLib = sessionStorage.getItem('pendingBookDetailLib');
+  const dMy = sessionStorage.getItem('pendingBookDetailMy');
+  if (dLib !== null) {
+    sessionStorage.removeItem('pendingBookDetailLib');
+    const idx = parseInt(dLib, 10);
+    if (!Number.isNaN(idx) && idx >= 0 && idx < books.length) {
+      go('library');
+      openDetail(idx, 'lib');
+    }
+    return;
+  }
+  if (dMy !== null) {
+    sessionStorage.removeItem('pendingBookDetailMy');
+    const idx = parseInt(dMy, 10);
+    if (!Number.isNaN(idx) && idx >= 0 && idx < myB.length) {
+      go('my');
+      openDetail(idx, 'my');
+    }
+  }
+}
+
+function tryOpenPendingReader() {
+  if (!getUserProfile()) return;
+  const lib = sessionStorage.getItem('pendingReaderLib');
+  const my = sessionStorage.getItem('pendingReaderMy');
+  if (lib !== null) {
+    sessionStorage.removeItem('pendingReaderLib');
+    const idx = parseInt(lib, 10);
+    if (!Number.isNaN(idx) && idx >= 0 && idx < books.length) openReader(idx, 'lib');
+    return;
+  }
+  if (my !== null) {
+    sessionStorage.removeItem('pendingReaderMy');
+    const idx = parseInt(my, 10);
+    if (!Number.isNaN(idx) && idx >= 0 && idx < myB.length) openReader(idx, 'my');
+  }
+}
+
 function openReader(bookIdx, source) {
   const list = source === 'my' ? myB : books;
   const b = list[bookIdx];
@@ -5641,7 +5722,7 @@ Object.assign(window, {
   openSchoolModal, closeSchoolModal, confirmSchoolBind, clearSchoolBind,
   bookShortcut,
   toggleMineShelfMore, closeAllMineShelfMore,
-  openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, readerGo, readerToggleTocGroup,
+  openReader, closeReader, openReaderFromDetail, openReaderFromDetailMode, tryOpenPendingBookDetail, tryOpenPendingReader, readerGo, readerToggleTocGroup,
   readerOpenQuizModal, readerCloseQuizModal, readerSubmitQuizModal, readerQuizPickChoice, readerQuizPickTf,
   readerOpenLab, readerCloseLab, readerOpenICase, readerCloseICase,
   readerQuizGoNext, readerQuizGoPrev, readerQuizJumpToStep, readerQuizOnInputChanged, readerOpenSavedReport,

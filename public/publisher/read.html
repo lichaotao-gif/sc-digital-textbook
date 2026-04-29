@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>阅读界面 · 出版社端</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --white: #ffffff;
+      --snow: #f9fafb;
+      --cloud: #f3f4f6;
+      --mist: #e5e7eb;
+      --stone: #9ca3af;
+      --ink: #374151;
+      --deep: #1f2937;
+      --mint: #d2f0e2;
+      --mint-deep: #3a9e78;
+      --sky-deep: #3d80b8;
+      --radius: 14px;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: "Noto Sans SC", "PingFang SC", system-ui, -apple-system, sans-serif;
+      background: linear-gradient(165deg, #ecfdf5 0%, #f9fafb 34%, #eff6ff 100%);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      line-height: 1.6;
+    }
+    .pub-read-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--white);
+      border: 1px solid var(--mist);
+      border-radius: var(--radius);
+      padding: 28px 26px 24px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+      text-align: center;
+    }
+    .pub-read-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--mint-deep);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .pub-read-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--deep);
+      margin-bottom: 10px;
+    }
+    .pub-read-desc {
+      font-size: 14px;
+      color: var(--stone);
+      margin-bottom: 22px;
+    }
+    .pub-read-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--mist);
+      background: var(--white);
+      color: var(--sky-deep);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .pub-read-back:hover {
+      background: var(--snow);
+      border-color: var(--cloud);
+    }
+  </style>
+</head>
+<body>
+  <main class="pub-read-card" role="main">
+    <div class="pub-read-badge" aria-hidden="true">演示占位</div>
+    <h1 class="pub-read-title">阅读界面</h1>
+    <p class="pub-read-desc">当前页面为阅读界面占位；后续可替换为正式阅读端或与数字教材阅读器对接。</p>
+    <a class="pub-read-back" href="index.html">返回出版社端</a>
+  </main>
+</body>
+</html>

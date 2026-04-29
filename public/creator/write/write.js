@@ -42,6 +42,60 @@
     h.textContent = title || (id ? '教材编写' : '撰写图书');
   }
 
+  function syncAuditBadges() {
+    var list = document.getElementById('writeAuditList');
+    var tabBadge = document.getElementById('writeAuditTabBadge');
+    var railBadge = document.getElementById('writeRailAuditBadge');
+    var n = list ? list.querySelectorAll('.cr-write-audit-item').length : 0;
+    var label = n > 0 ? n + '条' : '';
+    if (tabBadge) {
+      tabBadge.textContent = label;
+      tabBadge.hidden = n === 0;
+    }
+    if (railBadge) {
+      railBadge.textContent = label;
+      railBadge.hidden = n === 0;
+      if (n > 0) {
+        railBadge.setAttribute('aria-label', n + ' 条审核记录');
+      } else {
+        railBadge.removeAttribute('aria-label');
+      }
+    }
+  }
+  syncAuditBadges();
+
+  var auditBody = document.getElementById('writeRailAudit');
+  var verBody = document.getElementById('writeRailVersion');
+  if (verBody) {
+    verBody.addEventListener('click', function (e) {
+      if (e.target.closest('.cr-write-version-open')) {
+        toast('打开历史版本（演示）');
+      }
+    });
+  }
+
+  if (auditBody) {
+    auditBody.addEventListener('click', function (e) {
+      var expand = e.target.closest('.cr-write-audit-expand-btn');
+      if (expand) {
+        var panelId = expand.getAttribute('aria-controls');
+        var panel = panelId ? document.getElementById(panelId) : null;
+        if (!panel) return;
+        var open = panel.hidden;
+        panel.hidden = !open;
+        expand.setAttribute('aria-expanded', open ? 'true' : 'false');
+        return;
+      }
+      if (e.target.closest('.cr-write-audit-link')) {
+        toast('留言（演示，可对接评论服务）');
+        return;
+      }
+      if (e.target.closest('.cr-write-audit-send')) {
+        toast('已发送（演示，未写入服务器）');
+      }
+    });
+  }
+
   var rail = document.getElementById('writeRailAside');
   var railToggle = document.getElementById('writeRailToggle');
   function syncRailToggleUi() {
@@ -50,7 +104,7 @@
     railToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     railToggle.setAttribute(
       'title',
-      collapsed ? '展开侧栏（审核意见 / 版本记录）' : '收起侧栏'
+      collapsed ? '展开侧栏（审核记录 / 版本记录）' : '收起侧栏'
     );
     var panel = document.getElementById('writeRailPanel');
     if (panel) panel.setAttribute('aria-hidden', collapsed ? 'true' : 'false');

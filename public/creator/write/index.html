@@ -54,15 +54,19 @@
   <div class="app cr-write-app">
     <div class="cr-write-shell">
       <header class="cr-write-head">
-        <a class="cr-write-head-back" href="../index.html">
-          <svg class="cr-w-svg" aria-hidden="true"><use href="#cr-ic-chevron-left"/></svg>
-          返回
-        </a>
-        <h1 class="cr-write-head-title" id="writePageTitle">撰写图书</h1>
+        <div class="cr-write-head-lead">
+          <a class="cr-write-head-back" href="../index.html">
+            <svg class="cr-w-svg" aria-hidden="true"><use href="#cr-ic-chevron-left"/></svg>
+            返回
+          </a>
+          <h1 class="cr-write-head-title" id="writePageTitle">撰写图书</h1>
+        </div>
         <div class="cr-write-head-actions">
           <button type="button" class="cr-write-ai" id="writeAiBtn" title="AI 助手（演示）">
-            <svg class="cr-w-svg" aria-hidden="true"><use href="#cr-ic-sparkles"/></svg>
-            AI 助手
+            <span class="cr-write-ai-inner">
+              <svg class="cr-w-svg cr-write-ai-ic" aria-hidden="true"><use href="#cr-ic-sparkles"/></svg>
+              <span class="cr-write-ai-txt">AI 助手</span>
+            </span>
           </button>
           <button type="button" class="cr-write-btn cr-write-btn--ghost" title="预览">
             <svg class="cr-w-svg" aria-hidden="true"><use href="#cr-ic-eye"/></svg>
@@ -307,30 +311,158 @@
         </section>
 
         <aside class="cr-write-rail is-collapsed" id="writeRailAside" aria-label="审核与版本侧栏">
-          <button type="button" class="cr-write-rail-handle" id="writeRailToggle" aria-expanded="false" aria-controls="writeRailPanel" title="展开侧栏（审核意见 / 版本记录）">
+          <button type="button" class="cr-write-rail-handle" id="writeRailToggle" aria-expanded="false" aria-controls="writeRailPanel" title="展开侧栏（审核记录 / 版本记录）">
             <svg class="cr-w-svg cr-write-rail-handle-ic" aria-hidden="true"><use href="#cr-ic-chevron-left"/></svg>
             <span class="cr-write-rail-handle-hint">审核</span>
+            <span class="cr-write-rail-audit-badge" id="writeRailAuditBadge" aria-label="3 条审核记录">3条</span>
           </button>
           <div class="cr-write-rail-panel" id="writeRailPanel" aria-hidden="true">
             <div class="cr-write-tabs" role="tablist">
-              <button type="button" class="cr-write-tab is-active" role="tab" aria-selected="true" data-write-tab="audit">审核意见</button>
+              <button type="button" class="cr-write-tab is-active" role="tab" aria-selected="true" data-write-tab="audit">
+                <span class="cr-write-tab-label">审核记录</span>
+                <span class="cr-write-tab-badge" id="writeAuditTabBadge">3条</span>
+              </button>
               <button type="button" class="cr-write-tab" role="tab" aria-selected="false" data-write-tab="version">版本记录</button>
             </div>
             <div class="cr-write-rail-body" id="writeRailAudit">
-              <div class="cr-write-empty" id="writeAuditEmpty">
-                <svg class="cr-write-empty-illus" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <path d="M14 2v6h6"/>
-                  <path d="M9 13h6M9 17h6"/>
-                </svg>
-                <span>暂无数据</span>
-              </div>
+              <ul class="cr-write-audit-list" id="writeAuditList" role="list">
+                <li class="cr-write-audit-item">
+                  <article class="cr-write-audit-card">
+                    <div class="cr-write-audit-top">
+                      <span class="cr-write-audit-num cr-write-audit-num--a" aria-hidden="true">1</span>
+                      <div class="cr-write-audit-top-main">
+                        <div class="cr-write-audit-statusline">
+                          <span class="cr-write-audit-status">已修改</span>
+                          <time class="cr-write-audit-when" datetime="2026-02-23T18:00">2026-02-23 18:00</time>
+                        </div>
+                        <div class="cr-write-audit-quote">
+                          <span class="cr-write-audit-quote-label">引用：</span>
+                          视技术工人的素质。在市场经济条件下，技术工人的素质直接影响……
+                        </div>
+                        <p class="cr-write-audit-feedback">本页面，有错别字</p>
+                        <div class="cr-write-audit-actions">
+                          <button type="button" class="cr-write-audit-link">留言</button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </li>
+                <li class="cr-write-audit-item">
+                  <article class="cr-write-audit-card">
+                    <div class="cr-write-audit-top">
+                      <span class="cr-write-audit-num cr-write-audit-num--b" aria-hidden="true">2</span>
+                      <div class="cr-write-audit-top-main">
+                        <div class="cr-write-audit-statusline">
+                          <span class="cr-write-audit-status cr-write-audit-status--strong">完成</span>
+                          <time class="cr-write-audit-when" datetime="2026-02-24T15:30">2026-02-24 15:30</time>
+                        </div>
+                        <div class="cr-write-audit-quote cr-write-audit-quote--media">
+                          <div class="cr-write-audit-quote-imgph" role="img" aria-label="引用附图占位">配图示意</div>
+                        </div>
+                        <p class="cr-write-audit-feedback">不能使用侵权水印的图片作为出版内容</p>
+                        <div class="cr-write-audit-actions">
+                          <button type="button" class="cr-write-audit-link">留言</button>
+                          <button type="button" class="cr-write-audit-expand-btn" aria-expanded="false" aria-controls="writeAuditThread2">
+                            留言展开<span class="cr-write-audit-expand-n">3</span>条›
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="cr-write-audit-thread" id="writeAuditThread2" hidden>
+                      <div class="cr-write-audit-msg">
+                        <div class="cr-write-audit-msg-row">
+                          <span class="cr-write-audit-chip cr-write-audit-chip--reviewer">审核人</span>
+                          <time class="cr-write-audit-msg-time" datetime="2024-05-14T10:09">2024-05-14 10:09</time>
+                        </div>
+                        <p class="cr-write-audit-msg-body">不能用这个图片</p>
+                      </div>
+                      <div class="cr-write-audit-msg">
+                        <div class="cr-write-audit-msg-row">
+                          <span class="cr-write-audit-chip cr-write-audit-chip--author">作者</span>
+                          <time class="cr-write-audit-msg-time" datetime="2024-05-14T11:02">2024-05-14 11:02</time>
+                        </div>
+                        <p class="cr-write-audit-msg-body">好的</p>
+                      </div>
+                      <div class="cr-write-audit-msg">
+                        <div class="cr-write-audit-msg-row">
+                          <span class="cr-write-audit-chip cr-write-audit-chip--reviewer">审核人</span>
+                          <time class="cr-write-audit-msg-time" datetime="2024-05-14T14:20">2024-05-14 14:20</time>
+                        </div>
+                        <p class="cr-write-audit-msg-body">请替换为无水印高清图并标注来源。</p>
+                      </div>
+                      <div class="cr-write-audit-reply">
+                        <input type="text" class="cr-write-audit-input" id="writeAuditReply2" placeholder="评论" autocomplete="off"/>
+                        <button type="button" class="cr-write-audit-send">发送</button>
+                      </div>
+                    </div>
+                  </article>
+                </li>
+                <li class="cr-write-audit-item">
+                  <article class="cr-write-audit-card">
+                    <div class="cr-write-audit-top">
+                      <span class="cr-write-audit-num cr-write-audit-num--c" aria-hidden="true">3</span>
+                      <div class="cr-write-audit-top-main">
+                        <div class="cr-write-audit-statusline">
+                          <span class="cr-write-audit-status">待处理</span>
+                          <time class="cr-write-audit-when" datetime="2026-04-20T09:40">2026-04-20 09:40</time>
+                        </div>
+                        <div class="cr-write-audit-quote">
+                          <span class="cr-write-audit-quote-label">引用：</span>
+                          第一章　导学与课标对应（节选中）
+                        </div>
+                        <p class="cr-write-audit-feedback">请补充导学目标与课标条目的对应说明，便于教研核对。</p>
+                        <div class="cr-write-audit-actions">
+                          <button type="button" class="cr-write-audit-link">留言</button>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </li>
+              </ul>
             </div>
-            <div class="cr-write-rail-body" id="writeRailVersion" hidden style="display:none">
-              <div class="cr-write-empty">
-                <svg class="cr-write-empty-illus" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-                <span>暂无版本记录（演示）</span>
-              </div>
+            <div class="cr-write-rail-body cr-write-rail-body--version" id="writeRailVersion" hidden style="display:none">
+              <ul class="cr-write-version-list" role="list">
+                <li class="cr-write-version-item cr-write-version-item--current">
+                  <div class="cr-write-version-inner">
+                    <div class="cr-write-version-main">
+                      <div class="cr-write-version-title">
+                        第3版本<span class="cr-write-version-current-tag">（当前）</span>
+                      </div>
+                      <time class="cr-write-version-time" datetime="2024-05-11T21:27">2024-05-11 21:27</time>
+                      <div class="cr-write-version-author-row">
+                        <span class="cr-write-version-dot" aria-hidden="true"></span>
+                        <span class="cr-write-version-author">李梓发</span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="cr-write-version-item">
+                  <div class="cr-write-version-inner">
+                    <div class="cr-write-version-main">
+                      <div class="cr-write-version-title">第2版本</div>
+                      <time class="cr-write-version-time" datetime="2024-05-09T16:42">2024-05-09 16:42</time>
+                      <div class="cr-write-version-author-row">
+                        <span class="cr-write-version-dot" aria-hidden="true"></span>
+                        <span class="cr-write-version-author">吴彦琛</span>
+                      </div>
+                    </div>
+                    <button type="button" class="cr-write-version-open">打开</button>
+                  </div>
+                </li>
+                <li class="cr-write-version-item">
+                  <div class="cr-write-version-inner">
+                    <div class="cr-write-version-main">
+                      <div class="cr-write-version-title">第1版本</div>
+                      <time class="cr-write-version-time" datetime="2024-04-22T09:15">2024-04-22 09:15</time>
+                      <div class="cr-write-version-author-row">
+                        <span class="cr-write-version-dot" aria-hidden="true"></span>
+                        <span class="cr-write-version-author">李梓发</span>
+                      </div>
+                    </div>
+                    <button type="button" class="cr-write-version-open">打开</button>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
         </aside>

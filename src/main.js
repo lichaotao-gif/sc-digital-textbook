@@ -2486,10 +2486,6 @@ function renderMy(){
           : (myShelfView === 'group' && myShelfClassFilter === opt.id);
         return `<button type="button" class="my-shelf-tab ${active ? 'is-active' : ''}" onclick='setMyShelfTab(${JSON.stringify(opt.id)})'>${escAttr(opt.label)}</button>`;
       }).join('')}
-      <button type="button" class="my-shelf-create-quick" onclick="openCreateClass()">
-        <svg class="my-shelf-create-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <span>创建</span>
-      </button>
     </div>`;
   const activeClassName = myShelfClassFilter;
 
@@ -2516,9 +2512,15 @@ function renderMy(){
         <svg class="join-class-entry-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
-    <div class="sec-head">
+    <div class="sec-head sec-head--my-shelf">
       <div class="sec-title"><span class="dot"></span>书架</div>
-      <div class="sec-extra">${myShelfView === 'mine' ? `共 ${myB.length} 本` : `${activeClassName} · ${shownGroupShelfEntries.length} 本`}</div>
+      <div class="sec-head-actions sec-head-actions--my-shelf">
+        <span class="sec-extra">${myShelfView === 'mine' ? `共 ${myB.length} 本` : `${activeClassName} · ${shownGroupShelfEntries.length} 本`}</span>
+        <button type="button" class="my-shelf-create-quick" onclick="openCreateClass()">
+          <svg class="my-shelf-create-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>创建组群</span>
+        </button>
+      </div>
     </div>
     ${shelfTabsHtml}
     ${myShelfView === 'mine' ? mineShelfHtml : groupShelfHtml}

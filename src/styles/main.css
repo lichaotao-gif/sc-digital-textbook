@@ -446,6 +446,26 @@ body{
 .sec-extra{font-size:12px;color:var(--stone);font-weight:300;cursor:pointer;transition:var(--transition)}
 .sec-extra:hover{color:var(--mint-deep)}
 
+.sec-head--my-shelf{
+  flex-wrap:wrap;
+  gap:10px 14px;
+  align-items:center;
+}
+.sec-head-actions--my-shelf{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.sec-head-actions--my-shelf .sec-extra{
+  cursor:default;
+}
+.sec-head-actions--my-shelf .sec-extra:hover{
+  color:var(--stone);
+}
+
 /* 我的教材书架：主 Tab + 组群 Tab（组群多时可自动换行） */
 .my-shelf-tabs{
   display:flex;
@@ -486,7 +506,7 @@ body{
   border-color:var(--mint-mid);
   box-shadow:none;
 }
-/* 书架 Tab 行末尾：快捷创建组群 */
+/* 书架标题行右侧：快捷创建组群 */
 .my-shelf-create-quick{
   display:inline-flex;
   align-items:center;
